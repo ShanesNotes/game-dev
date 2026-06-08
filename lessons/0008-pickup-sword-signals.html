@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lesson 8 — Find the Sword: Areas & Signals</title>
+<link rel="stylesheet" href="_lesson.css">
+</head>
+<body>
+<main>
+<header class="hero">
+  <div class="kicker">Godot · Lesson 08 · Quest 1 of 3</div>
+  <h1>Find the Sword: <span>Areas &amp; Signals</span></h1>
+  <p class="sub">Walk over a sword and pick it up. Behind that simple act is the most important idea in Godot: <em>signals</em>.</p>
+</header>
+
+<div class="win">
+  <b>TODAY</b>
+  <p>A sword sits in the field. Walk onto it and it vanishes — picked up — with a message in the Output panel. Quest begun.</p>
+</div>
+
+<h2>The big idea: signals</h2>
+<p>
+  So far your code <em>asks</em> every frame: "is a key down?" That's fine for input, but imagine asking
+  "did I touch the sword?" 60 times a second for every object — exhausting and messy. Games solve this with
+  <strong>signals</strong>.
+</p>
+<div class="callout note">
+  <span class="ct">◈ signal = an announcement</span>
+  <p>A node <em>emits a signal</em> when something noteworthy happens ("a body entered me!", "the timer finished!", "the button was pressed!"). You <strong>connect</strong> that signal to a function. When the event fires, your function runs — automatically. You stop asking; the game <em>tells</em> you.</p>
+</div>
+<p>This is called <em>event-driven</em> code, and once it clicks you'll see it everywhere in game development.</p>
+
+<h2>The detector: Area2D</h2>
+<p>
+  In Lesson 4 you met <strong>solid</strong> bodies (CharacterBody2D, StaticBody2D). An <strong>Area2D</strong> is
+  different — it's <em>not</em> solid, you walk right through it. Its only job is to <em>notice</em> overlaps and
+  emit a signal called <code class="inline">body_entered</code>. Perfect for a pickup.
+</p>
+
+<h2>Part A — build the sword pickup</h2>
+<p>I made you <code class="inline">assets/sword.png</code>. We'll build this little tree as a child of <code class="inline">Main</code>:</p>
+<div class="tree">
+<span class="node">▸ Sword</span> <span class="dim">(Area2D — detects the player)</span>
+  <span class="leaf">├─ Sprite2D</span> <span class="dim">(sword.png)</span>
+  <span class="leaf">└─ CollisionShape2D</span> <span class="dim">(the pickup zone)</span>
+</div>
+<div class="flow">
+  <div class="phase"><div class="rail"><div class="num">1</div><div class="line"></div></div><div class="body"><p>Right-click <code class="inline">Main</code> → <kbd>Add Child Node</kbd> → <code class="inline">Area2D</code> → rename it <code class="inline">Sword</code>.</p></div></div>
+  <div class="phase"><div class="rail"><div class="num">2</div><div class="line"></div></div><div class="body"><p>Add a child <code class="inline">Sprite2D</code> to Sword; in its Inspector set <strong>Texture</strong> → Quick Load → <code class="inline">assets/sword.png</code>.</p></div></div>
+  <div class="phase"><div class="rail"><div class="num">3</div><div class="line"></div></div><div class="body"><p>Add a child <code class="inline">CollisionShape2D</code> to Sword; give it a <strong>New RectangleShape2D</strong> and size it over the sword.</p></div></div>
+  <div class="phase"><div class="rail"><div class="num">4</div></div><div class="body"><p>In the viewport, drag the whole <code class="inline">Sword</code> somewhere out in the grass, away from the player's start.</p></div></div>
+</div>
+
+<h2>Part B — script the pickup</h2>
+<div class="flow">
+  <div class="phase"><div class="rail"><div class="num">1</div><div class="line"></div></div><div class="body"><p>Select <code class="inline">Sword</code> → <kbd>Attach Script</kbd> → <kbd>Create</kbd> (default path is fine, e.g. <code class="inline">sword.gd</code>). Replace its contents with:</p></div></div>
+</div>
+<div class="code">
+  <div class="bar"><span class="t">GDScript · sword.gd</span><button class="copy">copy</button></div>
+<pre><span class="kw">extends</span> <span class="type">Area2D</span>
+
+<span class="kw">func</span> <span class="fn">_on_body_entered</span>(body):
+    <span class="kw">if</span> <span class="var">body</span>.name == <span class="str">"Player"</span>:
+        <span class="fn">print</span>(<span class="str">"You found the sword!"</span>)
+        <span class="fn">queue_free</span>()</pre>
+</div>
+<div class="annot">
+  <div class="line-note"><code>func _on_body_entered(body):</code> — <b>the function the signal will call.</b> Godot hands it <code>body</code> = whatever walked in. (The name is just a convention; the connection in Part C is what matters.)</div>
+  <div class="line-note"><code>if body.name == "Player":</code> — <b>make sure it was the player</b>, not the wolf or a wall. <code>==</code> means "is equal to" (two equals; one equals is <em>assignment</em>).</div>
+  <div class="line-note"><code>print(...)</code> — <b>writes a message to the Output panel</b> at the bottom of the editor. Your first debugging tool.</div>
+  <div class="line-note"><code>queue_free()</code> — <b>deletes this node</b> (the whole Sword) safely. That's the sword "being picked up" — it disappears.</div>
+</div>
+
+<h2>Part C — connect the signal (the crucial bit)</h2>
+<p>The function exists, but nothing calls it yet. We wire the Area2D's <code class="inline">body_entered</code> signal to it.</p>
+<div class="flow">
+  <div class="phase"><div class="rail"><div class="num">1</div><div class="line"></div></div><div class="body"><p>Select the <code class="inline">Sword</code> node. On the right, next to the <em>Inspector</em> tab, click the <strong>Node</strong> tab, then <strong>Signals</strong>.</p></div></div>
+  <div class="phase"><div class="rail"><div class="num">2</div><div class="line"></div></div><div class="body"><p>Find <code class="inline">body_entered(body: Node2D)</code> in the list. <strong>Double-click</strong> it.</p></div></div>
+  <div class="phase"><div class="rail"><div class="num">3</div><div class="line"></div></div><div class="body"><p>In the dialog, the Sword node is selected as the receiver and the method auto-fills as <code class="inline">_on_body_entered</code> — exactly our function. Click <kbd>Connect</kbd>.</p></div></div>
+  <div class="phase"><div class="rail"><div class="num">4</div></div><div class="body"><p>A little green "connected" icon appears next to your function in the script. The wire is live.</p></div></div>
+</div>
+
+<div class="flow">
+  <div class="phase"><div class="rail"><div class="num">▶</div></div><div class="body"><p>Press <kbd>F5</kbd>, walk onto the sword. It vanishes and <strong>"You found the sword!"</strong> prints in the Output panel. 🎉 Quest 1 done.</p></div></div>
+</div>
+
+<h2>Check yourself</h2>
+<div class="quiz">
+  <p class="q">1. What's a <em>signal</em>?</p>
+  <button onclick="pick(this)" data-correct>An announcement a node emits when something happens, which you connect to a function</button>
+  <button onclick="pick(this)">A type of sprite</button>
+  <button onclick="pick(this)">A variable that holds true/false</button>
+  <div class="feedback"></div>
+</div>
+<div class="quiz">
+  <p class="q">2. Why an <code class="inline">Area2D</code> for the sword, not a StaticBody2D?</p>
+  <button onclick="pick(this)" data-correct>Area2D detects overlaps without being solid, so you can walk onto it</button>
+  <button onclick="pick(this)">Area2D is faster</button>
+  <button onclick="pick(this)">StaticBody2D can't have a sprite</button>
+  <div class="feedback"></div>
+</div>
+<div class="quiz">
+  <p class="q">3. What does <code class="inline">queue_free()</code> do?</p>
+  <button onclick="pick(this)">Frees up memory in the menu</button>
+  <button onclick="pick(this)" data-correct>Deletes the node it's called on — here, the sword disappears</button>
+  <button onclick="pick(this)">Pauses the game</button>
+  <div class="feedback"></div>
+</div>
+
+<div class="teacher">
+  <b>I'M YOUR TEACHER — ASK ME ANYTHING</b>
+  <p>Most common snag: the sword vanishes but nothing prints (or vice-versa) — usually the signal isn't connected (redo Part C), or the player node isn't named exactly <code class="inline">Player</code>. If walking over it does nothing at all, check the CollisionShape2D actually has a shape. Want the sword to make the character <em>hold</em> a sword, or play a sound? Great follow-ups — ask. Say <em>"done"</em> when you've picked it up. Next: <strong>the wolf appears.</strong> 🐺</p>
+</div>
+
+<footer>
+  LESSON 08 · Quest 1/3 · grounded in <a href="../MISSION.md">your mission</a> · sources in <a href="../RESOURCES.md">RESOURCES.md</a><br>
+  Primary reference: <a href="https://docs.godotengine.org/en/stable/tutorials/scripting/signals.html">Godot — Using signals</a>
+</footer>
+</main>
+<script src="_lesson.js"></script>
+</body>
+</html>

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lesson 1 — Nodes, Scenes & Your First Sprite</title>
+<link rel="stylesheet" href="_lesson.css">
+</head>
+<body>
+<main>
+<header class="hero">
+  <div class="kicker">Godot · Lesson 01</div>
+  <h1>Nodes, Scenes &amp; Your First <span>Sprite</span></h1>
+  <p class="sub">The one mental model everything in Godot is built on — and getting your first thing on screen.</p>
+</header>
+
+<div class="win">
+  <b>TODAY</b>
+  <p>A character visible in a game window that <em>you</em> launched. No code yet — just the foundation, and a screen that says "I made this run."</p>
+</div>
+
+<h2>The one idea: everything is a Node</h2>
+<p class="lead">A Godot game is a tree of nodes.</p>
+<p>
+  A <em>node</em> is a single small building block that does <strong>one</strong> job: draw a picture, play a
+  sound, detect a collision, hold a position. You build a game by combining many small nodes into a tree —
+  like LEGO bricks snapped together.
+</p>
+<p>
+  A <strong>Scene</strong> is just a saved branch of that tree. Your player could be a scene. A coin could be
+  a scene. The whole level is a scene that holds the others.
+  <span class="cite">(<a href="https://docs.godotengine.org/en/stable/getting_started/step_by_step/nodes_and_scenes.html">Godot Docs: Nodes and Scenes</a>)</span>
+</p>
+
+<div class="tree">
+<span class="node">▸ Main</span>  <span class="dim">(root node — a Node2D)</span>
+  <span class="leaf">└─ Sprite2D</span>  <span class="dim">(draws a picture on screen)</span>
+</div>
+<p class="cite">You'll build exactly this. <code class="inline">Node2D</code> is an empty anchor that holds a position; the <code class="inline">Sprite2D</code> hangs off it and shows an image.</p>
+
+<h3>Why this matters for the games you want to make</h3>
+<p>
+  Zelda, Stardew, Pokémon — every character, tree, chicken, and dialog box is a small scene made of nodes,
+  dropped into a bigger scene. Once nodes-and-scenes clicks, the rest of Godot is just <em>which</em> nodes
+  exist and what they do.
+</p>
+
+<h2>Do it: your first scene on screen</h2>
+<p>In the Godot window on your right.</p>
+<div class="flow">
+  <div class="phase"><div class="rail"><div class="num">1</div><div class="line"></div></div><div class="body"><p><strong>Create the project.</strong> In the Godot <em>Project Manager</em>, click <kbd>＋ Create</kbd>. Name it <code class="inline">first-steps</code>, path <code class="inline">~/game-dev/projects/</code>, leave the renderer default, click <kbd>Create &amp; Edit</kbd>.</p></div></div>
+  <div class="phase"><div class="rail"><div class="num">2</div><div class="line"></div></div><div class="body"><p><strong>Add the root node.</strong> In the <em>Scene</em> dock (top-left), click <kbd>Other Node</kbd>, search <code class="inline">Node2D</code>, <kbd>Create</kbd>. Rename it to <code class="inline">Main</code> (double-click).</p></div></div>
+  <div class="phase"><div class="rail"><div class="num">3</div><div class="line"></div></div><div class="body"><p><strong>Add a Sprite2D.</strong> Right-click <code class="inline">Main</code> → <kbd>Add Child Node</kbd> → search <code class="inline">Sprite2D</code> → <kbd>Create</kbd>. It now hangs under Main.</p></div></div>
+  <div class="phase"><div class="rail"><div class="num">4</div><div class="line"></div></div><div class="body"><p><strong>Give it a picture.</strong> With <code class="inline">Sprite2D</code> selected, in the <em>Inspector</em> (right) find <strong>Texture</strong> → click <kbd>&lt;empty&gt;</kbd> → <kbd>Quick Load</kbd> → pick <code class="inline">icon.svg</code> (the Godot robot, ships with every project). The robot appears.</p></div></div>
+  <div class="phase"><div class="rail"><div class="num">5</div><div class="line"></div></div><div class="body"><p><strong>Save the scene.</strong> <kbd>Ctrl+S</kbd> → save as <code class="inline">main.tscn</code>. <span class="cite">(.tscn = "text scene" — your tree, saved as a file.)</span></p></div></div>
+  <div class="phase"><div class="rail"><div class="num">6</div></div><div class="body"><p><strong>Run it.</strong> Press <kbd>F5</kbd> (or ▶, top-right). Godot asks for a main scene → <kbd>Select Current</kbd>. A game window opens with your robot. 🎉 That window <em>is</em> your game running — close it to return to the editor.</p></div></div>
+</div>
+
+<h2>Check yourself</h2>
+<div class="quiz">
+  <p class="q">1. What is a <em>Scene</em> in Godot?</p>
+  <button onclick="pick(this)">A cutscene or animation that plays in the game</button>
+  <button onclick="pick(this)" data-correct>A saved tree (or branch) of nodes</button>
+  <button onclick="pick(this)">A single image file</button>
+  <div class="feedback"></div>
+</div>
+<div class="quiz">
+  <p class="q">2. You want something to <em>draw a picture</em> in a 2D game. Which node?</p>
+  <button onclick="pick(this)">Node2D</button>
+  <button onclick="pick(this)" data-correct>Sprite2D</button>
+  <button onclick="pick(this)">AudioStreamPlayer</button>
+  <div class="feedback"></div>
+</div>
+<div class="quiz">
+  <p class="q">3. The <code class="inline">Sprite2D</code> sits <em>under</em> <code class="inline">Main</code>. That makes it a…</p>
+  <button onclick="pick(this)" data-correct>child of Main</button>
+  <button onclick="pick(this)">copy of Main</button>
+  <button onclick="pick(this)">replacement for Main</button>
+  <div class="feedback"></div>
+</div>
+
+<div class="teacher">
+  <b>I'M YOUR TEACHER — ASK ME ANYTHING</b>
+  <p>Stuck on a step? Curious why we used <code class="inline">Node2D</code> and not plain <code class="inline">Node</code>? Just say so in the terminal on your left. When the robot's on screen and you've pressed Play, say <em>"done"</em> — Lesson 2 makes it <strong>move</strong> (your first GDScript).</p>
+</div>
+
+<footer>
+  LESSON 01 · grounded in <a href="../MISSION.md">your mission</a> · sources in <a href="../RESOURCES.md">RESOURCES.md</a><br>
+  Primary reference: <a href="https://docs.godotengine.org/en/stable/getting_started/step_by_step/index.html">Godot — Step by step</a>
+</footer>
+</main>
+<script src="_lesson.js"></script>
+</body>
+</html>

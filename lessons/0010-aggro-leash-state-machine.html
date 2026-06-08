@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lesson 10 — Aggro & Leash: The Enemy State Machine</title>
+<link rel="stylesheet" href="_lesson.css">
+</head>
+<body>
+<main>
+<header class="hero">
+  <div class="kicker">Godot · Lesson 10 · Quest 2½</div>
+  <h1>Aggro &amp; Leash: <span>The Enemy State Machine</span></h1>
+  <p class="sub">You spotted it: a dumb always-chaser. Let's give the wolf a real brain — the WoW way.</p>
+</header>
+
+<div class="win">
+  <b>TODAY</b>
+  <p>The wolf ignores you until you wander into its <em>aggro radius</em>, chases when pulled, and — if you drag it too far — <em>leashes</em>: gives up and trots home to reset. Then it's huntable again.</p>
+</div>
+
+<h2>The idea: a state machine</h2>
+<p>
+  Your wolf currently does <em>one</em> thing forever: chase. Real enemies switch between <strong>behaviours</strong>
+  depending on the situation. That pattern — "be in exactly one state at a time, and switch on events" — is a
+  <strong>state machine</strong>, and it's everywhere in games (player states, menus, doors, AI). Learn it once,
+  reuse it forever.
+</p>
+<p>Our wolf gets three states, lifted straight from MMO combat:</p>
+<div class="defs">
+  <div class="def"><b>IDLE</b><p>Sit at home. Do nothing — until the player crosses into the aggro radius. <span class="cite">(WoW: standing at spawn.)</span></p></div>
+  <div class="def"><b>CHASE</b><p>Pursue the player. But watch the distance from home — stray too far and leash. <span class="cite">(WoW: pulled / in combat.)</span></p></div>
+  <div class="def"><b>RETURN</b><p>Walk back to the spawn point, ignoring the player. On arrival, drop to IDLE. <span class="cite">(WoW: the "evade / reset" you've seen when you kite a mob too far.)</span></p></div>
+</div>
+
+<h2>Three new code tools</h2>
+<div class="defs">
+  <div class="def"><b>@export</b><p>Puts a variable in the <em>Inspector</em> so you can tune it live without touching code — perfect for <code class="inline">aggro_radius</code> and <code class="inline">leash_range</code>.</p></div>
+  <div class="def"><b>enum</b><p>A named list of options. <code class="inline">enum State { IDLE, CHASE, RETURN }</code> gives our three states readable names instead of magic numbers.</p></div>
+  <div class="def"><b>match</b><p>Like a tidy stack of <code class="inline">if/else</code>: "match the current state, and run the matching block." Plus <code class="inline">distance_to()</code> for measuring gaps, and <code class="inline">_ready()</code> to record home once at start.</p></div>
+</div>
+
+<h2>The script</h2>
+<p>Replace your <code class="inline">wolf.gd</code> with this. It's longer, but it's just the three states spelled out.</p>
+<div class="code">
+  <div class="bar"><span class="t">GDScript · wolf.gd</span><button class="copy">copy</button></div>
+<pre><span class="kw">extends</span> <span class="type">CharacterBody2D</span>
+
+<span class="kw">@export</span> <span class="kw">var</span> <span class="var">speed</span> = <span class="num">120</span>
+<span class="kw">@export</span> <span class="kw">var</span> <span class="var">aggro_radius</span> = <span class="num">180.0</span>
+<span class="kw">@export</span> <span class="kw">var</span> <span class="var">leash_range</span> = <span class="num">400.0</span>
+
+<span class="kw">@onready</span> <span class="kw">var</span> <span class="var">player</span> = <span class="fn">get_node</span>(<span class="str">"../Player"</span>)
+<span class="kw">@onready</span> <span class="kw">var</span> <span class="var">sprite</span> = <span class="var">$Sprite2D</span>
+
+<span class="kw">enum</span> <span class="type">State</span> { IDLE, CHASE, RETURN }
+<span class="kw">var</span> <span class="var">state</span> = <span class="type">State</span>.IDLE
+<span class="kw">var</span> <span class="var">home</span> = <span class="type">Vector2</span>.ZERO
+
+<span class="kw">func</span> <span class="fn">_ready</span>():
+    <span class="var">home</span> = global_position
+
+<span class="kw">func</span> <span class="fn">_physics_process</span>(delta):
+    <span class="kw">match</span> <span class="var">state</span>:
+        <span class="type">State</span>.IDLE:
+            <span class="var">velocity</span> = <span class="type">Vector2</span>.ZERO
+            <span class="kw">if</span> global_position.distance_to(<span class="var">player</span>.global_position) &lt;= <span class="var">aggro_radius</span>:
+                <span class="var">state</span> = <span class="type">State</span>.CHASE
+
+        <span class="type">State</span>.CHASE:
+            <span class="kw">var</span> <span class="var">dir</span> = (<span class="var">player</span>.global_position - global_position).normalized()
+            <span class="var">velocity</span> = <span class="var">dir</span> * <span class="var">speed</span>
+            <span class="kw">if</span> global_position.distance_to(<span class="var">home</span>) &gt;= <span class="var">leash_range</span>:
+                <span class="var">state</span> = <span class="type">State</span>.RETURN
+
+        <span class="type">State</span>.RETURN:
+            <span class="kw">var</span> <span class="var">dir</span> = (<span class="var">home</span> - global_position).normalized()
+            <span class="var">velocity</span> = <span class="var">dir</span> * <span class="var">speed</span>
+            <span class="kw">if</span> global_position.distance_to(<span class="var">home</span>) &lt;= <span class="num">4.0</span>:
+                <span class="var">state</span> = <span class="type">State</span>.IDLE
+
+    <span class="fn">move_and_slide</span>()
+    <span class="kw">if</span> <span class="var">velocity</span>.x != <span class="num">0</span>:
+        <span class="var">sprite</span>.flip_h = <span class="var">velocity</span>.x &lt; <span class="num">0</span></pre>
+</div>
+<div class="annot">
+  <div class="line-note"><code>@export var aggro_radius = 180.0</code> — <b>shows up in the Inspector.</b> Select the Wolf and you'll see sliders for speed / aggro / leash — tune them while playing, no code edits.</div>
+  <div class="line-note"><code>func _ready(): home = global_position</code> — <b>runs once</b> when the wolf enters the scene. We snapshot its starting spot as "home" to leash back to.</div>
+  <div class="line-note"><code>match state:</code> — <b>do the block for whichever state we're in.</b> Only one runs each frame. That's the state machine.</div>
+  <div class="line-note"><code>distance_to(...)</code> — <b>straight-line distance between two points.</b> IDLE uses it to detect the player (aggro); CHASE uses it to measure the tether to home (leash).</div>
+  <div class="line-note"><code>state = State.CHASE</code> etc. — <b>the transitions.</b> Changing <code>state</code> is the whole mechanism — next frame, a different block runs.</div>
+</div>
+
+<div class="callout idea">
+  <span class="ct">◇ the WoW behaviour you wanted</span>
+  <p>Walk near the wolf → it <strong>aggros</strong>. Lead it on a long chase → it hits <code class="inline">leash_range</code> from its spawn and <strong>resets</strong>, trotting home while ignoring you (try to "kite" it — it won't bite). Back at home it's <strong>IDLE</strong> and can be pulled again. Classic mob leashing.</p>
+</div>
+
+<div class="flow">
+  <div class="phase"><div class="rail"><div class="num">▶</div></div><div class="body"><p>Press <kbd>F5</kbd>. Approach to pull it, then sprint away past its leash and watch it give up and reset. Select the Wolf in the editor and tweak <strong>Aggro Radius</strong> / <strong>Leash Range</strong> in the Inspector to feel the design space. 🎉</p></div></div>
+</div>
+
+<h2>Check yourself</h2>
+<div class="quiz">
+  <p class="q">1. What's a state machine?</p>
+  <button onclick="pick(this)" data-correct>Being in exactly one state at a time and switching between them on events</button>
+  <button onclick="pick(this)">A machine that saves your game</button>
+  <button onclick="pick(this)">A faster kind of loop</button>
+  <div class="feedback"></div>
+</div>
+<div class="quiz">
+  <p class="q">2. What triggers the leash (RETURN state)?</p>
+  <button onclick="pick(this)" data-correct>The wolf's distance from its home exceeds leash_range</button>
+  <button onclick="pick(this)">The player picks up the sword</button>
+  <button onclick="pick(this)">The wolf runs out of speed</button>
+  <div class="feedback"></div>
+</div>
+<div class="quiz">
+  <p class="q">3. Why mark <code class="inline">aggro_radius</code> with <code class="inline">@export</code>?</p>
+  <button onclick="pick(this)" data-correct>So you can tune it in the Inspector without editing code</button>
+  <button onclick="pick(this)">It makes the wolf invisible</button>
+  <button onclick="pick(this)">It's required for every variable</button>
+  <div class="feedback"></div>
+</div>
+
+<div class="teacher">
+  <b>I'M YOUR TEACHER — ASK ME ANYTHING</b>
+  <p>This is the most "computer-science-y" lesson so far — if <code class="inline">match</code>/<code class="inline">enum</code> feel weird, ask and I'll break them down further. Natural extensions, all very WoW: a <strong>de-aggro timer</strong> (reset if the player stays out of sight for N seconds), <strong>heal-to-full on reset</strong>, a <strong>chase-break distance</strong> separate from the home leash, or showing the aggro radius as a circle while debugging. Say which excites you. Otherwise say <em>"done"</em> — final quest leg next: <strong>north to the cabin.</strong> 🏚️</p>
+</div>
+
+<footer>
+  LESSON 10 · Quest 2½ · grounded in <a href="../MISSION.md">your mission</a> · sources in <a href="../RESOURCES.md">RESOURCES.md</a><br>
+  Primary reference: <a href="https://docs.godotengine.org/en/stable/tutorials/scripting/gdscript/gdscript_basics.html#match">Godot — GDScript: match &amp; enums</a>
+</footer>
+</main>
+<script src="_lesson.js"></script>
+</body>
+</html>

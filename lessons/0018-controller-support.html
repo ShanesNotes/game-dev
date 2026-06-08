@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lesson 18 — Controller Support</title>
+<link rel="stylesheet" href="_lesson.css">
+</head>
+<body>
+<main>
+<header class="hero">
+  <div class="kicker">Godot · Lesson 18 · Polish 3</div>
+  <h1>Controller <span>Support</span></h1>
+  <p class="sub">Analog-stick movement and a gamepad attack button — plus a free fix for the diagonal-speed quirk.</p>
+</header>
+
+<div class="win">
+  <b>TODAY</b>
+  <p>Play with a controller: move with the left stick (smooth and analog), attack with a face button. Keyboard keeps working exactly as before.</p>
+</div>
+
+<h2>One function does most of the work</h2>
+<p>
+  Right now movement is four <code class="inline">if</code>s reading arrow keys. Godot has a built-in that's better in
+  every way: <code class="inline">Input.get_vector()</code>. Hand it your four direction actions and it returns a
+  ready-made <code class="inline">Vector2</code> — and it does three things for you at once:
+</p>
+<div class="defs">
+  <div class="def"><b>Analog</b><p>A gamepad stick reports <em>how far</em> it's pushed, so a half-tilt = half speed. <code class="inline">get_vector</code> preserves that.</p></div>
+  <div class="def"><b>Deadzone</b><p>Sticks drift slightly at rest; <code class="inline">get_vector</code> ignores tiny inputs so your character doesn't wander on its own.</p></div>
+  <div class="def"><b>Length-clamped</b><p>It never returns longer than 1 — which <strong>fixes the diagonal-is-faster bug</strong> from Lesson 3, finally and for free.</p></div>
+</div>
+<div class="callout note">
+  <span class="ct">◈ why the stick already moves you</span>
+  <p>Godot's built-in <code class="inline">ui_left/right/up/down</code> actions come <em>pre-bound to the gamepad's left stick and D-pad</em>. So once movement reads them via <code class="inline">get_vector</code>, the controller just works — no Input Map changes needed for movement.</p>
+</div>
+
+<h2>Part A — switch movement to <code class="inline">get_vector</code></h2>
+<p>In the Player script, replace the movement lines in <code class="inline">_physics_process</code>. The four <code class="inline">if</code>s become one line:</p>
+<div class="code">
+  <div class="bar"><span class="t">GDScript · sprite_2d.gd (_physics_process)</span><button class="copy">copy</button></div>
+<pre><span class="kw">func</span> <span class="fn">_physics_process</span>(delta):
+    <span class="kw">var</span> <span class="var">direction</span> = <span class="fn">Input</span>.get_vector(<span class="str">"ui_left"</span>, <span class="str">"ui_right"</span>, <span class="str">"ui_up"</span>, <span class="str">"ui_down"</span>)
+    <span class="var">velocity</span> = <span class="var">direction</span> * <span class="var">speed</span>
+    <span class="fn">move_and_slide</span>()
+    <span class="fn">update_animation</span>(<span class="var">direction</span>)
+
+    <span class="kw">if</span> <span class="fn">Input</span>.is_action_just_pressed(<span class="str">"attack"</span>):
+        <span class="fn">start_auto_attack</span>()</pre>
+</div>
+<div class="annot">
+  <div class="line-note"><code>Input.get_vector("ui_left", "ui_right", "ui_up", "ui_down")</code> — <b>order is left, right, up, down</b> (negative-x, positive-x, negative-y, positive-y). Returns the movement <code>Vector2</code> directly — keyboard <em>and</em> stick.</div>
+  <div class="line-note"><b>Everything else is unchanged.</b> <code>update_animation</code> still works — with a stick, <code>direction</code> values are fractions (e.g. 0.6), and the <code>abs()</code> comparison handles those fine.</div>
+</div>
+
+<h2>Part B — add a gamepad button to "attack"</h2>
+<div class="flow">
+  <div class="phase"><div class="rail"><div class="num">1</div><div class="line"></div></div><div class="body"><p><kbd>Project</kbd> → <kbd>Project Settings</kbd> → <strong>Input Map</strong>. Find your <code class="inline">attack</code> action.</p></div></div>
+  <div class="phase"><div class="rail"><div class="num">2</div><div class="line"></div></div><div class="body"><p>Click <code class="inline">attack</code>'s <strong>＋</strong>. With a controller connected, <strong>press the button you want</strong> (e.g. A / cross). Godot records it as a Joypad Button. <kbd>OK</kbd>.</p></div></div>
+  <div class="phase"><div class="rail"><div class="num">3</div></div><div class="body"><p>No controller handy? Use the dropdown in that dialog to pick <strong>Joypad Buttons → Bottom Action (Sony Cross, Xbox A…)</strong> manually. Close settings.</p></div></div>
+</div>
+<p class="cite">Because the code already uses the <code class="inline">"attack"</code> action (not a specific key), adding the gamepad event is all it takes — no script change.</p>
+
+<div class="flow">
+  <div class="phase"><div class="rail"><div class="num">▶</div></div><div class="body"><p>Plug in a controller and press <kbd>F5</kbd>. Left stick moves you (gently push for a slow walk), the face button auto-attacks. Unplug and the keyboard works identically. 🎉 Polish arc complete.</p></div></div>
+</div>
+
+<h2>Check yourself</h2>
+<div class="quiz">
+  <p class="q">1. What three things does <code class="inline">Input.get_vector</code> give you?</p>
+  <button onclick="pick(this)" data-correct>Analog magnitude, deadzone handling, and length-clamping (no fast diagonals)</button>
+  <button onclick="pick(this)">Health, mana, and stamina</button>
+  <button onclick="pick(this)">Three separate timers</button>
+  <div class="feedback"></div>
+</div>
+<div class="quiz">
+  <p class="q">2. Why did adding a gamepad button to <code class="inline">attack</code> need no code change?</p>
+  <button onclick="pick(this)" data-correct>The code listens to the action name, not a specific key — any bound input triggers it</button>
+  <button onclick="pick(this)">Godot auto-writes the code</button>
+  <button onclick="pick(this)">Controllers don't need code</button>
+  <div class="feedback"></div>
+</div>
+<div class="quiz">
+  <p class="q">3. Why does the left stick move you with no Input Map changes?</p>
+  <button onclick="pick(this)" data-correct>The built-in ui_* actions are already bound to the stick and D-pad</button>
+  <button onclick="pick(this)">get_vector ignores the Input Map</button>
+  <button onclick="pick(this)">It doesn't — you must rebind everything</button>
+  <div class="feedback"></div>
+</div>
+
+<div class="teacher">
+  <b>I'M YOUR TEACHER — ASK ME ANYTHING</b>
+  <p>Stick drifts / character wanders? Raise the action's <strong>deadzone</strong> in the Input Map. Want <strong>rumble</strong> on hit, or to swap UI prompts based on whether a controller's connected? Both doable — ask. That's your whole polish list done: auto-attack, damage numbers, controller. Say <em>"done"</em> and we tackle the <strong>wolf pack</strong> (using the reusable-scene skill from Lesson 17) — or jump to anything else you're feeling.</p>
+</div>
+
+<footer>
+  LESSON 18 · Polish 3 · grounded in <a href="../MISSION.md">your mission</a> · sources in <a href="../RESOURCES.md">RESOURCES.md</a><br>
+  Primary reference: <a href="https://docs.godotengine.org/en/stable/tutorials/inputs/controllers_gamepads_joysticks.html">Godot — Controllers &amp; gamepads</a>
+</footer>
+</main>
+<script src="_lesson.js"></script>
+</body>
+</html>

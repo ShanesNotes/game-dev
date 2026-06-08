@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lesson 6 — A World Bigger Than the Screen: Camera Follow</title>
+<link rel="stylesheet" href="_lesson.css">
+</head>
+<body>
+<main>
+<header class="hero">
+  <div class="kicker">Godot · Lesson 06</div>
+  <h1>Bigger Than the Screen: <span>Camera Follow</span></h1>
+  <p class="sub">One node, dropped in the right place. The world scrolls; the robot stays centred.</p>
+</header>
+
+<div class="win">
+  <b>TODAY</b>
+  <p>Walk to the edge of the screen and the <em>world</em> scrolls instead of the robot leaving — a camera that follows you.</p>
+</div>
+
+<h2>The concept you've secretly already used</h2>
+<p>
+  Back in Lesson 4, when you made the <code class="inline">Sprite2D</code> and <code class="inline">CollisionShape2D</code>
+  children of <code class="inline">Player</code>, they started moving <em>with</em> the player automatically. You
+  never wrote code to move them. That's the rule:
+</p>
+<div class="callout note">
+  <span class="ct">◈ parent-child transform</span>
+  <p>A child node's position is <em>relative to its parent</em>. Move the parent, and every child moves with it — for free. It's one of the most useful ideas in the whole engine.</p>
+</div>
+<p>
+  A <strong>Camera2D</strong> decides which slice of the world you see. So if we make the camera a
+  <em>child of the Player</em>… it follows the player everywhere, no code required. That's the whole trick.
+</p>
+
+<h2>First: give yourself room to scroll</h2>
+<p>A camera that follows is invisible if the whole map fits on screen. So let's make the world bigger.</p>
+<div class="flow">
+  <div class="phase"><div class="rail"><div class="num">1</div><div class="line"></div></div><div class="body"><p>Select your <code class="inline">Ground</code> tilemap. Using the tile palette from Lesson 5, <strong>paint a lot more grass</strong> — extend the floor well past the edges of the blue camera rectangle, in every direction. Make it big.</p></div></div>
+  <div class="phase"><div class="rail"><div class="num">2</div></div><div class="body"><p>Zoom out in the editor (<kbd>Ctrl</kbd> + scroll, or <kbd>−</kbd>) if you need to see what you're painting.</p></div></div>
+</div>
+
+<h2>Add the camera</h2>
+<div class="flow">
+  <div class="phase"><div class="rail"><div class="num">1</div><div class="line"></div></div><div class="body"><p>Right-click <code class="inline">Player</code> → <kbd>Add Child Node</kbd> → search <code class="inline">Camera2D</code> → <kbd>Create</kbd>. It must be a child of <strong>Player</strong>, not Main.</p></div></div>
+  <div class="phase"><div class="rail"><div class="num">2</div><div class="line"></div></div><div class="body"><p>That's it. A Camera2D automatically becomes the active camera, and because it's parented to Player, it inherits the player's movement.</p></div></div>
+  <div class="phase"><div class="rail"><div class="num">3</div></div><div class="body"><p>Press <kbd>F5</kbd> and walk around. The robot stays centred while the grass scrolls past. 🎉</p></div></div>
+</div>
+
+<h2>Optional juice: smooth the follow</h2>
+<p>Right now the camera is glued rigidly to the robot. A tiny bit of lag feels much nicer.</p>
+<div class="flow">
+  <div class="phase"><div class="rail"><div class="num">1</div><div class="line"></div></div><div class="body"><p>Select the <code class="inline">Camera2D</code>. In the Inspector, open <strong>Position Smoothing</strong> and tick <strong>Enabled</strong>.</p></div></div>
+  <div class="phase"><div class="rail"><div class="num">2</div></div><div class="body"><p>Run again. The camera now eases toward the robot — a subtle drift that makes movement feel alive. Bump the <strong>Speed</strong> value up or down to taste.</p></div></div>
+</div>
+
+<h2>Check yourself</h2>
+<div class="quiz">
+  <p class="q">1. Why does the camera follow the player with no code?</p>
+  <button onclick="pick(this)" data-correct>It's a child of Player, and children move with their parent</button>
+  <button onclick="pick(this)">Cameras always follow the nearest body</button>
+  <button onclick="pick(this)">We wrote a follow script earlier</button>
+  <div class="feedback"></div>
+</div>
+<div class="quiz">
+  <p class="q">2. A child node's position is measured…</p>
+  <button onclick="pick(this)">From the top-left of the screen, always</button>
+  <button onclick="pick(this)" data-correct>Relative to its parent</button>
+  <button onclick="pick(this)">Randomly each frame</button>
+  <div class="feedback"></div>
+</div>
+<div class="quiz">
+  <p class="q">3. What does Position Smoothing add?</p>
+  <button onclick="pick(this)">It makes the player faster</button>
+  <button onclick="pick(this)" data-correct>A slight easing/lag so the camera glides toward the player</button>
+  <button onclick="pick(this)">It hides the camera</button>
+  <div class="feedback"></div>
+</div>
+
+<div class="teacher">
+  <b>I'M YOUR TEACHER — ASK ME ANYTHING</b>
+  <p>Camera not following? Check it's a child of <em>Player</em> (not Main) and that there's only one Camera2D. Want to stop the camera from showing the void past the map edges (camera "limits")? Ask me. When the world scrolls as you walk, say <em>"done"</em>. Lesson 7 is a milestone — we'll turn the robot into an <strong>animated character</strong> that faces the way it walks.</p>
+</div>
+
+<footer>
+  LESSON 06 · grounded in <a href="../MISSION.md">your mission</a> · sources in <a href="../RESOURCES.md">RESOURCES.md</a><br>
+  Primary reference: <a href="https://docs.godotengine.org/en/stable/classes/class_camera2d.html">Godot — Camera2D</a>
+</footer>
+</main>
+<script src="_lesson.js"></script>
+</body>
+</html>

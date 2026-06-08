@@ -1,0 +1,71 @@
+extends CharacterBody2D
+
+@export var speed = 120
+@export var melee_range = 40.0
+@export var swing_damage = 3
+@export var max_health = 12
+var health = max_health
+
+@onready var sprite = $Sprite2D
+@onready var swing_timer = $SwingTimer
+@onready var health_bar = $HealthBar
+
+var target = null
+var spawn = Vector2.ZERO
+
+const DAMAGE_NUMBER = preload("res://damage_number.tscn")
+
+func _ready():
+	spawn = global_position
+	health_bar.max_value = max_health
+	health_bar.value = health
+
+func _physics_process(delta):
+	if target != null:
+		if global_position.distance_to(target.global_position) > melee_range:
+			velocity = (target.global_position - global_position).normalized() * speed
+		else:
+			velocity = Vector2.ZERO
+	else:
+		if global_position.distance_to(spawn) > 4.0:
+			velocity = (spawn - global_position).normalized() * speed
+		else:
+			velocity = Vector2.ZERO
+	move_and_slide()
+	face_target()
+
+func take_damage(amount):
+	health -= amount
+	if health < 0: health = 0
+	health_bar.value = health
+	spawn_number(amount, Color.WHITE)
+	print("Wolf health: ", health)
+	if health == 0:
+		queue_free()        # the wolf dies
+
+func spawn_number(amount, color):
+	var n = DAMAGE_NUMBER.instantiate()
+	get_parent().add_child(n)
+	n.global_position = global_position + Vector2(-8, -30)
+	n.setup(amount, color)
+	
+func _on_aggro_area_body_entered(body):
+	if body.name == "Player":
+		target = body
+		swing_timer.start()
+
+func _on_aggro_area_body_exited(body):
+	if body.name == "Player":
+		target = null
+		swing_timer.stop()
+
+func _on_swing_timer_timeout():
+	if target != null and global_position.distance_to(target.global_position) <= melee_range + 16:
+		target.take_damage(swing_damage, self)   #pass self as the attacker
+
+func face_target():
+	var face_x = velocity.x
+	if target != null:
+		face_x = target.global_position.x - global_position.x
+	if face_x != 0:
+		sprite.flip_h = face_x < 0

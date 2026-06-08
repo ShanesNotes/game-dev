@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lesson 11 — Into Combat: Melee Range & the Swing Timer</title>
+<link rel="stylesheet" href="_lesson.css">
+</head>
+<body>
+<main>
+<header class="hero">
+  <div class="kicker">Godot · Lesson 11 · Combat 1 of 5</div>
+  <h1>Into Combat: <span>Melee Range &amp; the Swing Timer</span></h1>
+  <p class="sub">The Elwynn Forest pull. The wolf closes to melee, <em>stops</em>, and starts swinging on a timer.</p>
+</header>
+
+<div class="win">
+  <b>TODAY</b>
+  <p>Pull the wolf → it runs to melee range, <em>stops mirroring you</em>, and bites on a ~2s swing timer: <code class="inline">"The wolf bites you for 5!"</code> ticking in the Output. Real combat begins.</p>
+</div>
+
+<h2>Why this also fixes the "mirror" bug</h2>
+<p>
+  Last session we proved the wolf orbit-locks because it forever aims at where you <em>are</em>. Real MMO
+  enemies don't do that — they reach <strong>melee range</strong> and <strong>stop</strong>, then auto-attack on a
+  fixed <strong>swing timer</strong>. So we add a fourth state, <code class="inline">COMBAT</code>: the moment the wolf
+  is close enough, it quits chasing and starts swinging. No more endless pursuit, no more mirror.
+</p>
+<div class="tree">
+<span class="dim">state flow:</span>
+IDLE ──(you enter aggro radius)──▶ CHASE ──(reach melee range)──▶ <span class="node">COMBAT</span>
+  <span class="dim">▲                                                    │</span>
+  <span class="dim">└──────── RETURN ◀──(dragged past leash)─────────────┘</span>
+</div>
+
+<h2>The new tool: the <code class="inline">Timer</code> node</h2>
+<div class="callout note">
+  <span class="ct">◈ a Timer = a metronome that emits a signal</span>
+  <p>A <strong>Timer</strong> node counts down and fires a <code class="inline">timeout</code> signal when it hits zero — then (if repeating) starts again. It's how games do <em>anything</em> on a clock: swing timers, global cooldowns, spawn waves, regen ticks. This one signal underpins the entire combat arc.</p>
+</div>
+<p>This is the <strong>swing timer</strong> from WoW: every tick, one auto-attack. We'll <code class="inline">start()</code> it when combat begins and <code class="inline">stop()</code> it when the fight ends.</p>
+
+<h2>Part A — add the swing timer node</h2>
+<div class="flow">
+  <div class="phase"><div class="rail"><div class="num">1</div><div class="line"></div></div><div class="body"><p>Right-click the <code class="inline">Wolf</code> → <kbd>Add Child Node</kbd> → <code class="inline">Timer</code> → rename it <code class="inline">SwingTimer</code> (exact name — code uses it).</p></div></div>
+  <div class="phase"><div class="rail"><div class="num">2</div><div class="line"></div></div><div class="body"><p>Select <code class="inline">SwingTimer</code>. In the Inspector set <strong>Wait Time</strong> = <code class="inline">2</code>. Leave <strong>Autostart</strong> OFF and <strong>One Shot</strong> OFF (we want it to repeat, and to start it ourselves).</p></div></div>
+  <div class="phase"><div class="rail"><div class="num">3</div></div><div class="body"><p>Connect its signal: with <code class="inline">SwingTimer</code> selected, go to the <strong>Node → Signals</strong> tab, double-click <code class="inline">timeout()</code>, and <kbd>Connect</kbd> it to the <strong>Wolf</strong> node. Godot makes a function <code class="inline">_on_swing_timer_timeout()</code> in wolf.gd.</p></div></div>
+</div>
+
+<h2>Part B — the upgraded wolf brain</h2>
+<p>Replace <code class="inline">wolf.gd</code> with this. It's your aggro/leash machine plus the COMBAT state and the swing handler.</p>
+<div class="code">
+  <div class="bar"><span class="t">GDScript · wolf.gd</span><button class="copy">copy</button></div>
+<pre><span class="kw">extends</span> <span class="type">CharacterBody2D</span>
+
+<span class="kw">@export</span> <span class="kw">var</span> <span class="var">speed</span> = <span class="num">120</span>
+<span class="kw">@export</span> <span class="kw">var</span> <span class="var">aggro_radius</span> = <span class="num">180.0</span>
+<span class="kw">@export</span> <span class="kw">var</span> <span class="var">leash_range</span> = <span class="num">400.0</span>
+<span class="kw">@export</span> <span class="kw">var</span> <span class="var">melee_range</span> = <span class="num">40.0</span>
+<span class="kw">@export</span> <span class="kw">var</span> <span class="var">swing_damage</span> = <span class="num">5</span>
+
+<span class="kw">@onready</span> <span class="kw">var</span> <span class="var">player</span> = <span class="fn">get_node</span>(<span class="str">"../Player"</span>)
+<span class="kw">@onready</span> <span class="kw">var</span> <span class="var">sprite</span> = <span class="var">$Sprite2D</span>
+<span class="kw">@onready</span> <span class="kw">var</span> <span class="var">swing_timer</span> = <span class="var">$SwingTimer</span>
+
+<span class="kw">enum</span> <span class="type">State</span> { IDLE, CHASE, COMBAT, RETURN }
+<span class="kw">var</span> <span class="var">state</span> = <span class="type">State</span>.IDLE
+<span class="kw">var</span> <span class="var">home</span> = <span class="type">Vector2</span>.ZERO
+
+<span class="kw">func</span> <span class="fn">_ready</span>():
+    <span class="var">home</span> = global_position
+
+<span class="kw">func</span> <span class="fn">_physics_process</span>(delta):
+    <span class="kw">var</span> <span class="var">to_player</span> = global_position.distance_to(<span class="var">player</span>.global_position)
+    <span class="kw">var</span> <span class="var">from_home</span> = global_position.distance_to(<span class="var">home</span>)
+
+    <span class="kw">match</span> <span class="var">state</span>:
+        <span class="type">State</span>.IDLE:
+            <span class="var">velocity</span> = <span class="type">Vector2</span>.ZERO
+            <span class="kw">if</span> <span class="var">to_player</span> &lt;= <span class="var">aggro_radius</span>:
+                <span class="var">state</span> = <span class="type">State</span>.CHASE
+
+        <span class="type">State</span>.CHASE:
+            <span class="var">velocity</span> = (<span class="var">player</span>.global_position - global_position).normalized() * <span class="var">speed</span>
+            <span class="kw">if</span> <span class="var">to_player</span> &lt;= <span class="var">melee_range</span>:
+                <span class="fn">enter_combat</span>()
+            <span class="kw">elif</span> <span class="var">from_home</span> &gt;= <span class="var">leash_range</span>:
+                <span class="var">state</span> = <span class="type">State</span>.RETURN
+
+        <span class="type">State</span>.COMBAT:
+            <span class="var">velocity</span> = <span class="type">Vector2</span>.ZERO          <span class="com"># stand and fight — no more chasing</span>
+            <span class="kw">if</span> <span class="var">to_player</span> &gt; <span class="var">melee_range</span> + <span class="num">16</span>:    <span class="com"># you stepped out of melee</span>
+                <span class="var">state</span> = <span class="type">State</span>.CHASE
+                <span class="var">swing_timer</span>.stop()
+            <span class="kw">elif</span> <span class="var">from_home</span> &gt;= <span class="var">leash_range</span>:
+                <span class="var">state</span> = <span class="type">State</span>.RETURN
+                <span class="var">swing_timer</span>.stop()
+
+        <span class="type">State</span>.RETURN:
+            <span class="var">velocity</span> = (<span class="var">home</span> - global_position).normalized() * <span class="var">speed</span>
+            <span class="kw">if</span> <span class="var">from_home</span> &lt;= <span class="num">4.0</span>:
+                <span class="var">state</span> = <span class="type">State</span>.IDLE
+
+    <span class="fn">move_and_slide</span>()
+    <span class="fn">face_target</span>()
+
+<span class="kw">func</span> <span class="fn">enter_combat</span>():
+    <span class="var">state</span> = <span class="type">State</span>.COMBAT
+    <span class="kw">if</span> <span class="var">swing_timer</span>.is_stopped():
+        <span class="var">swing_timer</span>.start()        <span class="com"># begin the swing-timer auto-attacks</span>
+
+<span class="kw">func</span> <span class="fn">_on_swing_timer_timeout</span>():
+    <span class="kw">if</span> <span class="var">state</span> == <span class="type">State</span>.COMBAT:
+        <span class="fn">print</span>(<span class="str">"The wolf bites you for "</span>, <span class="var">swing_damage</span>, <span class="str">"!"</span>)
+
+<span class="kw">func</span> <span class="fn">face_target</span>():
+    <span class="kw">var</span> <span class="var">face_x</span> = <span class="var">velocity</span>.x
+    <span class="kw">if</span> <span class="var">state</span> == <span class="type">State</span>.COMBAT:
+        <span class="var">face_x</span> = <span class="var">player</span>.global_position.x - global_position.x
+    <span class="kw">if</span> <span class="var">face_x</span> != <span class="num">0</span>:
+        <span class="var">sprite</span>.flip_h = <span class="var">face_x</span> &lt; <span class="num">0</span></pre>
+</div>
+<div class="annot">
+  <div class="line-note"><code>@onready var swing_timer = $SwingTimer</code> — <b>grab the Timer node</b> you added, so code can <code>start()</code>/<code>stop()</code> it.</div>
+  <div class="line-note"><code>State.COMBAT: velocity = Vector2.ZERO</code> — <b>the wolf plants its feet.</b> This single line is what kills the orbit-mirror — in combat it doesn't move toward you at all.</div>
+  <div class="line-note"><code>enter_combat()</code> — <b>switch to COMBAT and start the swing timer once</b> (the <code>is_stopped()</code> guard stops us restarting it every frame).</div>
+  <div class="line-note"><code>_on_swing_timer_timeout()</code> — <b>fires every 2 seconds</b> while the timer runs. For now it just prints the bite — next lesson it'll subtract health.</div>
+  <div class="line-note"><code>to_player &gt; melee_range + 16</code> — <b>a small buffer</b> so the wolf doesn't flicker between CHASE and COMBAT right at the edge. Step well away and it chases again.</div>
+</div>
+
+<div class="flow">
+  <div class="phase"><div class="rail"><div class="num">▶</div></div><div class="body"><p>Press <kbd>F5</kbd>. Walk into the wolf's aggro radius — it charges, reaches you, <strong>stops</strong>, and the Output panel starts ticking <strong>"The wolf bites you for 5!"</strong> every couple seconds. Step back out of melee and it gives chase again. 🎉 You're in combat.</p></div></div>
+</div>
+
+<h2>Check yourself</h2>
+<div class="quiz">
+  <p class="q">1. What does a <code class="inline">Timer</code> node give you?</p>
+  <button onclick="pick(this)" data-correct>A timeout signal it emits on a clock — here, each auto-attack swing</button>
+  <button onclick="pick(this)">A way to slow the game down</button>
+  <button onclick="pick(this)">A health bar</button>
+  <div class="feedback"></div>
+</div>
+<div class="quiz">
+  <p class="q">2. Which line stops the orbit-mirror behaviour?</p>
+  <button onclick="pick(this)" data-correct>velocity = Vector2.ZERO in the COMBAT state</button>
+  <button onclick="pick(this)">swing_timer.start()</button>
+  <button onclick="pick(this)">home = global_position</button>
+  <div class="feedback"></div>
+</div>
+<div class="quiz">
+  <p class="q">3. Why the <code class="inline">is_stopped()</code> guard in <code class="inline">enter_combat()</code>?</p>
+  <button onclick="pick(this)" data-correct>So we don't restart the swing timer every single frame we're in melee</button>
+  <button onclick="pick(this)">To pause the game</button>
+  <button onclick="pick(this)">Timers can only start once ever</button>
+  <div class="feedback"></div>
+</div>
+
+<div class="teacher">
+  <b>I'M YOUR TEACHER — ASK ME ANYTHING</b>
+  <p>Snags: no bites printing? Check the <code class="inline">SwingTimer</code> name and that its <code class="inline">timeout()</code> is connected (Part A.3). Wolf still slides into you? Make sure the COMBAT block sets velocity to zero. Curious about the GCD vs swing-timer distinction, or want the bite interval as a tunable? Ask. This is the foundation — say <em>"done"</em> and Lesson 12 makes those bites <strong>hurt</strong>: health and health bars for you and the wolf.</p>
+</div>
+
+<footer>
+  LESSON 11 · Combat 1/5 · grounded in <a href="../MISSION.md">your mission</a> · sources in <a href="../RESOURCES.md">RESOURCES.md</a><br>
+  Primary reference: <a href="https://docs.godotengine.org/en/stable/classes/class_timer.html">Godot — Timer</a>
+</footer>
+</main>
+<script src="_lesson.js"></script>
+</body>
+</html>

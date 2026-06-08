@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lesson 7 — Milestone: An Animated Character That Faces Where It Walks</title>
+<link rel="stylesheet" href="_lesson.css">
+</head>
+<body>
+<main>
+<header class="hero">
+  <div class="kicker">Godot · Lesson 07 · ★ Milestone</div>
+  <h1>An Animated Character <span>That Faces Where It Walks</span></h1>
+  <p class="sub">The leap from "a sprite that slides" to "a character that's alive." Three new code ideas, paced gently.</p>
+</header>
+
+<div class="win">
+  <b>TODAY</b>
+  <p>The robot becomes a little person who <em>walks</em> — legs moving — and turns to face up, down, left, or right as you steer.</p>
+</div>
+
+<h2>The plan</h2>
+<p>
+  We'll swap the static picture for an <strong>AnimatedSprite2D</strong> (a sprite that plays frame-by-frame
+  animations), load the character spritesheet I made you, define four walk animations, then write code that
+  plays the right one based on which way you're moving.
+</p>
+<div class="callout note">
+  <span class="ct">◈ I made you a character</span>
+  <p>In <strong>FileSystem → assets</strong> you'll find <code class="inline">character.png</code> — a 128×128 sheet, <strong>4 frames across, 4 rows down</strong>. Row order top-to-bottom: <strong>down, left, right, up</strong>.</p>
+</div>
+
+<h2>Part A — swap in an AnimatedSprite2D</h2>
+<div class="flow">
+  <div class="phase"><div class="rail"><div class="num">1</div><div class="line"></div></div><div class="body"><p>In the Scene dock, <strong>delete</strong> the old <code class="inline">Sprite2D</code> under Player (right-click → Delete, or select + <kbd>Del</kbd>).</p></div></div>
+  <div class="phase"><div class="rail"><div class="num">2</div><div class="line"></div></div><div class="body"><p>Right-click <code class="inline">Player</code> → <kbd>Add Child Node</kbd> → <code class="inline">AnimatedSprite2D</code> → <kbd>Create</kbd>. Leave its name as <code class="inline">AnimatedSprite2D</code> — our code will rely on that exact name.</p></div></div>
+  <div class="phase"><div class="rail"><div class="num">3</div></div><div class="body"><p>With it selected, in the Inspector find <strong>Sprite Frames</strong> → <kbd>&lt;empty&gt;</kbd> → <kbd>New SpriteFrames</kbd>. A <strong>SpriteFrames</strong> panel opens at the bottom.</p></div></div>
+</div>
+<div class="callout note"><span class="ct">◈ jargon</span><p><strong>SpriteFrames</strong> is just a container holding named animations, each a list of frames. One AnimatedSprite2D, many animations inside it.</p></div>
+
+<h2>Part B — create the four walk animations</h2>
+<p>In the SpriteFrames panel you'll see one default animation called <code class="inline">default</code>. We'll make four.</p>
+<div class="flow">
+  <div class="phase"><div class="rail"><div class="num">1</div><div class="line"></div></div><div class="body"><p>Rename <code class="inline">default</code> to <code class="inline">walk_down</code> (double-click the name). Then use the <strong>＋ Add Animation</strong> button to add three more: <code class="inline">walk_left</code>, <code class="inline">walk_right</code>, <code class="inline">walk_up</code>. <span class="cite">Names must match exactly — the code uses them.</span></p></div></div>
+  <div class="phase"><div class="rail"><div class="num">2</div><div class="line"></div></div><div class="body"><p>Select <code class="inline">walk_down</code>. Click the <strong>Add frames from Sprite Sheet</strong> button (the grid-with-a-photo icon in the panel's toolbar). Pick <code class="inline">assets/character.png</code>.</p></div></div>
+  <div class="phase"><div class="rail"><div class="num">3</div><div class="line"></div></div><div class="body"><p>In the slice dialog, set <strong>Horizontal = 4</strong> and <strong>Vertical = 4</strong>. The sheet splits into a 4×4 grid. Click the <strong>four cells of the top row</strong> (left→right), then <kbd>Add 4 Frames</kbd>.</p></div></div>
+  <div class="phase"><div class="rail"><div class="num">4</div><div class="line"></div></div><div class="body"><p>Repeat for the others, picking the matching row: <code class="inline">walk_left</code> = row 2, <code class="inline">walk_right</code> = row 3, <code class="inline">walk_up</code> = row 4 (bottom).</p></div></div>
+  <div class="phase"><div class="rail"><div class="num">5</div></div><div class="body"><p>For each animation, set <strong>FPS</strong> ≈ <code class="inline">8</code> and make sure the <strong>loop</strong> toggle is on. Press the ▶ in the panel to preview the walk cycle.</p></div></div>
+</div>
+
+<h2>Part C — the code</h2>
+<p>Open the Player's script. Here's the whole thing — three new ideas explained underneath.</p>
+<div class="code">
+  <div class="bar"><span class="t">GDScript · sprite_2d.gd</span><button class="copy">copy</button></div>
+<pre><span class="kw">extends</span> <span class="type">CharacterBody2D</span>
+
+<span class="kw">var</span> <span class="var">speed</span> = <span class="num">200</span>
+<span class="kw">@onready</span> <span class="kw">var</span> <span class="var">anim</span> = <span class="var">$AnimatedSprite2D</span>
+
+<span class="kw">func</span> <span class="fn">_physics_process</span>(delta):
+    <span class="kw">var</span> <span class="var">direction</span> = <span class="type">Vector2</span>.ZERO
+    <span class="kw">if</span> <span class="fn">Input</span>.is_action_pressed(<span class="str">"ui_right"</span>): <span class="var">direction</span>.x += <span class="num">1</span>
+    <span class="kw">if</span> <span class="fn">Input</span>.is_action_pressed(<span class="str">"ui_left"</span>):  <span class="var">direction</span>.x -= <span class="num">1</span>
+    <span class="kw">if</span> <span class="fn">Input</span>.is_action_pressed(<span class="str">"ui_down"</span>):  <span class="var">direction</span>.y += <span class="num">1</span>
+    <span class="kw">if</span> <span class="fn">Input</span>.is_action_pressed(<span class="str">"ui_up"</span>):    <span class="var">direction</span>.y -= <span class="num">1</span>
+
+    <span class="var">velocity</span> = <span class="var">direction</span> * <span class="var">speed</span>
+    <span class="fn">move_and_slide</span>()
+    <span class="fn">update_animation</span>(<span class="var">direction</span>)
+
+<span class="kw">func</span> <span class="fn">update_animation</span>(<span class="var">direction</span>):
+    <span class="kw">if</span> <span class="var">direction</span> == <span class="type">Vector2</span>.ZERO:
+        <span class="var">anim</span>.stop()
+        <span class="kw">return</span>
+    <span class="kw">if</span> <span class="fn">abs</span>(<span class="var">direction</span>.x) > <span class="fn">abs</span>(<span class="var">direction</span>.y):
+        <span class="kw">if</span> <span class="var">direction</span>.x > <span class="num">0</span>: <span class="var">anim</span>.play(<span class="str">"walk_right"</span>)
+        <span class="kw">else</span>: <span class="var">anim</span>.play(<span class="str">"walk_left"</span>)
+    <span class="kw">else</span>:
+        <span class="kw">if</span> <span class="var">direction</span>.y > <span class="num">0</span>: <span class="var">anim</span>.play(<span class="str">"walk_down"</span>)
+        <span class="kw">else</span>: <span class="var">anim</span>.play(<span class="str">"walk_up"</span>)</pre>
+</div>
+
+<h3>The three new ideas</h3>
+<div class="annot">
+  <div class="line-note"><code>$AnimatedSprite2D</code> — <b>a reference to a child node by name.</b> The <code>$</code> means "find my child called AnimatedSprite2D." This is how code reaches other nodes. (That's why the name had to match.)</div>
+  <div class="line-note"><code>@onready var anim = ...</code> — <b>grab that node once, when the Player is ready, and keep it in a variable</b> called <code>anim</code>. Now we type <code>anim</code> instead of <code>$AnimatedSprite2D</code> everywhere. <code>@onready</code> waits until the child actually exists.</div>
+  <div class="line-note"><code>func update_animation(direction):</code> — <b>your first hand-written function with a parameter.</b> We <em>defined</em> it, then <em>called</em> it on the line <code>update_animation(direction)</code>. Splitting logic into named functions keeps <code>_physics_process</code> readable.</div>
+  <div class="line-note"><code>else</code> / <code>return</code> — <b>else</b> = "otherwise do this"; <b>return</b> = "stop running this function now." If there's no movement we stop the animation and bail early.</div>
+  <div class="line-note"><code>abs(direction.x) > abs(direction.y)</code> — <b>which axis is stronger?</b> <code>abs()</code> strips the minus sign, so we compare <em>amount</em> of horizontal vs vertical movement to decide whether to face sideways or up/down.</div>
+</div>
+
+<div class="flow">
+  <div class="phase"><div class="rail"><div class="num">▶</div></div><div class="body"><p>Press <kbd>F5</kbd>. Walk in each direction — the character animates and faces the way it moves; stop, and it freezes. 🎉 <strong>You now have a real top-down character.</strong></p></div></div>
+</div>
+
+<h2>Check yourself</h2>
+<div class="quiz">
+  <p class="q">1. What does <code class="inline">$AnimatedSprite2D</code> give you?</p>
+  <button onclick="pick(this)" data-correct>A reference to the child node named AnimatedSprite2D</button>
+  <button onclick="pick(this)">A new animation</button>
+  <button onclick="pick(this)">The amount of money in the game</button>
+  <div class="feedback"></div>
+</div>
+<div class="quiz">
+  <p class="q">2. Why split the facing logic into <code class="inline">update_animation()</code>?</p>
+  <button onclick="pick(this)" data-correct>To keep _physics_process readable by giving a named job its own function</button>
+  <button onclick="pick(this)">Functions run faster than plain lines</button>
+  <button onclick="pick(this)">Godot requires exactly two functions</button>
+  <div class="feedback"></div>
+</div>
+<div class="quiz">
+  <p class="q">3. What does <code class="inline">return</code> do when direction is zero?</p>
+  <button onclick="pick(this)">Restarts the game</button>
+  <button onclick="pick(this)" data-correct>Stops running the function early, so no walk animation plays</button>
+  <button onclick="pick(this)">Returns the player to the start</button>
+  <div class="feedback"></div>
+</div>
+
+<div class="teacher">
+  <b>I'M YOUR TEACHER — ASK ME ANYTHING</b>
+  <p>Lots of moving parts here. Common snags: animation names not matching the strings in code, the node not named exactly <code class="inline">AnimatedSprite2D</code>, or frames added from the wrong row. Tell me the symptom and we'll fix it. Want the character to freeze on a <em>facing</em> frame instead of resetting when idle (proper "idle" poses)? Ask — it's a great next tweak. Say <em>"done"</em> when your character walks. We've built a complete movement foundation — next we can branch toward whatever excites you: <strong>picking things up</strong>, <strong>an enemy</strong>, or <strong>a door to a new room</strong>.</p>
+</div>
+
+<footer>
+  LESSON 07 ★ · grounded in <a href="../MISSION.md">your mission</a> · sources in <a href="../RESOURCES.md">RESOURCES.md</a><br>
+  Primary reference: <a href="https://docs.godotengine.org/en/stable/classes/class_animatedsprite2d.html">Godot — AnimatedSprite2D</a>
+</footer>
+</main>
+<script src="_lesson.js"></script>
+</body>
+</html>

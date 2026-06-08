@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lesson 13 — Reset: Return to Spawn</title>
+<link rel="stylesheet" href="_lesson.css">
+</head>
+<body>
+<main>
+<header class="hero">
+  <div class="kicker">Godot · Lesson 13 · Combat 3 · quick one</div>
+  <h1>Reset: <span>Return to Spawn</span></h1>
+  <p class="sub">Drop aggro and the wolf trots home — the WoW "evade/reset." A few lines on what you already have.</p>
+</header>
+
+<div class="win">
+  <b>TODAY</b>
+  <p>Leave the wolf's aura and it walks back to exactly where it started, then waits there to be pulled again.</p>
+</div>
+
+<h2>The idea</h2>
+<p>
+  Right now, when you leave the aura, <code class="inline">target</code> becomes <code class="inline">null</code> and the wolf
+  just <em>stops wherever it happens to be</em>. We want it to remember its spawn and walk back. Two small
+  additions:
+</p>
+<div class="defs">
+  <div class="def"><b>remember home</b><p>In <code class="inline">_ready()</code> (runs once at start), store the wolf's starting position in a variable, <code class="inline">spawn</code>.</p></div>
+  <div class="def"><b>walk back when idle</b><p>When there's no target, head toward <code class="inline">spawn</code> until you're basically on it, then stop.</p></div>
+</div>
+<p class="cite">It's the same "move toward a point" math you use for chasing — just pointed at <code class="inline">spawn</code> instead of the player.</p>
+
+<h2>The code</h2>
+<p>Only the top of the file and <code class="inline">_physics_process</code> change. Replace <code class="inline">wolf.gd</code> with this:</p>
+<div class="code">
+  <div class="bar"><span class="t">GDScript · wolf.gd</span><button class="copy">copy</button></div>
+<pre><span class="kw">extends</span> <span class="type">CharacterBody2D</span>
+
+<span class="kw">@export</span> <span class="kw">var</span> <span class="var">speed</span> = <span class="num">120</span>
+<span class="kw">@export</span> <span class="kw">var</span> <span class="var">melee_range</span> = <span class="num">40.0</span>
+<span class="kw">@export</span> <span class="kw">var</span> <span class="var">swing_damage</span> = <span class="num">1</span>
+
+<span class="kw">@onready</span> <span class="kw">var</span> <span class="var">sprite</span> = <span class="var">$Sprite2D</span>
+<span class="kw">@onready</span> <span class="kw">var</span> <span class="var">swing_timer</span> = <span class="var">$SwingTimer</span>
+
+<span class="kw">var</span> <span class="var">target</span> = <span class="kw">null</span>
+<span class="kw">var</span> <span class="var">spawn</span> = <span class="type">Vector2</span>.ZERO          <span class="com"># where the wolf started</span>
+
+<span class="kw">func</span> <span class="fn">_ready</span>():
+    <span class="var">spawn</span> = global_position          <span class="com"># remember home, once</span>
+
+<span class="kw">func</span> <span class="fn">_physics_process</span>(delta):
+    <span class="kw">if</span> <span class="var">target</span> != <span class="kw">null</span>:
+        <span class="com"># in combat: close to melee, then hold</span>
+        <span class="kw">if</span> global_position.distance_to(<span class="var">target</span>.global_position) &gt; <span class="var">melee_range</span>:
+            <span class="var">velocity</span> = (<span class="var">target</span>.global_position - global_position).normalized() * <span class="var">speed</span>
+        <span class="kw">else</span>:
+            <span class="var">velocity</span> = <span class="type">Vector2</span>.ZERO
+    <span class="kw">else</span>:
+        <span class="com"># no target: walk back to spawn</span>
+        <span class="kw">if</span> global_position.distance_to(<span class="var">spawn</span>) &gt; <span class="num">4.0</span>:
+            <span class="var">velocity</span> = (<span class="var">spawn</span> - global_position).normalized() * <span class="var">speed</span>
+        <span class="kw">else</span>:
+            <span class="var">velocity</span> = <span class="type">Vector2</span>.ZERO
+    <span class="fn">move_and_slide</span>()
+    <span class="fn">face_target</span>()
+
+<span class="kw">func</span> <span class="fn">_on_aggro_area_body_entered</span>(body):
+    <span class="kw">if</span> <span class="var">body</span>.name == <span class="str">"Player"</span>:
+        <span class="var">target</span> = <span class="var">body</span>
+        <span class="var">swing_timer</span>.start()
+
+<span class="kw">func</span> <span class="fn">_on_aggro_area_body_exited</span>(body):
+    <span class="kw">if</span> <span class="var">body</span>.name == <span class="str">"Player"</span>:
+        <span class="var">target</span> = <span class="kw">null</span>
+        <span class="var">swing_timer</span>.stop()
+
+<span class="kw">func</span> <span class="fn">_on_swing_timer_timeout</span>():
+    <span class="kw">if</span> <span class="var">target</span> != <span class="kw">null</span> <span class="kw">and</span> global_position.distance_to(<span class="var">target</span>.global_position) &lt;= <span class="var">melee_range</span> + <span class="num">16</span>:
+        <span class="fn">print</span>(<span class="str">"The wolf bites you for "</span>, <span class="var">swing_damage</span>, <span class="str">"!"</span>)
+
+<span class="kw">func</span> <span class="fn">face_target</span>():
+    <span class="kw">var</span> <span class="var">face_x</span> = <span class="var">velocity</span>.x
+    <span class="kw">if</span> <span class="var">target</span> != <span class="kw">null</span>:
+        <span class="var">face_x</span> = <span class="var">target</span>.global_position.x - global_position.x
+    <span class="kw">if</span> <span class="var">face_x</span> != <span class="num">0</span>:
+        <span class="var">sprite</span>.flip_h = <span class="var">face_x</span> &lt; <span class="num">0</span></pre>
+</div>
+<div class="annot">
+  <div class="line-note"><code>func _ready(): spawn = global_position</code> — <b>captures home once.</b> Because we fixed the wolf's transform last lesson, <code>global_position</code> is now truly where the wolf sits — so this records the right spot.</div>
+  <div class="line-note"><code>else:</code> branch — <b>no target → go home.</b> Same normalize-and-move pattern as chasing, aimed at <code>spawn</code>. The <code>&gt; 4.0</code> check stops it jittering once it arrives.</div>
+</div>
+
+<div class="flow">
+  <div class="phase"><div class="rail"><div class="num">▶</div></div><div class="body"><p>Press <kbd>F5</kbd>. Pull the wolf, lead it across the field, then step out of its aura — it turns and walks straight back to its spawn, then waits. Pull it again and it re-engages. 🎉</p></div></div>
+</div>
+
+<h2>Check yourself</h2>
+<div class="quiz">
+  <p class="q">1. Why store <code class="inline">spawn</code> in <code class="inline">_ready()</code> rather than every frame?</p>
+  <button onclick="pick(this)" data-correct>_ready runs once at start, so it captures the original spot before the wolf moves</button>
+  <button onclick="pick(this)">_ready is the only place variables can be set</button>
+  <button onclick="pick(this)">It makes the wolf faster</button>
+  <div class="feedback"></div>
+</div>
+<div class="quiz">
+  <p class="q">2. The "walk home" code is basically the same as…</p>
+  <button onclick="pick(this)" data-correct>the chase code, but aimed at spawn instead of the player</button>
+  <button onclick="pick(this)">the swing timer</button>
+  <button onclick="pick(this)">the camera follow</button>
+  <div class="feedback"></div>
+</div>
+<div class="quiz">
+  <p class="q">3. What's the <code class="inline">&gt; 4.0</code> check for?</p>
+  <button onclick="pick(this)" data-correct>Stop moving once it's essentially home, so it doesn't jitter on the spot</button>
+  <button onclick="pick(this)">Wait 4 seconds</button>
+  <button onclick="pick(this)">Deal 4 damage</button>
+  <div class="feedback"></div>
+</div>
+
+<div class="teacher">
+  <b>I'M YOUR TEACHER — ASK ME ANYTHING</b>
+  <p>Want the wolf to <strong>sprint home faster</strong> when resetting (WoW mobs do), or to be <strong>untargetable while evading</strong>? Easy add-ons — ask. Say <em>"done"</em> and we finally build the thing you're itching for: <strong>health and health bars</strong>. The bites start to matter. 🩸</p>
+</div>
+
+<footer>
+  LESSON 13 · Combat 3 · grounded in <a href="../MISSION.md">your mission</a> · sources in <a href="../RESOURCES.md">RESOURCES.md</a><br>
+  Primary reference: <a href="https://docs.godotengine.org/en/stable/getting_started/step_by_step/scripting_first_script.html#the-ready-function">Godot — the _ready function</a>
+</footer>
+</main>
+<script src="_lesson.js"></script>
+</body>
+</html>

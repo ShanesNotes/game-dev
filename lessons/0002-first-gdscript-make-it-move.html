@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lesson 2 — Your First GDScript: Make It Move</title>
+<link rel="stylesheet" href="_lesson.css">
+</head>
+<body>
+<main>
+<header class="hero">
+  <div class="kicker">Godot · Lesson 02</div>
+  <h1>Your First GDScript: <span>Make It Move</span></h1>
+  <p class="sub">Your first lines of code ever. We'll teach what each piece <em>is</em> — not just what to type.</p>
+</header>
+
+<div class="win">
+  <b>TODAY</b>
+  <p>The robot glides across the screen by itself, driven by code <em>you</em> wrote and understand.</p>
+</div>
+
+<h2>What is a script?</h2>
+<p>
+  In Lesson 1 you built a tree of nodes. But nodes just sit there. To make a node <em>do</em> something, you
+  attach a <strong>script</strong> — a list of instructions the node follows while the game runs. Think of the
+  node as a robot body, and the script as its brain.
+  <span class="cite">(<a href="https://docs.godotengine.org/en/stable/getting_started/step_by_step/scripting_first_script.html">Godot Docs: Creating your first script</a>)</span>
+</p>
+
+<h2>Three words you need first</h2>
+<div class="defs">
+  <div class="def"><b>Function</b><p>A named chunk of instructions. When something "calls" the function by its name, every line inside runs, top to bottom. You'll write a function whose name Godot already knows to call.</p></div>
+  <div class="def"><b>Property</b><p>A value that belongs to a node, like its <code class="inline">position</code>. Reading it tells you where the node is; changing it <em>moves</em> the node.</p></div>
+  <div class="def"><b>Frame</b><p>A game redraws the screen many times per second (each redraw = one frame, ~60/sec). Nudge the position a little <em>every frame</em> and the eye sees smooth motion.</p></div>
+</div>
+
+<h2>The code you'll write</h2>
+<p>Read the line-by-line breakdown under it before typing.</p>
+<div class="code">
+  <div class="bar"><span class="t">GDScript · sprite_2d.gd</span><button class="copy">copy</button></div>
+<pre><span class="kw">extends</span> <span class="type">Sprite2D</span>
+
+<span class="kw">var</span> <span class="var">speed</span> = <span class="num">200</span>
+
+<span class="kw">func</span> <span class="fn">_process</span>(delta):
+    <span class="var">position</span>.x += <span class="var">speed</span> * delta</pre>
+</div>
+
+<div class="annot">
+  <div class="line-note"><code>extends Sprite2D</code> — <b>"this script controls a Sprite2D node."</b> Added automatically. Lets the script use that node's properties (like <code>position</code>).</div>
+  <div class="line-note"><code>var speed = 200</code> — <b>creates a variable</b> named <code>speed</code> holding 200. A variable is a labelled box you store a value in.</div>
+  <div class="line-note"><code>func _process(delta):</code> — <b>defines a function</b> named <code>_process</code>. Godot calls a function with this exact name <em>once every frame</em>, so lines inside run ~60×/sec. <span class="cite">(<a href="https://docs.godotengine.org/en/stable/tutorials/scripting/idle_and_physics_processing.html">docs</a>)</span></div>
+  <div class="line-note"><code>delta</code> — <b>seconds since the last frame</b> (a tiny number Godot hands you). Multiplying by it makes "200 pixels <em>per second</em>", not per frame.</div>
+  <div class="line-note"><code>position.x += speed * delta</code> — <b>the movement.</b> <code>position.x</code> is the horizontal spot; <code>+=</code> means "add to what's there." Each frame: move right by <code>speed × delta</code> pixels.</div>
+</div>
+
+<div class="callout warn">
+  <span class="ct">⚠ Indentation matters</span>
+  <p>The last line is indented (one Tab) <em>inside</em> the function. That indent is how Godot knows the line belongs to <code class="inline">_process</code>. Get it wrong and it won't run.</p>
+</div>
+
+<h2>Do it</h2>
+<div class="flow">
+  <div class="phase"><div class="rail"><div class="num">1</div><div class="line"></div></div><div class="body"><p>Reopen the Lesson 1 project if closed: <code class="inline">godot --path ~/game-dev/projects/first-steps</code> (or pick it in the Project Manager).</p></div></div>
+  <div class="phase"><div class="rail"><div class="num">2</div><div class="line"></div></div><div class="body"><p>In the <em>Scene</em> dock, click your <code class="inline">Sprite2D</code> node to select it.</p></div></div>
+  <div class="phase"><div class="rail"><div class="num">3</div><div class="line"></div></div><div class="body"><p>Click <strong>Attach Script</strong> (scroll icon with a <strong>+</strong>, top of the Scene dock). Leave defaults — language <strong>GDScript</strong> — click <kbd>Create</kbd>.</p></div></div>
+  <div class="phase"><div class="rail"><div class="num">4</div><div class="line"></div></div><div class="body"><p>The <em>Script editor</em> opens with starter lines. <strong>Delete everything</strong> and type the 5 lines above. Type it — don't paste. Muscle memory matters when you're learning.</p></div></div>
+  <div class="phase"><div class="rail"><div class="num">5</div><div class="line"></div></div><div class="body"><p>Press <kbd>F5</kbd>. The robot slides right and off screen. 🎉</p></div></div>
+  <div class="phase"><div class="rail"><div class="num">6</div></div><div class="body"><p><strong>Experiment:</strong> stop, change <code class="inline">200</code> to <code class="inline">50</code>, run. Then try <code class="inline">600</code>. You just felt what a variable does.</p></div></div>
+</div>
+
+<h2>Check yourself</h2>
+<div class="quiz">
+  <p class="q">1. Why does the code go inside <code class="inline">_process</code>?</p>
+  <button onclick="pick(this)">Because it's the only function Godot allows</button>
+  <button onclick="pick(this)" data-correct>Because Godot calls _process every frame, so the move repeats continuously</button>
+  <button onclick="pick(this)">Because _process makes the code run faster</button>
+  <div class="feedback"></div>
+</div>
+<div class="quiz">
+  <p class="q">2. What is <code class="inline">speed</code>?</p>
+  <button onclick="pick(this)" data-correct>A variable — a named box holding the value 200</button>
+  <button onclick="pick(this)">A built-in Godot command</button>
+  <button onclick="pick(this)">The name of the node</button>
+  <div class="feedback"></div>
+</div>
+<div class="quiz">
+  <p class="q">3. To make the robot move <em>down</em> instead of right, you'd change…</p>
+  <button onclick="pick(this)">extends Sprite2D</button>
+  <button onclick="pick(this)" data-correct>position.x to position.y</button>
+  <button onclick="pick(this)">func _process to func _down</button>
+  <div class="feedback"></div>
+</div>
+
+<div class="teacher">
+  <b>I'M YOUR TEACHER — ASK ME ANYTHING</b>
+  <p>Confused by <code class="inline">delta</code>? Wondering why <code class="inline">+=</code> not <code class="inline">=</code>? Got a red error? Paste it to me on the left — errors are normal, and reading them is a core skill. When the robot moves, say <em>"done"</em>. Lesson 3: move only when <strong>you</strong> press the arrow keys.</p>
+</div>
+
+<footer>
+  LESSON 02 · grounded in <a href="../MISSION.md">your mission</a> · sources in <a href="../RESOURCES.md">RESOURCES.md</a><br>
+  Primary reference: <a href="https://docs.godotengine.org/en/stable/getting_started/step_by_step/scripting_first_script.html">Godot — Creating your first script</a>
+</footer>
+</main>
+<script src="_lesson.js"></script>
+</body>
+</html>

@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lesson 15 — Fight Back: Swing the Sword</title>
+<link rel="stylesheet" href="_lesson.css">
+</head>
+<body>
+<main>
+<header class="hero">
+  <div class="kicker">Godot · Lesson 15 · Combat 5 · ⚔ payoff</div>
+  <h1>Fight Back: <span>Swing the Sword</span></h1>
+  <p class="sub">Press a key, deal damage, drop the wolf. The full combat loop closes today.</p>
+</header>
+
+<div class="win">
+  <b>TODAY</b>
+  <p>Hit the attack key near the wolf → its health bar drops → at zero it dies. Meanwhile it's biting you. A real, winnable fight.</p>
+</div>
+
+<h2>Three new ideas</h2>
+<div class="defs">
+  <div class="def"><b>An input action</b><p>So far you've used Godot's built-in arrow actions. Now you'll <em>define your own</em> — an <code class="inline">attack</code> action — in the Input Map. This is how every game binds its controls.</p></div>
+  <div class="def"><b>"just pressed" vs "pressed"</b><p>Movement uses <code class="inline">is_action_pressed</code> (true the whole time a key is held). An attack should fire <em>once per press</em> — that's <code class="inline">is_action_just_pressed</code>.</p></div>
+  <div class="def"><b>A cooldown (the GCD)</b><p>You can't swing infinitely fast. A one-shot <code class="inline">Timer</code> + a <code class="inline">can_attack</code> flag gives you the global-cooldown feel from WoW.</p></div>
+</div>
+
+<h2>Part A — bind an attack key</h2>
+<div class="flow">
+  <div class="phase"><div class="rail"><div class="num">1</div><div class="line"></div></div><div class="body"><p>Top menu → <kbd>Project</kbd> → <kbd>Project Settings…</kbd> → <strong>Input Map</strong> tab.</p></div></div>
+  <div class="phase"><div class="rail"><div class="num">2</div><div class="line"></div></div><div class="body"><p>In the <strong>Add New Action</strong> box type <code class="inline">attack</code> and click <kbd>Add</kbd>.</p></div></div>
+  <div class="phase"><div class="rail"><div class="num">3</div></div><div class="body"><p>Find <code class="inline">attack</code> in the list, click its <strong>＋</strong>, then press the <kbd>Space</kbd> bar (or whatever key you want) → <kbd>OK</kbd>. Close settings.</p></div></div>
+</div>
+
+<h2>Part B — the player's attack</h2>
+<div class="flow">
+  <div class="phase"><div class="rail"><div class="num">1</div><div class="line"></div></div><div class="body"><p>Add the cooldown timer: right-click <code class="inline">Player</code> → <kbd>Add Child Node</kbd> → <code class="inline">Timer</code> → rename <code class="inline">AttackCooldown</code>. In the Inspector set <strong>Wait Time</strong> = <code class="inline">0.6</code> and tick <strong>One Shot</strong> ON.</p></div></div>
+  <div class="phase"><div class="rail"><div class="num">2</div><div class="line"></div></div><div class="body"><p>Connect it: select <code class="inline">AttackCooldown</code> → <strong>Node → Signals</strong> → double-click <code class="inline">timeout</code> → connect to <strong>Player</strong>.</p></div></div>
+  <div class="phase"><div class="rail"><div class="num">3</div></div><div class="body"><p>Update the Player script to the full file below.</p></div></div>
+</div>
+<div class="code">
+  <div class="bar"><span class="t">GDScript · sprite_2d.gd (Player)</span><button class="copy">copy</button></div>
+<pre><span class="kw">extends</span> <span class="type">CharacterBody2D</span>
+
+<span class="kw">@export</span> <span class="kw">var</span> <span class="var">speed</span> = <span class="num">200</span>
+<span class="kw">@export</span> <span class="kw">var</span> <span class="var">max_health</span> = <span class="num">30</span>
+<span class="kw">@export</span> <span class="kw">var</span> <span class="var">attack_damage</span> = <span class="num">4</span>
+<span class="kw">@export</span> <span class="kw">var</span> <span class="var">attack_range</span> = <span class="num">60.0</span>
+<span class="kw">var</span> <span class="var">health</span> = <span class="var">max_health</span>
+<span class="kw">var</span> <span class="var">can_attack</span> = <span class="kw">true</span>
+
+<span class="kw">@onready</span> <span class="kw">var</span> <span class="var">anim</span> = <span class="var">$AnimatedSprite2D</span>
+<span class="kw">@onready</span> <span class="kw">var</span> <span class="var">health_bar</span> = <span class="fn">get_node</span>(<span class="str">"../HUD/HealthBar"</span>)
+<span class="kw">@onready</span> <span class="kw">var</span> <span class="var">attack_cooldown</span> = <span class="var">$AttackCooldown</span>
+
+<span class="kw">func</span> <span class="fn">_ready</span>():
+    <span class="var">health_bar</span>.max_value = <span class="var">max_health</span>
+    <span class="var">health_bar</span>.value = <span class="var">health</span>
+
+<span class="kw">func</span> <span class="fn">_physics_process</span>(delta):
+    <span class="kw">var</span> <span class="var">direction</span> = <span class="type">Vector2</span>.ZERO
+    <span class="kw">if</span> <span class="fn">Input</span>.is_action_pressed(<span class="str">"ui_right"</span>): <span class="var">direction</span>.x += <span class="num">1</span>
+    <span class="kw">if</span> <span class="fn">Input</span>.is_action_pressed(<span class="str">"ui_left"</span>):  <span class="var">direction</span>.x -= <span class="num">1</span>
+    <span class="kw">if</span> <span class="fn">Input</span>.is_action_pressed(<span class="str">"ui_down"</span>):  <span class="var">direction</span>.y += <span class="num">1</span>
+    <span class="kw">if</span> <span class="fn">Input</span>.is_action_pressed(<span class="str">"ui_up"</span>):    <span class="var">direction</span>.y -= <span class="num">1</span>
+    <span class="var">velocity</span> = <span class="var">direction</span> * <span class="var">speed</span>
+    <span class="fn">move_and_slide</span>()
+    <span class="fn">update_animation</span>(<span class="var">direction</span>)
+
+    <span class="kw">if</span> <span class="fn">Input</span>.is_action_just_pressed(<span class="str">"attack"</span>) <span class="kw">and</span> <span class="var">can_attack</span>:
+        <span class="fn">attack</span>()
+
+<span class="kw">func</span> <span class="fn">attack</span>():
+    <span class="var">can_attack</span> = <span class="kw">false</span>
+    <span class="var">attack_cooldown</span>.start()
+    <span class="fn">print</span>(<span class="str">"Swing!"</span>)
+    <span class="kw">var</span> <span class="var">wolf</span> = <span class="fn">get_node_or_null</span>(<span class="str">"../Wolf"</span>)
+    <span class="kw">if</span> <span class="var">wolf</span> != <span class="kw">null</span> <span class="kw">and</span> global_position.distance_to(<span class="var">wolf</span>.global_position) &lt;= <span class="var">attack_range</span>:
+        <span class="var">wolf</span>.take_damage(<span class="var">attack_damage</span>)
+
+<span class="kw">func</span> <span class="fn">_on_attack_cooldown_timeout</span>():
+    <span class="var">can_attack</span> = <span class="kw">true</span>
+
+<span class="kw">func</span> <span class="fn">take_damage</span>(<span class="var">amount</span>):
+    <span class="var">health</span> -= <span class="var">amount</span>
+    <span class="kw">if</span> <span class="var">health</span> &lt; <span class="num">0</span>: <span class="var">health</span> = <span class="num">0</span>
+    <span class="var">health_bar</span>.value = <span class="var">health</span>
+    <span class="kw">if</span> <span class="var">health</span> == <span class="num">0</span>:
+        <span class="fn">die</span>()
+
+<span class="kw">func</span> <span class="fn">die</span>():
+    <span class="fn">print</span>(<span class="str">"You died!"</span>)
+    <span class="fn">get_tree</span>().reload_current_scene()
+
+<span class="kw">func</span> <span class="fn">update_animation</span>(<span class="var">direction</span>):
+    <span class="kw">if</span> <span class="var">direction</span> == <span class="type">Vector2</span>.ZERO:
+        <span class="var">anim</span>.stop()
+        <span class="kw">return</span>
+    <span class="kw">if</span> <span class="fn">abs</span>(<span class="var">direction</span>.x) &gt; <span class="fn">abs</span>(<span class="var">direction</span>.y):
+        <span class="kw">if</span> <span class="var">direction</span>.x &gt; <span class="num">0</span>: <span class="var">anim</span>.play(<span class="str">"walk_right"</span>)
+        <span class="kw">else</span>: <span class="var">anim</span>.play(<span class="str">"walk_left"</span>)
+    <span class="kw">else</span>:
+        <span class="kw">if</span> <span class="var">direction</span>.y &gt; <span class="num">0</span>: <span class="var">anim</span>.play(<span class="str">"walk_down"</span>)
+        <span class="kw">else</span>: <span class="var">anim</span>.play(<span class="str">"walk_up"</span>)</pre>
+</div>
+<div class="annot">
+  <div class="line-note"><code>is_action_just_pressed("attack")</code> — <b>fires once per tap</b>, so one press = one swing (not a swing every frame the key is down).</div>
+  <div class="line-note"><code>can_attack</code> + <code>attack_cooldown.start()</code> — <b>the GCD.</b> Swing → set <code>can_attack=false</code> and start the 0.6s timer. When it times out, <code>_on_attack_cooldown_timeout()</code> sets it true again.</div>
+  <div class="line-note"><code>get_node_or_null("../Wolf")</code> — <b>safely find the wolf</b> (returns null if it's already dead/gone, which the <code>!= null</code> guard handles).</div>
+  <div class="line-note"><code>wolf.take_damage(attack_damage)</code> — <b>the mirror of last lesson</b>: now <em>you</em> call the wolf's method. Combat is just two things calling each other's <code>take_damage</code>.</div>
+</div>
+
+<h2>Part C — give the wolf health &amp; a bar</h2>
+<div class="flow">
+  <div class="phase"><div class="rail"><div class="num">1</div><div class="line"></div></div><div class="body"><p>Add a floating bar: right-click <code class="inline">Wolf</code> → <kbd>Add Child Node</kbd> → <code class="inline">ProgressBar</code> → rename <code class="inline">HealthBar</code>. In the Inspector set its <strong>Size</strong> to about <code class="inline">32 × 5</code> and <strong>Position</strong> to about <code class="inline">(-16, -28)</code> so it floats just above the wolf. Untick <strong>Show Percentage</strong>.</p></div></div>
+  <div class="phase"><div class="rail"><div class="num">2</div></div><div class="body"><p>Update <code class="inline">wolf.gd</code> to the full file below (your aura/return logic plus health).</p></div></div>
+</div>
+<div class="code">
+  <div class="bar"><span class="t">GDScript · wolf.gd</span><button class="copy">copy</button></div>
+<pre><span class="kw">extends</span> <span class="type">CharacterBody2D</span>
+
+<span class="kw">@export</span> <span class="kw">var</span> <span class="var">speed</span> = <span class="num">120</span>
+<span class="kw">@export</span> <span class="kw">var</span> <span class="var">melee_range</span> = <span class="num">40.0</span>
+<span class="kw">@export</span> <span class="kw">var</span> <span class="var">swing_damage</span> = <span class="num">3</span>
+<span class="kw">@export</span> <span class="kw">var</span> <span class="var">max_health</span> = <span class="num">12</span>
+<span class="kw">var</span> <span class="var">health</span> = <span class="var">max_health</span>
+
+<span class="kw">@onready</span> <span class="kw">var</span> <span class="var">sprite</span> = <span class="var">$Sprite2D</span>
+<span class="kw">@onready</span> <span class="kw">var</span> <span class="var">swing_timer</span> = <span class="var">$SwingTimer</span>
+<span class="kw">@onready</span> <span class="kw">var</span> <span class="var">health_bar</span> = <span class="var">$HealthBar</span>
+
+<span class="kw">var</span> <span class="var">target</span> = <span class="kw">null</span>
+<span class="kw">var</span> <span class="var">spawn</span> = <span class="type">Vector2</span>.ZERO
+
+<span class="kw">func</span> <span class="fn">_ready</span>():
+    <span class="var">spawn</span> = global_position
+    <span class="var">health_bar</span>.max_value = <span class="var">max_health</span>
+    <span class="var">health_bar</span>.value = <span class="var">health</span>
+
+<span class="kw">func</span> <span class="fn">_physics_process</span>(delta):
+    <span class="kw">if</span> <span class="var">target</span> != <span class="kw">null</span>:
+        <span class="kw">if</span> global_position.distance_to(<span class="var">target</span>.global_position) &gt; <span class="var">melee_range</span>:
+            <span class="var">velocity</span> = (<span class="var">target</span>.global_position - global_position).normalized() * <span class="var">speed</span>
+        <span class="kw">else</span>:
+            <span class="var">velocity</span> = <span class="type">Vector2</span>.ZERO
+    <span class="kw">else</span>:
+        <span class="kw">if</span> global_position.distance_to(<span class="var">spawn</span>) &gt; <span class="num">4.0</span>:
+            <span class="var">velocity</span> = (<span class="var">spawn</span> - global_position).normalized() * <span class="var">speed</span>
+        <span class="kw">else</span>:
+            <span class="var">velocity</span> = <span class="type">Vector2</span>.ZERO
+    <span class="fn">move_and_slide</span>()
+    <span class="fn">face_target</span>()
+
+<span class="kw">func</span> <span class="fn">take_damage</span>(<span class="var">amount</span>):
+    <span class="var">health</span> -= <span class="var">amount</span>
+    <span class="kw">if</span> <span class="var">health</span> &lt; <span class="num">0</span>: <span class="var">health</span> = <span class="num">0</span>
+    <span class="var">health_bar</span>.value = <span class="var">health</span>
+    <span class="fn">print</span>(<span class="str">"Wolf health: "</span>, <span class="var">health</span>)
+    <span class="kw">if</span> <span class="var">health</span> == <span class="num">0</span>:
+        <span class="fn">queue_free</span>()        <span class="com"># the wolf dies</span>
+
+<span class="kw">func</span> <span class="fn">_on_aggro_area_body_entered</span>(body):
+    <span class="kw">if</span> <span class="var">body</span>.name == <span class="str">"Player"</span>:
+        <span class="var">target</span> = <span class="var">body</span>
+        <span class="var">swing_timer</span>.start()
+
+<span class="kw">func</span> <span class="fn">_on_aggro_area_body_exited</span>(body):
+    <span class="kw">if</span> <span class="var">body</span>.name == <span class="str">"Player"</span>:
+        <span class="var">target</span> = <span class="kw">null</span>
+        <span class="var">swing_timer</span>.stop()
+
+<span class="kw">func</span> <span class="fn">_on_swing_timer_timeout</span>():
+    <span class="kw">if</span> <span class="var">target</span> != <span class="kw">null</span> <span class="kw">and</span> global_position.distance_to(<span class="var">target</span>.global_position) &lt;= <span class="var">melee_range</span> + <span class="num">16</span>:
+        <span class="var">target</span>.take_damage(<span class="var">swing_damage</span>)
+
+<span class="kw">func</span> <span class="fn">face_target</span>():
+    <span class="kw">var</span> <span class="var">face_x</span> = <span class="var">velocity</span>.x
+    <span class="kw">if</span> <span class="var">target</span> != <span class="kw">null</span>:
+        <span class="var">face_x</span> = <span class="var">target</span>.global_position.x - global_position.x
+    <span class="kw">if</span> <span class="var">face_x</span> != <span class="num">0</span>:
+        <span class="var">sprite</span>.flip_h = <span class="var">face_x</span> &lt; <span class="num">0</span></pre>
+</div>
+
+<div class="flow">
+  <div class="phase"><div class="rail"><div class="num">▶</div></div><div class="body"><p>Press <kbd>F5</kbd>. Pull the wolf, stand in its face, and tap <kbd>Space</kbd> repeatedly. Its bar drops with each hit while yours drops from its bites — a real trade. Three good swings and the wolf <strong>dies and vanishes</strong>. 🎉 ⚔️ <strong>You won the fight.</strong></p></div></div>
+</div>
+
+<h2>Check yourself</h2>
+<div class="quiz">
+  <p class="q">1. Why <code class="inline">is_action_just_pressed</code> for attack, not <code class="inline">is_action_pressed</code>?</p>
+  <button onclick="pick(this)" data-correct>So one key tap = one swing, instead of a swing every frame held</button>
+  <button onclick="pick(this)">It's faster</button>
+  <button onclick="pick(this)">pressed doesn't work for Space</button>
+  <div class="feedback"></div>
+</div>
+<div class="quiz">
+  <p class="q">2. What gives the attack its cooldown (GCD)?</p>
+  <button onclick="pick(this)" data-correct>can_attack is set false on swing and back to true when the one-shot Timer times out</button>
+  <button onclick="pick(this)">The wolf's swing timer</button>
+  <button onclick="pick(this)">The camera</button>
+  <div class="feedback"></div>
+</div>
+<div class="quiz">
+  <p class="q">3. What makes the wolf disappear at 0 health?</p>
+  <button onclick="pick(this)" data-correct>queue_free() in its take_damage when health hits 0</button>
+  <button onclick="pick(this)">reload_current_scene()</button>
+  <button onclick="pick(this)">flip_h</button>
+  <div class="feedback"></div>
+</div>
+
+<div class="teacher">
+  <b>I'M YOUR TEACHER — ASK ME ANYTHING</b>
+  <p>You just built a complete combat loop from scratch — pull, trade blows, win or die. Huge. Snags: nothing happens on Space? Check the <code class="inline">attack</code> action exists in the Input Map and <code class="inline">AttackCooldown</code>'s timeout is connected. Wolf bar not dropping? It must be named <code class="inline">HealthBar</code> under the Wolf. Great next touches: a <strong>swing animation/flash</strong>, requiring you to <strong>face</strong> the wolf, only attacking if you <strong>own the sword</strong>, or an <strong>XP/loot drop</strong> when it dies. Say <em>"done"</em> — then Lesson 16 turns this one wolf into a <strong>pack</strong> (and teaches reusable scenes).</p>
+</div>
+
+<footer>
+  LESSON 15 · Combat 5/5 · grounded in <a href="../MISSION.md">your mission</a> · sources in <a href="../RESOURCES.md">RESOURCES.md</a><br>
+  Primary reference: <a href="https://docs.godotengine.org/en/stable/tutorials/inputs/inputevent.html#actions">Godot — Input actions</a>
+</footer>
+</main>
+<script src="_lesson.js"></script>
+</body>
+</html>

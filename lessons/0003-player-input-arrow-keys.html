@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lesson 3 — Take the Controls: Arrow-Key Movement</title>
+<link rel="stylesheet" href="_lesson.css">
+</head>
+<body>
+<main>
+<header class="hero">
+  <div class="kicker">Godot · Lesson 03</div>
+  <h1>Take the Controls: <span>Arrow-Key Movement</span></h1>
+  <p class="sub">From "it moves on its own" to "<em>I</em> move it." This is the heart of every game you named.</p>
+</header>
+
+<div class="win">
+  <b>TODAY</b>
+  <p>Drive the robot around the screen with the arrow keys — up, down, left, right, and diagonals.</p>
+</div>
+
+<h2>The new idea: <code class="inline">if</code></h2>
+<p>
+  Last lesson the robot <em>always</em> moved. A controllable character only moves <em>when a key is held</em>.
+  That word "when" is an <strong>if statement</strong>: run some lines <em>only if</em> a condition is true.
+</p>
+<div class="code">
+  <div class="bar"><span class="t">GDScript · shape of an if</span></div>
+<pre><span class="kw">if</span> &lt;something is true&gt;:
+    <span class="com"># these indented lines run only then</span></pre>
+</div>
+<p class="cite">Same indentation rule as a function: the indented lines belong to the <code class="inline">if</code>.</p>
+
+<h2>How Godot reads the keyboard</h2>
+<p>
+  Godot has built-in <strong>input actions</strong> already mapped to the arrow keys: <code class="inline">"ui_up"</code>,
+  <code class="inline">"ui_down"</code>, <code class="inline">"ui_left"</code>, <code class="inline">"ui_right"</code>.
+  You ask <em>"is this action being pressed right now?"</em> with:
+</p>
+<div class="code">
+  <div class="bar"><span class="t">GDScript</span></div>
+<pre><span class="fn">Input</span>.is_action_pressed(<span class="str">"ui_right"</span>)</pre>
+</div>
+<p>That gives back <strong>true</strong> (held) or <strong>false</strong> (not held) — exactly what an <code class="inline">if</code> wants.
+  <span class="cite">(<a href="https://docs.godotengine.org/en/stable/tutorials/inputs/input_examples.html">Godot Docs: Input examples</a>)</span></p>
+
+<h2>One more tool: <code class="inline">Vector2</code></h2>
+<p>
+  Position has two parts: <code class="inline">x</code> (left↔right) and <code class="inline">y</code> (up↔down). A
+  <strong>Vector2</strong> bundles those two numbers into one value, written <code class="inline">(x, y)</code>.
+  We'll build a <em>direction</em> as a Vector2 — holding right makes <code class="inline">(1, 0)</code>, up-and-right
+  makes <code class="inline">(1, -1)</code>.
+</p>
+<div class="callout warn">
+  <span class="ct">⚠ y is upside-down</span>
+  <p>In 2D, <code class="inline">y</code> grows <em>downward</em>, so "up" is <code class="inline">-1</code>, not +1.</p>
+</div>
+
+<h2>The code</h2>
+<p>Replace your whole script with this. Read the notes under it as you type.</p>
+<div class="code">
+  <div class="bar"><span class="t">GDScript · sprite_2d.gd</span><button class="copy">copy</button></div>
+<pre><span class="kw">extends</span> <span class="type">Sprite2D</span>
+
+<span class="kw">var</span> <span class="var">speed</span> = <span class="num">200</span>
+
+<span class="kw">func</span> <span class="fn">_process</span>(delta):
+    <span class="kw">var</span> <span class="var">direction</span> = <span class="type">Vector2</span>.ZERO
+
+    <span class="kw">if</span> <span class="fn">Input</span>.is_action_pressed(<span class="str">"ui_right"</span>):
+        <span class="var">direction</span>.x += <span class="num">1</span>
+    <span class="kw">if</span> <span class="fn">Input</span>.is_action_pressed(<span class="str">"ui_left"</span>):
+        <span class="var">direction</span>.x -= <span class="num">1</span>
+    <span class="kw">if</span> <span class="fn">Input</span>.is_action_pressed(<span class="str">"ui_down"</span>):
+        <span class="var">direction</span>.y += <span class="num">1</span>
+    <span class="kw">if</span> <span class="fn">Input</span>.is_action_pressed(<span class="str">"ui_up"</span>):
+        <span class="var">direction</span>.y -= <span class="num">1</span>
+
+    <span class="var">position</span> += <span class="var">direction</span> * <span class="var">speed</span> * delta</pre>
+</div>
+
+<div class="annot">
+  <div class="line-note"><code>var direction = Vector2.ZERO</code> — <b>start each frame at "no movement"</b>, i.e. <code>(0, 0)</code>. We rebuild direction from scratch every frame based on what's held right now.</div>
+  <div class="line-note"><code>if ...("ui_right"): direction.x += 1</code> — <b>if right is held, push x toward the right.</b> Four independent ifs — holding two at once (right + up) adds both, giving a diagonal automatically.</div>
+  <div class="line-note"><code>position += direction * speed * delta</code> — <b>one movement line for all directions.</b> Nothing held → direction is <code>(0,0)</code> → robot stays put.</div>
+</div>
+
+<h2>Do it</h2>
+<div class="flow">
+  <div class="phase"><div class="rail"><div class="num">1</div><div class="line"></div></div><div class="body"><p>Open the project, select the <code class="inline">Sprite2D</code>, open its script (double-click the script icon next to it in the Scene dock).</p></div></div>
+  <div class="phase"><div class="rail"><div class="num">2</div><div class="line"></div></div><div class="body"><p>Replace the old code with the script above. Mind the indentation — lines under each <code class="inline">if</code> are indented <em>twice</em> (inside the function, then inside the if).</p></div></div>
+  <div class="phase"><div class="rail"><div class="num">3</div><div class="line"></div></div><div class="body"><p>Press <kbd>F5</kbd>. Hold an arrow — it moves. Release — it stops. Hold two — diagonal.</p></div></div>
+  <div class="phase"><div class="rail"><div class="num">4</div></div><div class="body"><p><strong>Experiment:</strong> notice diagonal is slightly faster (it adds two directions). That's a real bug in real games — ask me about <em>"normalizing"</em> for the one-line fix.</p></div></div>
+</div>
+
+<h2>Check yourself</h2>
+<div class="quiz">
+  <p class="q">1. What does an <code class="inline">if</code> statement do?</p>
+  <button onclick="pick(this)">Repeats lines forever</button>
+  <button onclick="pick(this)" data-correct>Runs its indented lines only when the condition is true</button>
+  <button onclick="pick(this)">Creates a new variable</button>
+  <div class="feedback"></div>
+</div>
+<div class="quiz">
+  <p class="q">2. Why reset <code class="inline">direction</code> to <code class="inline">Vector2.ZERO</code> each frame?</p>
+  <button onclick="pick(this)" data-correct>So movement reflects only the keys held right now, not leftovers from before</button>
+  <button onclick="pick(this)">Because Vector2 must always start at zero</button>
+  <button onclick="pick(this)">To make the robot faster</button>
+  <div class="feedback"></div>
+</div>
+<div class="quiz">
+  <p class="q">3. Which makes a node move UP the screen in 2D Godot?</p>
+  <button onclick="pick(this)">direction.y += 1</button>
+  <button onclick="pick(this)" data-correct>direction.y -= 1</button>
+  <button onclick="pick(this)">direction.x -= 1</button>
+  <div class="feedback"></div>
+</div>
+
+<div class="teacher">
+  <b>I'M YOUR TEACHER — ASK ME ANYTHING</b>
+  <p>Want the diagonal-speed fix (<code class="inline">normalized()</code>)? Curious how to use WASD instead of arrows? Hit an error? Tell me on the left. When you can drive the robot around, say <em>"done"</em> — Lesson 4 turns this sprite into a real <strong>character that can't walk through walls</strong>.</p>
+</div>
+
+<footer>
+  LESSON 03 · grounded in <a href="../MISSION.md">your mission</a> · sources in <a href="../RESOURCES.md">RESOURCES.md</a><br>
+  Primary reference: <a href="https://docs.godotengine.org/en/stable/tutorials/inputs/input_examples.html">Godot — Input examples</a>
+</footer>
+</main>
+<script src="_lesson.js"></script>
+</body>
+</html>
