@@ -3,13 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Lesson 14 — Health: Taking Damage & a Health Bar</title>
+<title>Lesson 13 — Health: Taking Damage & a Health Bar</title>
 <link rel="stylesheet" href="_lesson.css">
 </head>
 <body>
 <main>
 <header class="hero">
-  <div class="kicker">Godot · Lesson 14 · Combat 4</div>
+  <div class="kicker">Godot · Lesson 13 · Combat 3</div>
   <h1>Health: <span>Taking Damage &amp; a Health Bar</span></h1>
   <p class="sub">The bites finally bite. A health bar drains as the wolf hits you — and at zero, you die.</p>
 </header>
@@ -108,7 +108,7 @@
 </div>
 <div class="callout warn">
   <span class="ct">⚠ tune the numbers</span>
-  <p>Your <code class="inline">swing_damage</code> is <code class="inline">1</code> right now — with 30 health that's 30 bites. Select the <strong>Wolf</strong> and bump <strong>Swing Damage</strong> to ~<code class="inline">3</code> in the Inspector so the fight has pace. (This is why we made it <code class="inline">@export</code>.)</p>
+  <p>The wolf's <strong>Swing Damage</strong> is <code class="inline">3</code> — with 30 health that's a brisk handful of bites. Select the <strong>Wolf</strong> and tune Swing Damage in the Inspector to taste; that's exactly why we made it <code class="inline">@export</code>.</p>
 </div>
 
 <div class="flow">
@@ -140,11 +140,11 @@
 
 <div class="teacher">
   <b>I'M YOUR TEACHER — ASK ME ANYTHING</b>
-  <p>Snags: bar not moving? Check it's named <code class="inline">HealthBar</code> under <code class="inline">HUD</code>, and that you swapped the wolf's <code class="inline">print</code> for <code class="inline">target.take_damage(swing_damage)</code>. "null instance" on the bar? The path <code class="inline">"../HUD/HealthBar"</code> must match your tree. Want a coloured bar (green→red), a floating bar over the wolf, or a brief <strong>hurt flash</strong> when hit? All great next touches. Say <em>"done"</em> — Lesson 15 is the one the whole story has been building to: <strong>swing your sword and fight back.</strong> ⚔️</p>
+  <p>Snags: bar not moving? Check it's named <code class="inline">HealthBar</code> under <code class="inline">HUD</code>, and that you swapped the wolf's <code class="inline">print</code> for <code class="inline">target.take_damage(swing_damage)</code>. "null instance" on the bar? The path <code class="inline">"../HUD/HealthBar"</code> must match your tree. Want a coloured bar (green→red), a floating bar over the wolf, or a brief <strong>hurt flash</strong> when hit? All great next touches. Say <em>"done"</em> — Lesson 14 is the one the whole story has been building to: <strong>swing your sword and fight back.</strong> ⚔️</p>
 </div>
 
 <footer>
-  LESSON 14 · Combat 4 · grounded in <a href="../MISSION.md">your mission</a> · sources in <a href="../RESOURCES.md">RESOURCES.md</a><br>
+  LESSON 13 · Combat 3 · grounded in <a href="../MISSION.md">your mission</a> · sources in <a href="../RESOURCES.md">RESOURCES.md</a><br>
   Primary reference: <a href="https://docs.godotengine.org/en/stable/classes/class_progressbar.html">Godot — ProgressBar</a> · <a href="https://docs.godotengine.org/en/stable/classes/class_canvaslayer.html">CanvasLayer</a>
 </footer>
 </main>

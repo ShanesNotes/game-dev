@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lesson 11 — Into Combat: The Aggro Aura &amp; Swing Timer</title>
+<link rel="stylesheet" href="_lesson.css">
+</head>
+<body>
+<main>
+<header class="hero">
+  <div class="kicker">Godot · Lesson 11 · Combat 1 of 4</div>
+  <h1>Into Combat: <span>The Aggro Aura &amp; Swing Timer</span></h1>
+  <p class="sub">The Elwynn-Forest pull. Step into the wolf's space and the fight begins — it closes to melee, holds, and bites on a steady swing timer.</p>
+</header>
+
+<div class="win">
+  <b>TODAY</b>
+  <p>Walk into the wolf's aura → it charges to melee range, <em>stops</em>, and bites on a ~2s swing timer: <code class="inline">"The wolf bites you for 3!"</code> ticking in the Output. Real combat begins.</p>
+</div>
+
+<h2>Two ways to know the player is near</h2>
+<p>
+  Last lesson the wolf got a brain — a state machine that aggros, chases, and leashes by measuring the
+  distance to the player <em>every frame</em>. That works. But for combat there's a lighter, more reliable
+  tool: instead of the wolf constantly <em>asking</em> "how close is the player?", we let a zone <em>tell</em> it
+  the instant the player arrives or leaves.
+</p>
+<div class="callout idea">
+  <span class="ct">◇ events beat polling</span>
+  <p>The state machine <strong>polls</strong> — it re-checks distance on every single frame. <strong>Event-driven</strong> design flips that: an <code class="inline">Area2D</code> "aura" around the wolf emits a signal the moment a body enters or leaves it. It's the same <code class="inline">Area2D</code> + signals you used for the sword in Lesson 8 — now serving as the wolf's combat trigger. Less code, and it can't "miss" the player.</p>
+</div>
+<p>With the aura doing the detecting, the whole brain collapses to one question: <strong>"do I have a target or not?"</strong></p>
+<div class="tree">
+<span class="dim">player enters aura</span> ──▶ <span class="node">target = player</span> ──▶ move to melee &amp; swing
+<span class="dim">player leaves aura</span> ──▶ <span class="node">target = null</span> ──▶ stop, stop swinging
+</div>
+
+<h2>The new tool: the <code class="inline">Timer</code> node</h2>
+<div class="callout note">
+  <span class="ct">◈ a Timer = a metronome that emits a signal</span>
+  <p>A <strong>Timer</strong> node counts down and fires a <code class="inline">timeout</code> signal when it hits zero — then (if repeating) starts again. It's how games do <em>anything</em> on a clock: swing timers, global cooldowns, spawn waves, regen ticks. This one signal underpins the whole combat arc.</p>
+</div>
+<p>Ours is the <strong>swing timer</strong> from WoW: every tick, one auto-attack. We'll <code class="inline">start()</code> it when combat begins and <code class="inline">stop()</code> it when the fight ends.</p>
+
+<h2>Part A — add the swing timer node</h2>
+<div class="flow">
+  <div class="phase"><div class="rail"><div class="num">1</div><div class="line"></div></div><div class="body"><p>Right-click the <code class="inline">Wolf</code> → <kbd>Add Child Node</kbd> → <code class="inline">Timer</code> → rename it <code class="inline">SwingTimer</code> (exact name — code uses it).</p></div></div>
+  <div class="phase"><div class="rail"><div class="num">2</div><div class="line"></div></div><div class="body"><p>Select <code class="inline">SwingTimer</code>. In the Inspector set <strong>Wait Time</strong> = <code class="inline">2</code>. Leave <strong>Autostart</strong> OFF and <strong>One Shot</strong> OFF (we want it to repeat, and to start it ourselves).</p></div></div>
+  <div class="phase"><div class="rail"><div class="num">3</div></div><div class="body"><p>Connect its signal: with <code class="inline">SwingTimer</code> selected, go to the <strong>Node → Signals</strong> tab, double-click <code class="inline">timeout()</code>, and <kbd>Connect</kbd> it to the <strong>Wolf</strong> node. Godot makes a function <code class="inline">_on_swing_timer_timeout()</code> in wolf.gd.</p></div></div>
+</div>
+
+<h2>Part B — add the aggro aura</h2>
+<div class="flow">
+  <div class="phase"><div class="rail"><div class="num">1</div><div class="line"></div></div><div class="body"><p>Right-click <code class="inline">Wolf</code> → <kbd>Add Child Node</kbd> → <code class="inline">Area2D</code> → rename <code class="inline">AggroArea</code> (exact name).</p></div></div>
+  <div class="phase"><div class="rail"><div class="num">2</div><div class="line"></div></div><div class="body"><p>Add a child <code class="inline">CollisionShape2D</code> to <code class="inline">AggroArea</code> → <strong>New CircleShape2D</strong> → drag its radius handle out to a generous "aggro" size (≈ 150px — a few wolf-widths).</p></div></div>
+  <div class="phase"><div class="rail"><div class="num">3</div></div><div class="body"><p><strong>Connect two signals.</strong> With <code class="inline">AggroArea</code> selected → <strong>Node → Signals</strong>: double-click <code class="inline">body_entered</code> → connect to <strong>Wolf</strong>; then double-click <code class="inline">body_exited</code> → connect to <strong>Wolf</strong>. You'll get two new functions in wolf.gd.</p></div></div>
+</div>
+<div class="callout note"><span class="ct">◈ no layer setup needed</span><p>Everything in this scene lives on the default collision <strong>layer 1</strong>, so the aura detects the player out of the box — leave its <strong>Mask</strong> alone. The <code class="inline">body.name == "Player"</code> check in the script ignores anything else that drifts into the zone.</p></div>
+
+<h2>Part C — the wolf's new brain</h2>
+<p>Replace <em>everything</em> in <code class="inline">wolf.gd</code> with this. It swaps out last lesson's state machine — notice how much shorter it is.</p>
+<div class="code">
+  <div class="bar"><span class="t">GDScript · wolf.gd</span><button class="copy">copy</button></div>
+<pre><span class="kw">extends</span> <span class="type">CharacterBody2D</span>
+
+<span class="kw">@export</span> <span class="kw">var</span> <span class="var">speed</span> = <span class="num">120</span>
+<span class="kw">@export</span> <span class="kw">var</span> <span class="var">melee_range</span> = <span class="num">40.0</span>
+<span class="kw">@export</span> <span class="kw">var</span> <span class="var">swing_damage</span> = <span class="num">3</span>
+
+<span class="kw">@onready</span> <span class="kw">var</span> <span class="var">sprite</span> = <span class="var">$Sprite2D</span>
+<span class="kw">@onready</span> <span class="kw">var</span> <span class="var">swing_timer</span> = <span class="var">$SwingTimer</span>
+
+<span class="kw">var</span> <span class="var">target</span> = <span class="kw">null</span>   <span class="com"># the player, while they're in our aura</span>
+
+<span class="kw">func</span> <span class="fn">_physics_process</span>(delta):
+    <span class="kw">if</span> <span class="var">target</span> != <span class="kw">null</span> <span class="kw">and</span> global_position.distance_to(<span class="var">target</span>.global_position) &gt; <span class="var">melee_range</span>:
+        <span class="var">velocity</span> = (<span class="var">target</span>.global_position - global_position).normalized() * <span class="var">speed</span>
+    <span class="kw">else</span>:
+        <span class="var">velocity</span> = <span class="type">Vector2</span>.ZERO
+    <span class="fn">move_and_slide</span>()
+    <span class="fn">face_target</span>()
+
+<span class="kw">func</span> <span class="fn">_on_aggro_area_body_entered</span>(body):
+    <span class="kw">if</span> <span class="var">body</span>.name == <span class="str">"Player"</span>:
+        <span class="var">target</span> = <span class="var">body</span>
+        <span class="var">swing_timer</span>.start()        <span class="com"># enter combat</span>
+
+<span class="kw">func</span> <span class="fn">_on_aggro_area_body_exited</span>(body):
+    <span class="kw">if</span> <span class="var">body</span>.name == <span class="str">"Player"</span>:
+        <span class="var">target</span> = <span class="kw">null</span>
+        <span class="var">swing_timer</span>.stop()         <span class="com"># leave combat</span>
+
+<span class="kw">func</span> <span class="fn">_on_swing_timer_timeout</span>():
+    <span class="kw">if</span> <span class="var">target</span> != <span class="kw">null</span> <span class="kw">and</span> global_position.distance_to(<span class="var">target</span>.global_position) &lt;= <span class="var">melee_range</span> + <span class="num">16</span>:
+        <span class="fn">print</span>(<span class="str">"The wolf bites you for "</span>, <span class="var">swing_damage</span>, <span class="str">"!"</span>)
+
+<span class="kw">func</span> <span class="fn">face_target</span>():
+    <span class="kw">var</span> <span class="var">face_x</span> = <span class="var">velocity</span>.x
+    <span class="kw">if</span> <span class="var">target</span> != <span class="kw">null</span>:
+        <span class="var">face_x</span> = <span class="var">target</span>.global_position.x - global_position.x
+    <span class="kw">if</span> <span class="var">face_x</span> != <span class="num">0</span>:
+        <span class="var">sprite</span>.flip_h = <span class="var">face_x</span> &lt; <span class="num">0</span></pre>
+</div>
+<div class="annot">
+  <div class="line-note"><code>var target = null</code> — <b>the entire combat state, in one variable.</b> <code>null</code> means "nobody" (not in combat). When the aura sees the player, target becomes the player; when they leave, back to null. No enum needed.</div>
+  <div class="line-note"><code>_on_aggro_area_body_entered / _exited</code> — <b>the two events.</b> Enter → grab target + start the swing timer. Exit → drop target + stop the timer. Combat on/off, done.</div>
+  <div class="line-note"><code>if target != null and ... &gt; melee_range:</code> — <b>only walk if we have a target and aren't already adjacent.</b> Otherwise stand still and let the swing timer do the work. That "stop at melee" is what keeps the wolf from sliding through you.</div>
+  <div class="line-note">Gone from last lesson's brain: the <code>enum</code>, the <code>match</code>, <code>aggro_radius</code>, <code>leash_range</code>, <code>home</code>, <code>_ready()</code>. The aura replaces all of it — event-driven beats polling.</div>
+</div>
+
+<div class="flow">
+  <div class="phase"><div class="rail"><div class="num">▶</div></div><div class="body"><p>Press <kbd>F5</kbd>. Step into the aura — combat starts instantly and the bites tick, <em>regardless of how you move</em>. Walk out of the aura and it stops and goes quiet. Try circling the wolf: it follows while you're in range (that's combat) and disengages the moment you leave. 🎉 Reliable combat, a third of the code.</p></div></div>
+</div>
+
+<h2>Check yourself</h2>
+<div class="quiz">
+  <p class="q">1. What does a <code class="inline">Timer</code> node give you?</p>
+  <button onclick="pick(this)" data-correct>A timeout signal it emits on a clock — here, each auto-attack swing</button>
+  <button onclick="pick(this)">A way to slow the game down</button>
+  <button onclick="pick(this)">A health bar</button>
+  <div class="feedback"></div>
+</div>
+<div class="quiz">
+  <p class="q">2. What's the difference between polling and event-driven here?</p>
+  <button onclick="pick(this)" data-correct>Polling asks 'is the player close?' every frame; the aura's signals tell us on enter/exit</button>
+  <button onclick="pick(this)">Events are slower than polling</button>
+  <button onclick="pick(this)">They're the same thing</button>
+  <div class="feedback"></div>
+</div>
+<div class="quiz">
+  <p class="q">3. What replaced the whole state machine from last lesson?</p>
+  <button onclick="pick(this)" data-correct>A single variable, target, that's either the player or null</button>
+  <button onclick="pick(this)">A bigger Timer</button>
+  <button onclick="pick(this)">The camera</button>
+  <div class="feedback"></div>
+</div>
+
+<div class="teacher">
+  <b>I'M YOUR TEACHER — ASK ME ANYTHING</b>
+  <p>Snags: combat won't start? Both <code class="inline">body_entered</code> <em>and</em> <code class="inline">body_exited</code> must be connected to the Wolf. No bites? The <code class="inline">SwingTimer</code> must be named exactly that and its <code class="inline">timeout()</code> connected. Wolf still slides into you? Make sure the <code class="inline">else</code> branch sets velocity to zero. Curious about the GCD-vs-swing-timer distinction, or want the bite interval as a tunable <code class="inline">@export</code>? Ask. Say <em>"done"</em> — Lesson 12 makes the wolf <strong>trot home</strong> when you leave its aura (the WoW evade/reset).</p>
+</div>
+
+<footer>
+  LESSON 11 · Combat 1/4 · grounded in <a href="../MISSION.md">your mission</a> · sources in <a href="../RESOURCES.md">RESOURCES.md</a><br>
+  Primary references: <a href="https://docs.godotengine.org/en/stable/classes/class_area2d.html">Godot — Area2D</a> · <a href="https://docs.godotengine.org/en/stable/classes/class_timer.html">Timer</a>
+</footer>
+</main>
+<script src="_lesson.js"></script>
+</body>
+</html>

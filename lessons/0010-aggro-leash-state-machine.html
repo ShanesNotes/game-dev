@@ -9,9 +9,9 @@
 <body>
 <main>
 <header class="hero">
-  <div class="kicker">Godot · Lesson 10 · Quest 2½</div>
+  <div class="kicker">Godot · Lesson 10</div>
   <h1>Aggro &amp; Leash: <span>The Enemy State Machine</span></h1>
-  <p class="sub">You spotted it: a dumb always-chaser. Let's give the wolf a real brain — the WoW way.</p>
+  <p class="sub">Right now the wolf does just one thing: chase. Let's give it a real brain — the WoW way.</p>
 </header>
 
 <div class="win">
@@ -92,7 +92,7 @@
 </div>
 
 <div class="callout idea">
-  <span class="ct">◇ the WoW behaviour you wanted</span>
+  <span class="ct">◇ the WoW behaviour</span>
   <p>Walk near the wolf → it <strong>aggros</strong>. Lead it on a long chase → it hits <code class="inline">leash_range</code> from its spawn and <strong>resets</strong>, trotting home while ignoring you (try to "kite" it — it won't bite). Back at home it's <strong>IDLE</strong> and can be pulled again. Classic mob leashing.</p>
 </div>
 
@@ -125,11 +125,11 @@
 
 <div class="teacher">
   <b>I'M YOUR TEACHER — ASK ME ANYTHING</b>
-  <p>This is the most "computer-science-y" lesson so far — if <code class="inline">match</code>/<code class="inline">enum</code> feel weird, ask and I'll break them down further. Natural extensions, all very WoW: a <strong>de-aggro timer</strong> (reset if the player stays out of sight for N seconds), <strong>heal-to-full on reset</strong>, a <strong>chase-break distance</strong> separate from the home leash, or showing the aggro radius as a circle while debugging. Say which excites you. Otherwise say <em>"done"</em> — final quest leg next: <strong>north to the cabin.</strong> 🏚️</p>
+  <p>This is the most "computer-science-y" lesson so far — if <code class="inline">match</code>/<code class="inline">enum</code> feel weird, ask and I'll break them down further. Natural extensions, all very WoW: a <strong>de-aggro timer</strong> (reset if the player stays out of sight for N seconds), <strong>heal-to-full on reset</strong>, a <strong>chase-break distance</strong> separate from the home leash, or showing the aggro radius as a circle while debugging. Say which excites you. Otherwise say <em>"done"</em> — next we turn the chase into real combat: the wolf closes to melee and starts swinging. ⚔️</p>
 </div>
 
 <footer>
-  LESSON 10 · Quest 2½ · grounded in <a href="../MISSION.md">your mission</a> · sources in <a href="../RESOURCES.md">RESOURCES.md</a><br>
+  LESSON 10 · grounded in <a href="../MISSION.md">your mission</a> · sources in <a href="../RESOURCES.md">RESOURCES.md</a><br>
   Primary reference: <a href="https://docs.godotengine.org/en/stable/tutorials/scripting/gdscript/gdscript_basics.html#match">Godot — GDScript: match &amp; enums</a>
 </footer>
 </main>

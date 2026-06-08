@@ -3,13 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Lesson 13 — Reset: Return to Spawn</title>
+<title>Lesson 12 — Reset: Return to Spawn</title>
 <link rel="stylesheet" href="_lesson.css">
 </head>
 <body>
 <main>
 <header class="hero">
-  <div class="kicker">Godot · Lesson 13 · Combat 3 · quick one</div>
+  <div class="kicker">Godot · Lesson 12 · Combat 2 · quick one</div>
   <h1>Reset: <span>Return to Spawn</span></h1>
   <p class="sub">Drop aggro and the wolf trots home — the WoW "evade/reset." A few lines on what you already have.</p>
 </header>
@@ -39,7 +39,7 @@
 
 <span class="kw">@export</span> <span class="kw">var</span> <span class="var">speed</span> = <span class="num">120</span>
 <span class="kw">@export</span> <span class="kw">var</span> <span class="var">melee_range</span> = <span class="num">40.0</span>
-<span class="kw">@export</span> <span class="kw">var</span> <span class="var">swing_damage</span> = <span class="num">1</span>
+<span class="kw">@export</span> <span class="kw">var</span> <span class="var">swing_damage</span> = <span class="num">3</span>
 
 <span class="kw">@onready</span> <span class="kw">var</span> <span class="var">sprite</span> = <span class="var">$Sprite2D</span>
 <span class="kw">@onready</span> <span class="kw">var</span> <span class="var">swing_timer</span> = <span class="var">$SwingTimer</span>
@@ -88,7 +88,7 @@
         <span class="var">sprite</span>.flip_h = <span class="var">face_x</span> &lt; <span class="num">0</span></pre>
 </div>
 <div class="annot">
-  <div class="line-note"><code>func _ready(): spawn = global_position</code> — <b>captures home once.</b> Because we fixed the wolf's transform last lesson, <code>global_position</code> is now truly where the wolf sits — so this records the right spot.</div>
+  <div class="line-note"><code>func _ready(): spawn = global_position</code> — <b>captures home once.</b> <code>_ready()</code> runs a single time when the wolf enters the scene, so it records the wolf's true starting spot <em>before</em> it ever moves.</div>
   <div class="line-note"><code>else:</code> branch — <b>no target → go home.</b> Same normalize-and-move pattern as chasing, aimed at <code>spawn</code>. The <code>&gt; 4.0</code> check stops it jittering once it arrives.</div>
 </div>
 
@@ -125,7 +125,7 @@
 </div>
 
 <footer>
-  LESSON 13 · Combat 3 · grounded in <a href="../MISSION.md">your mission</a> · sources in <a href="../RESOURCES.md">RESOURCES.md</a><br>
+  LESSON 12 · Combat 2 · grounded in <a href="../MISSION.md">your mission</a> · sources in <a href="../RESOURCES.md">RESOURCES.md</a><br>
   Primary reference: <a href="https://docs.godotengine.org/en/stable/getting_started/step_by_step/scripting_first_script.html#the-ready-function">Godot — the _ready function</a>
 </footer>
 </main>
