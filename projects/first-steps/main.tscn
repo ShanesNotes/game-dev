@@ -5,8 +5,7 @@
 [ext_resource type="Texture2D" uid="uid://b1k7a8xscns3u" path="res://assets/character.png" id="3_h2yge"]
 [ext_resource type="Script" uid="uid://dc0hyve5lr8a4" path="res://sword.gd" id="4_lquwl"]
 [ext_resource type="Texture2D" uid="uid://dcaurreinfkrf" path="res://assets/sword.png" id="5_7mycd"]
-[ext_resource type="Script" uid="uid://bbyrwg8dycfbq" path="res://wolf.gd" id="6_272bh"]
-[ext_resource type="Texture2D" uid="uid://bna80w5387mfb" path="res://assets/wolf.png" id="7_5vw27"]
+[ext_resource type="PackedScene" uid="uid://7sfswd6u4h5r" path="res://wolf.tscn" id="6_7mycd"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_1bvp3"]
 texture = ExtResource("1_h2yge")
@@ -162,12 +161,6 @@ size = Vector2(17.25, 2382)
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_272bh"]
 size = Vector2(7, 22)
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_kek77"]
-size = Vector2(23, 14)
-
-[sub_resource type="CircleShape2D" id="CircleShape2D_272bh"]
-radius = 122.80065
-
 [node name="Main" type="Node2D" unique_id=697232748]
 position = Vector2(385, 430)
 
@@ -192,10 +185,18 @@ position_smoothing_enabled = true
 sprite_frames = SubResource("SpriteFrames_82xsv")
 animation = &"walk_down"
 autoplay = "walk_down"
-frame_progress = 0.921013
+frame_progress = 0.13589074
 
 [node name="SwingTimer" type="Timer" parent="Player" unique_id=2121176342]
 wait_time = 1.5
+
+[node name="Sword" type="Sprite2D" parent="Player" unique_id=2027497664]
+visible = false
+position = Vector2(10, 2)
+scale = Vector2(0.7, 0.7)
+skew = 0.61086524
+texture = ExtResource("5_7mycd")
+offset = Vector2(0, -16)
 
 [node name="Wall" type="StaticBody2D" parent="." unique_id=108019413]
 
@@ -214,31 +215,9 @@ texture = ExtResource("5_7mycd")
 position = Vector2(180, -92)
 shape = SubResource("RectangleShape2D_272bh")
 
-[node name="Wolf" type="CharacterBody2D" parent="." unique_id=2076673526]
+[node name="Wolf" parent="." unique_id=125961179 instance=ExtResource("6_7mycd")]
 position = Vector2(339, 10)
-script = ExtResource("6_272bh")
-
-[node name="Sprite2D" type="Sprite2D" parent="Wolf" unique_id=1808894871]
-texture = ExtResource("7_5vw27")
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Wolf" unique_id=2066578438]
-shape = SubResource("RectangleShape2D_kek77")
-
-[node name="SwingTimer" type="Timer" parent="Wolf" unique_id=35050289]
-wait_time = 2.0
-
-[node name="AggroArea" type="Area2D" parent="Wolf" unique_id=1810444489]
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Wolf/AggroArea" unique_id=312309465]
-shape = SubResource("CircleShape2D_272bh")
-
-[node name="HealthBar" type="ProgressBar" parent="Wolf" unique_id=691774071]
-custom_minimum_size = Vector2(32, 5)
-offset_left = -16.0
-offset_top = -28.0
-offset_right = 16.0
-offset_bottom = -23.0
-show_percentage = false
+input_pickable = true
 
 [node name="HUD" type="CanvasLayer" parent="." unique_id=776590320]
 offset = Vector2(5, 5)
@@ -256,8 +235,11 @@ offset_right = -0.25601196
 offset_bottom = 0.23999786
 show_percentage = false
 
+[node name="Wolf2" parent="." unique_id=704883021 instance=ExtResource("6_7mycd")]
+position = Vector2(270, 192)
+
+[node name="Wolf3" parent="." unique_id=933214363 instance=ExtResource("6_7mycd")]
+position = Vector2(385, -198)
+
 [connection signal="timeout" from="Player/SwingTimer" to="Player" method="_on_swing_timer_timeout"]
 [connection signal="body_entered" from="Sword" to="Sword" method="_on_body_entered"]
-[connection signal="timeout" from="Wolf/SwingTimer" to="Wolf" method="_on_swing_timer_timeout"]
-[connection signal="body_entered" from="Wolf/AggroArea" to="Wolf" method="_on_aggro_area_body_entered"]
-[connection signal="body_exited" from="Wolf/AggroArea" to="Wolf" method="_on_aggro_area_body_exited"]

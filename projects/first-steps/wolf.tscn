@@ -1,0 +1,41 @@
+[gd_scene format=3 uid="uid://7sfswd6u4h5r"]
+
+[ext_resource type="Script" uid="uid://bbyrwg8dycfbq" path="res://wolf.gd" id="1_6trwa"]
+[ext_resource type="Texture2D" uid="uid://bna80w5387mfb" path="res://assets/wolf.png" id="2_8rgm2"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_kek77"]
+size = Vector2(23, 14)
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_272bh"]
+radius = 122.80065
+
+[node name="Wolf" type="CharacterBody2D" unique_id=125961179]
+script = ExtResource("1_6trwa")
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=395876319]
+texture = ExtResource("2_8rgm2")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1937059484]
+shape = SubResource("RectangleShape2D_kek77")
+
+[node name="SwingTimer" type="Timer" parent="." unique_id=113216419]
+wait_time = 2.0
+
+[node name="AggroArea" type="Area2D" parent="." unique_id=1091505149]
+input_pickable = false
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="AggroArea" unique_id=1230738333]
+shape = SubResource("CircleShape2D_272bh")
+
+[node name="HealthBar" type="ProgressBar" parent="." unique_id=1748578485]
+custom_minimum_size = Vector2(32, 5)
+offset_left = -16.0
+offset_top = -28.0
+offset_right = 16.0
+offset_bottom = -23.0
+show_percentage = false
+
+[connection signal="input_event" from="." to="." method="_on_input_event"]
+[connection signal="timeout" from="SwingTimer" to="." method="_on_swing_timer_timeout"]
+[connection signal="body_entered" from="AggroArea" to="." method="_on_aggro_area_body_entered"]
+[connection signal="body_exited" from="AggroArea" to="." method="_on_aggro_area_body_exited"]

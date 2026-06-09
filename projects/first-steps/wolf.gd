@@ -69,3 +69,11 @@ func face_target():
 		face_x = target.global_position.x - global_position.x
 	if face_x != 0:
 		sprite.flip_h = face_x < 0
+
+
+func _on_input_event(viewport, event, shape_idx):
+	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		get_tree().get_first_node_in_group("player").set_target(self)
+
+func set_targeted(on):
+	sprite.modulate = Color(1, 0.85, 0.4) if on else Color.WHITE

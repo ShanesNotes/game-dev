@@ -1,6 +1,6 @@
 # 0001 — Baseline & Direction
 
-**Date:** 2026-06-07 · **last updated:** 2026-06-08
+**Date:** 2026-06-07 · **last updated:** 2026-06-08 (L18)
 
 ## Starting point
 - Total beginner to game development. No prior Godot or engine experience.
@@ -71,6 +71,16 @@
     which also finally fixes the L3 diagonal-speed bug); gamepad button added to the
     `attack` action.
 
+### The pack
+18. **Wolf pack — CLICK TARGETING** — `Save Branch as Scene` turns the built Wolf into a
+    reusable `wolf.tscn`; drag 3 copies into Main (each gets its own aura/timer/brain for
+    free). Player single-target (`"../Wolf"`) breaks → replaced by WoW-style click
+    targeting: wolf `input_pickable` + `input_event` → `get_first_node_in_group("player")
+    .set_target(self)`; player keeps `var target`/`attack_range`, `swing()` hits the
+    current target, clicking another wolf redirects (no swing-timer reset = WoW-accurate).
+    Gold-tint highlight via `set_targeted()`. **NOTE:** auto-attack stays single-target;
+    the AoE (Area2D hitbox + "enemies" group) is deferred to a **Whirlwind** ability later.
+
 ## Key decisions & teaching threads
 - **Events over polling.** The wolf moved from a polling state machine (L10) to an
   event-driven aura (L11). Recurring theme: prefer signals to per-frame checks, and
@@ -81,13 +91,21 @@
   player are solid and collide; the aura and sword still detect via the default
   mask 1. The learner explicitly wants wolf + player solid. **Do NOT re-suggest
   separating collision layers.**
-- **Reusable scenes** are now in the toolkit (L16) — the move for the pack.
+- **Reusable scenes** are now in the toolkit (L16) — the move applied to the wolf in L18.
+- **Groups + Area2D hitbox** (L18) are now the scalable pattern: tag many nodes, hit a
+  region. Replaces name/path-based single-target. The recurring "stop pointing at one
+  named node" lesson.
 
 ## What's next
-- **A wolf pack** — turn the Wolf into a reusable `.tscn` and instance several.
-  Upgrade the player's melee from the hardcoded `get_node_or_null("../Wolf")` to
-  hit-all-in-range via an Area2D hitbox + groups, so it scales to many enemies.
-- Then the final story leg: **travel north to a cabin** (a scene transition).
+- **See [`0002-roadmap-combat-quests-progression.md`](0002-roadmap-combat-quests-progression.md)** —
+  a 15-lesson arc (full Classic combat table, rage, XP/leveling, real inventory, wizard
+  quests, Heroic Strike, Whirlwind), grounded in [`reference/wow-combat-values.md`](../reference/wow-combat-values.md).
+  Player is now a **Warrior** (sword + rage). Do one at a time.
+- **Then travel north to the cabin** — the final story leg: the player's first **scene
+  transition** (`change_scene_to_file` / packed scene), a second map, a door/edge trigger.
+- Teased in L18, take if asked: **spawn the pack from code** (the "spawner" pattern —
+  `preload` + `instantiate` loop, waves/dungeons); **swing arc** (hit only wolves in
+  front, not a full ring).
 
 ## Deferred / backlog (only if asked)
 - Player `in_combat` flag to gate resting/regen — the learner wants the player put
