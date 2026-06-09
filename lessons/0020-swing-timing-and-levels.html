@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lesson 20 — Swing Timing & Levels</title>
+<link rel="stylesheet" href="_lesson.css">
+</head>
+<body>
+<main>
+<header class="hero">
+  <div class="kicker">Godot · Lesson 20 · Combat 1</div>
+  <h1>Swing Timing <span>& Levels</span></h1>
+  <p class="sub">Your sword swings at a real weapon speed, and every fighter now has a level — the foundation the whole WoW combat system stands on.</p>
+</header>
+
+<div class="win">
+  <b>TODAY</b>
+  <p>Your auto-attack ticks at your <strong>weapon's speed</strong> (change it, feel it). Each wolf shows its <strong>level</strong> above its head — <span style="color:#9fd0ff">L1</span>, <span style="color:#ffe08a">L2</span>, <span style="color:#ff9a9a">L3</span>. From here on, the gap between your level and theirs will decide hits, misses, dodges, and crits.</p>
+</div>
+
+<div class="callout idea">
+  <span class="ct">◇ from here we follow the real numbers</span>
+  <p>Everything in the next several lessons comes straight from Classic WoW (patch 1.12), pinned with sources in <a href="../reference/wow-combat-values.md"><code class="inline">reference/wow-combat-values.md</code></a>. When you wonder "why that number?", that file is the answer.</p>
+</div>
+
+<h2>Two different clocks: the swing timer vs the GCD</h2>
+<p>
+  WoW melee runs on <strong>two separate timers</strong>, and mixing them up is the #1 beginner confusion. Let's name them now.
+</p>
+<div class="defs">
+  <div class="def"><b>Swing timer</b><p>How often your <em>white auto-attack</em> fires. It equals your <strong>weapon's Speed</strong> — a slow axe might be 3.0s, a quick dagger 1.5s. This is the timer you already have.</p></div>
+  <div class="def"><b>Global cooldown (GCD)</b><p>A fixed <strong>1.5s</strong> lockout after you use an <em>ability</em> (like a spell or a special strike) before you can use another. It does <strong>not</strong> touch your auto-attack.</p></div>
+  <div class="def"><b>Level</b><p>A number on every fighter. The <em>difference</em> between attacker and defender level drives miss/dodge/crit — the heart of the next lessons.</p></div>
+</div>
+<div class="callout note">
+  <span class="ct">◈ why they're separate</span>
+  <p>Your weapon keeps swinging on its own rhythm no matter what abilities you press — that's the swing timer. The GCD only stops you from <em>chaining abilities</em> too fast. (And Heroic Strike, your future signature move, is sneaky: it sits <em>off</em> the GCD and rides your <em>next swing</em>. More on that in Lesson 32.)</p>
+</div>
+
+<h2>Part A — swing at your weapon's speed</h2>
+<p>Right now your <code class="inline">SwingTimer</code> has a fixed wait time set in the editor. Let's drive it from a <strong>weapon speed</strong> variable instead, so it's a real stat you can tune (and later, swap per weapon).</p>
+<div class="code">
+  <div class="bar"><span class="t">GDScript · sprite_2d.gd</span><button class="copy">copy</button></div>
+<pre><span class="com"># with the other @export vars near the top:</span>
+<span class="kw">@export</span> <span class="kw">var</span> <span class="var">weapon_speed</span> = <span class="num">2.0</span>    <span class="com"># seconds per swing (Worn Shortsword is ~1.9 in Classic)</span>
+
+<span class="com"># in _ready(), set the timer from it:</span>
+<span class="kw">func</span> <span class="fn">_ready</span>():
+    <span class="fn">add_to_group</span>(<span class="str">"player"</span>)
+    <span class="var">swing_timer</span>.wait_time = <span class="var">weapon_speed</span>     <span class="com"># the swing timer IS the weapon speed</span>
+    <span class="var">health_bar</span>.max_value = <span class="var">max_health</span>
+    <span class="var">health_bar</span>.value = <span class="var">health</span></pre>
+</div>
+<div class="annot">
+  <div class="line-note"><code>@export var weapon_speed = 2.0</code> — <b>your weapon's Speed stat.</b> In WoW the white swing timer simply <em>is</em> this number (no haste). Source: <a href="../reference/wow-combat-values.md"><code class="inline">wow-combat-values.md</code></a> §1.</div>
+  <div class="line-note"><code>swing_timer.wait_time = weapon_speed</code> — <b>feed it into the Timer</b> when the game starts. Change <code>weapon_speed</code> in the Inspector and your attack cadence changes with it.</div>
+</div>
+<div class="flow">
+  <div class="phase"><div class="rail"><div class="num">▶</div></div><div class="body"><p>Press <kbd>F5</kbd>, target a wolf, attack. Try <code class="inline">weapon_speed = 3.5</code> (ponderous) then <code class="inline">1.2</code> (frantic) in the Inspector to feel the difference. Set it back to <code class="inline">2.0</code>.</p></div></div>
+</div>
+
+<h2>Part B — the GCD (concept now, code later)</h2>
+<p>
+  There's nothing to wire for the GCD yet — it only matters once you have an <em>ability</em> to gate, and your first one (Heroic Strike) is Lesson 32. We're naming it now so the idea is in place:
+</p>
+<div class="callout warn">
+  <span class="ct">▲ don't put your auto-attack on the GCD</span>
+  <p>A common mistake is making every attack respect a 1.5s GCD. That would <em>break</em> fast weapons. White swings ride the <strong>swing timer</strong> (weapon speed); only abilities ride the <strong>GCD</strong>. We'll add a tiny GCD timer when the first ability needs it — not before (no dead code).</p>
+</div>
+
+<h2>Part C — give everyone a level</h2>
+<p>A level is just an exported number. Add it to the Player and the Wolf, and show the wolf's level above its head so the danger is readable at a glance.</p>
+
+<h3>Player</h3>
+<div class="code">
+  <div class="bar"><span class="t">GDScript · sprite_2d.gd</span><button class="copy">copy</button></div>
+<pre><span class="com"># with the other @export vars:</span>
+<span class="kw">@export</span> <span class="kw">var</span> <span class="var">level</span> = <span class="num">1</span></pre>
+</div>
+
+<h3>Wolf — add a level label to the scene</h3>
+<div class="flow">
+  <div class="phase"><div class="rail"><div class="num">1</div><div class="line"></div></div><div class="body"><p>Open <code class="inline">wolf.tscn</code>. Select the <code class="inline">Wolf</code> root → <kbd>+ Add Child Node</kbd> → <code class="inline">Label</code>. Rename it <code class="inline">LevelLabel</code>.</p></div></div>
+  <div class="phase"><div class="rail"><div class="num">2</div><div class="line"></div></div><div class="body"><p>In the Inspector set its <strong>Position</strong> to about <strong>(−10, −42)</strong> (just above the health bar). Shrink the font if you like (<strong>Theme Overrides → Font Sizes → Font Size ≈ 10</strong>).</p></div></div>
+  <div class="phase"><div class="rail"><div class="num">3</div></div><div class="body"><p><kbd>Ctrl+S</kbd> to save <code class="inline">wolf.tscn</code>.</p></div></div>
+</div>
+<div class="code">
+  <div class="bar"><span class="t">GDScript · wolf.gd</span><button class="copy">copy</button></div>
+<pre><span class="com"># with the other vars / @onready vars near the top:</span>
+<span class="kw">@export</span> <span class="kw">var</span> <span class="var">level</span> = <span class="num">1</span>
+<span class="kw">@onready</span> <span class="kw">var</span> <span class="var">level_label</span> = $<span class="var">LevelLabel</span>
+
+<span class="com"># in _ready(), show it:</span>
+<span class="kw">func</span> <span class="fn">_ready</span>():
+    <span class="var">spawn</span> = <span class="var">global_position</span>
+    <span class="var">health_bar</span>.max_value = <span class="var">max_health</span>
+    <span class="var">health_bar</span>.value = <span class="var">health</span>
+    <span class="var">level_label</span>.text = <span class="str">"L"</span> + <span class="fn">str</span>(<span class="var">level</span>)</pre>
+</div>
+<div class="annot">
+  <div class="line-note"><code>@export var level = 1</code> on the wolf — <b>because it's exported, each wolf instance can have its own level</b> set in the Inspector, with no separate script. This is the payoff of <code>@export</code> from L10.</div>
+  <div class="line-note"><code>level_label.text = "L" + str(level)</code> — <b>show it.</b> <code>str()</code> turns the number into text (same trick as the damage numbers).</div>
+</div>
+
+<h3>Set each wolf's level</h3>
+<div class="flow">
+  <div class="phase"><div class="rail"><div class="num">1</div><div class="line"></div></div><div class="body"><p>Back in <code class="inline">main.tscn</code>, select <code class="inline">Wolf</code> → in the Inspector find <strong>Level</strong> (your exported var) → leave it <strong>1</strong>.</p></div></div>
+  <div class="phase"><div class="rail"><div class="num">2</div></div><div class="body"><p>Select <code class="inline">Wolf2</code> → set <strong>Level = 2</strong>. Select <code class="inline">Wolf3</code> → set <strong>Level = 3</strong>. Same scene, three different levels.</p></div></div>
+</div>
+<div class="flow">
+  <div class="phase"><div class="rail"><div class="num">▶</div></div><div class="body"><p>Press <kbd>F5</kbd>. Each wolf wears its level — L1, L2, L3 — above its bar. You're L1 facing a pack that's mostly tougher than you. Next lesson, that gap starts to bite. 📊</p></div></div>
+</div>
+
+<h2>Check yourself</h2>
+<div class="quiz">
+  <p class="q">1. What does your white auto-attack's swing timer equal?</p>
+  <button onclick="pick(this)" data-correct>Your weapon's Speed stat</button>
+  <button onclick="pick(this)">A fixed 1.5 seconds (the GCD)</button>
+  <button onclick="pick(this)">Your level</button>
+  <div class="feedback"></div>
+</div>
+<div class="quiz">
+  <p class="q">2. What is the global cooldown (GCD) for?</p>
+  <button onclick="pick(this)" data-correct>Limiting how fast you chain abilities — not your auto-attack</button>
+  <button onclick="pick(this)">Making weapons swing faster</button>
+  <button onclick="pick(this)">Healing you over time</button>
+  <div class="feedback"></div>
+</div>
+<div class="quiz">
+  <p class="q">3. Why use <code class="inline">@export</code> for the wolf's <code class="inline">level</code>?</p>
+  <button onclick="pick(this)" data-correct>So each wolf instance can be set to a different level in the Inspector</button>
+  <button onclick="pick(this)">Exported variables run faster</button>
+  <button onclick="pick(this)">It's required for labels to work</button>
+  <div class="feedback"></div>
+</div>
+
+<div class="teacher">
+  <b>I'M YOUR TEACHER — ASK ME ANYTHING</b>
+  <p>This lesson is foundation — modest on screen, huge underneath. Snags: "Invalid get index 'LevelLabel'" → the Label must be a child of the Wolf root and named exactly <code class="inline">LevelLabel</code>, and <code class="inline">wolf.tscn</code> saved. Level shows "L1" on all of them → you set the per-instance Level in <code class="inline">main.tscn</code>, right? The label edits the <em>scene</em>, the level is set per <em>instance</em>.<br><br>
+  <b>Want more (ask me):</b> colour the level label by danger (grey/green/yellow/red vs your level — that's WoW's "con" system, and it's in the reference doc), give wolves their own <code class="inline">weapon_speed</code> too, or show <em>your</em> level on the HUD.<br><br>
+  Say <em>"done"</em> — next is the big one: <strong>Lesson 21, the one-roll attack table</strong>, where your swings start to <em>miss</em> based on that level gap. ⚔️🎲</p>
+</div>
+
+<footer>
+  LESSON 20 · Combat 1 · grounded in <a href="../MISSION.md">your mission</a> · numbers from <a href="../reference/wow-combat-values.md">wow-combat-values.md</a><br>
+  Primary reference: <a href="https://warcraft.wiki.gg/wiki/Attack_speed">WoW — Attack speed</a> · <a href="https://docs.godotengine.org/en/stable/classes/class_timer.html">Godot Timer</a>
+</footer>
+</main>
+<script src="_lesson.js"></script>
+</body>
+</html>

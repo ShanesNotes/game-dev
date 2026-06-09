@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lesson 24 — Glancing Blows</title>
+<link rel="stylesheet" href="_lesson.css">
+</head>
+<body>
+<main>
+<header class="hero">
+  <div class="kicker">Godot · Lesson 24 · Combat 5</div>
+  <h1>Glancing <span>Blows</span></h1>
+  <p class="sub">Punch above your weight and your sword skids off — the last band in your attack table, and it only bites when the foe out-levels you.</p>
+</header>
+
+<div class="win">
+  <b>TODAY</b>
+  <p>Against a higher-level wolf, some hits land as <span style="color:#9aa3ad">Glancing</span> — reduced damage you can't avoid or crit. Against the L1 wolf, never. Your attack table is now <strong>WoW-complete</strong>.</p>
+</div>
+
+<h2>The last band — and it's one-sided</h2>
+<p>
+  Glancing blows are the level gap turned against <em>you</em>: when you attack something <strong>higher level</strong>, a chunk of
+  your white swings just skid off for partial damage. They <strong>can't be dodged, can't crit, can't be reduced by gear</strong> —
+  pure tax for fighting above your weight. Against equal or lower level, glancing simply doesn't exist.
+</p>
+<div class="callout idea">
+  <span class="ct">◇ the complete table</span>
+  <p><code class="inline">Miss → Dodge → Parry → Glancing → Crit → Hit</code>. Glancing slots in right before Crit — so a glancing swing never gets the chance to crit. That's the full Vanilla player attack table, in one roll.</p>
+</div>
+<div class="defs">
+  <div class="def"><b>Chance</b><p><code class="inline">10% + 10% per level</code> the target is above you (reference §6): +1 = 20%, +2 = 30%. Zero against equal/lower level.</p></div>
+  <div class="def"><b>Damage</b><p>A random fraction of normal, worse the bigger the gap — roughly 90% at +1, ~80% at +2, down to ~55% vs a +3 boss.</p></div>
+</div>
+
+<h2>Part A — chance and damage</h2>
+<div class="code">
+  <div class="bar"><span class="t">GDScript · sprite_2d.gd</span><button class="copy">copy</button></div>
+<pre><span class="kw">func</span> <span class="fn">glancing_chance</span>(<span class="var">t</span>):
+    <span class="kw">var</span> <span class="var">gap</span> = <span class="var">t</span>.<span class="var">level</span> - <span class="var">level</span>
+    <span class="kw">if</span> <span class="var">gap</span> &lt;= <span class="num">0</span>:
+        <span class="kw">return</span> <span class="num">0.0</span>                     <span class="com"># no glancing vs equal/lower level</span>
+    <span class="kw">return</span> <span class="num">10.0</span> + <span class="var">gap</span> * <span class="num">10.0</span>          <span class="com"># +1 = 20%, +2 = 30%</span>
+
+<span class="kw">func</span> <span class="fn">glancing_damage</span>(<span class="var">t</span>):
+    <span class="kw">var</span> <span class="var">skill_diff</span> = (<span class="var">t</span>.<span class="var">level</span> - <span class="var">level</span>) * <span class="num">5</span>
+    <span class="kw">var</span> <span class="var">low</span> = <span class="fn">clampf</span>(<span class="num">1.3</span> - <span class="num">0.05</span> * <span class="var">skill_diff</span>, <span class="num">0.01</span>, <span class="num">0.91</span>)
+    <span class="kw">var</span> <span class="var">high</span> = <span class="fn">clampf</span>(<span class="num">1.2</span> - <span class="num">0.03</span> * <span class="var">skill_diff</span>, <span class="num">0.2</span>, <span class="num">0.99</span>)
+    <span class="kw">return</span> <span class="var">attack_damage</span> * <span class="fn">randf_range</span>(<span class="var">low</span>, <span class="var">high</span>)</pre>
+</div>
+<div class="annot">
+  <div class="line-note"><code>if gap &lt;= 0: return 0.0</code> — <b>glancing is one-sided.</b> It exists only when the target out-levels you; this single guard captures that.</div>
+  <div class="line-note"><code>clampf(...)</code> + <code>randf_range(low, high)</code> — <b>the WoW damage formula</b> (reference §6): the bigger the skill gap, the lower the band, and each glance rolls somewhere inside it.</div>
+</div>
+
+<h2>Part B — slot it before Crit</h2>
+<div class="code">
+  <div class="bar"><span class="t">GDScript · sprite_2d.gd — attack()</span><button class="copy">copy</button></div>
+<pre><span class="kw">func</span> <span class="fn">attack</span>(<span class="var">t</span>):
+    <span class="kw">var</span> <span class="var">roll</span> = <span class="fn">randf</span>() * <span class="num">100.0</span>
+    <span class="kw">var</span> <span class="var">miss</span> = <span class="fn">miss_chance</span>(<span class="var">t</span>)
+    <span class="kw">var</span> <span class="var">dodge</span> = <span class="fn">dodge_chance</span>(<span class="var">t</span>)
+    <span class="kw">var</span> <span class="var">parry</span> = <span class="fn">parry_chance</span>(<span class="var">t</span>)
+    <span class="kw">var</span> <span class="var">glancing</span> = <span class="fn">glancing_chance</span>(<span class="var">t</span>)
+    <span class="kw">var</span> <span class="var">crit</span> = <span class="fn">crit_chance</span>(<span class="var">t</span>)
+    <span class="kw">if</span> <span class="var">roll</span> &lt; <span class="var">miss</span>:
+        <span class="fn">spawn_text_over</span>(<span class="var">t</span>, <span class="str">"Miss"</span>, <span class="type">Color</span>.GRAY)
+    <span class="kw">elif</span> <span class="var">roll</span> &lt; <span class="var">miss</span> + <span class="var">dodge</span>:
+        <span class="fn">spawn_text_over</span>(<span class="var">t</span>, <span class="str">"Dodge"</span>, <span class="type">Color</span>.CYAN)
+    <span class="kw">elif</span> <span class="var">roll</span> &lt; <span class="var">miss</span> + <span class="var">dodge</span> + <span class="var">parry</span>:
+        <span class="fn">spawn_text_over</span>(<span class="var">t</span>, <span class="str">"Parry"</span>, <span class="type">Color</span>.ORANGE)
+    <span class="kw">elif</span> <span class="var">roll</span> &lt; <span class="var">miss</span> + <span class="var">dodge</span> + <span class="var">parry</span> + <span class="var">glancing</span>:
+        <span class="fn">spawn_text_over</span>(<span class="var">t</span>, <span class="str">"Glancing"</span>, <span class="type">Color</span>.GRAY)
+        <span class="var">t</span>.<span class="fn">take_damage</span>(<span class="fn">roundi</span>(<span class="fn">glancing_damage</span>(<span class="var">t</span>)))   <span class="com"># reduced, can't crit</span>
+    <span class="kw">elif</span> <span class="var">roll</span> &lt; <span class="var">miss</span> + <span class="var">dodge</span> + <span class="var">parry</span> + <span class="var">glancing</span> + <span class="var">crit</span>:
+        <span class="var">t</span>.<span class="fn">take_damage</span>(<span class="var">attack_damage</span> * <span class="num">2</span>, <span class="kw">true</span>)
+    <span class="kw">else</span>:
+        <span class="var">t</span>.<span class="fn">take_damage</span>(<span class="var">attack_damage</span>)</pre>
+</div>
+<div class="annot">
+  <div class="line-note"><code>"Glancing"</code> label + reduced damage — <b>at our small damage values the number barely shifts, so the label is the tell.</b> WoW shows glancing as a normal-looking hit; the label keeps it legible while you learn.</div>
+  <div class="line-note"><b>Position is the point.</b> Glancing is before Crit, so a glance is locked out of critting — exactly the table's priority order.</div>
+</div>
+
+<div class="flow">
+  <div class="phase"><div class="rail"><div class="num">▶</div></div><div class="body"><p>Press <kbd>F5</kbd>. Hit the L1 wolf — never glances. Hit the L2/L3 — "Glancing" pops on a chunk of swings. You feel the wall when you fight above your level. 🧱</p></div></div>
+</div>
+
+<h2>The other side (explained, not built yet)</h2>
+<p>
+  Glancing completes <em>your</em> table. The mirror — the <strong>wolf</strong> rolling a table when it bites <em>you</em> (your dodge,
+  your parry, its crit, and <strong>crushing blows</strong>) — is real WoW too, but we're skipping the code for a good reason:
+</p>
+<div class="callout note">
+  <span class="ct">◈ why we're not coding crushing / the mob table now</span>
+  <p><strong>Crushing blows</strong> (150% damage) only happen when the attacker is <strong>3–4+ levels above</strong> the defender. Your wolves top out at +2 over you, so crushing <em>literally cannot fire</em> — coding it would be dead code. And the wolf's defensive table is just a mirror of what you built in L21–24. We'll add both when it pays off: when you get a <strong>shield</strong> (unlocking your block) or fight much higher-level foes. Ask me anytime to build it.</p>
+</div>
+
+<h2>Check yourself</h2>
+<div class="quiz">
+  <p class="q">1. When do glancing blows happen?</p>
+  <button onclick="pick(this)" data-correct>Only when you attack a higher-level target</button>
+  <button onclick="pick(this)">Only on critical hits</button>
+  <button onclick="pick(this)">Against any target, randomly</button>
+  <div class="feedback"></div>
+</div>
+<div class="quiz">
+  <p class="q">2. Why is the Glancing band placed before Crit?</p>
+  <button onclick="pick(this)" data-correct>So a glancing blow can't also be a crit — table priority order</button>
+  <button onclick="pick(this)">Because it deals more damage</button>
+  <button onclick="pick(this)">Random ordering, doesn't matter</button>
+  <div class="feedback"></div>
+</div>
+<div class="quiz">
+  <p class="q">3. Why aren't we coding crushing blows yet?</p>
+  <button onclick="pick(this)" data-correct>They need a 3–4+ level gap; our wolves are at most +2, so it can never trigger</button>
+  <button onclick="pick(this)">Crushing blows don't exist in WoW</button>
+  <button onclick="pick(this)">Godot can't do 150% damage</button>
+  <div class="feedback"></div>
+</div>
+
+<div class="teacher">
+  <b>I'M YOUR TEACHER — ASK ME ANYTHING</b>
+  <p>Your attack table is now the real thing — six outcomes, one roll, WoW-accurate order. Snags: never see glancing → you must be hitting the L1 wolf (gap 0); try the L2/L3. Glancing damage looks identical to a hit → that's expected at 4 base damage; bump <code class="inline">attack_damage</code> to ~20 temporarily to see the reduction clearly.<br><br>
+  <b>Want more (ask me):</b> build <strong>the wolf's attack table</strong> now (your dodge/parry vs bites, "Dodge!" over your head), or give the player a <strong>shield</strong> to unlock block + crushing-immunity math.<br><br>
+  Say <em>"done"</em> — combat math is complete. Next we shift to <strong>Lesson 25: Rage</strong> — fighting builds a rage bar, the fuel for your future abilities. ⚡</p>
+</div>
+
+<footer>
+  LESSON 24 · Combat 5 · grounded in <a href="../MISSION.md">your mission</a> · numbers from <a href="../reference/wow-combat-values.md">wow-combat-values.md</a> §6<br>
+  Primary reference: <a href="https://warcraft.wiki.gg/wiki/Glancing_blow">WoW — Glancing blow</a> · <a href="https://warcraft.wiki.gg/wiki/Crushing_blow">Crushing blow</a>
+</footer>
+</main>
+<script src="_lesson.js"></script>
+</body>
+</html>

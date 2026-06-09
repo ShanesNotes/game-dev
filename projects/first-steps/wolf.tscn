@@ -35,6 +35,13 @@ offset_right = 16.0
 offset_bottom = -23.0
 show_percentage = false
 
+[node name="LevelLabel" type="Label" parent="." unique_id=224505637]
+offset_left = -10.0
+offset_top = -42.0
+offset_right = 30.0
+offset_bottom = -19.0
+theme_override_font_sizes/font_size = 10
+
 [connection signal="input_event" from="." to="." method="_on_input_event"]
 [connection signal="timeout" from="SwingTimer" to="." method="_on_swing_timer_timeout"]
 [connection signal="body_entered" from="AggroArea" to="." method="_on_aggro_area_body_entered"]

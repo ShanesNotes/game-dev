@@ -35,9 +35,12 @@ player is now effectively a **Warrior** (sword auto-attack + rage + Heroic Strik
   higher-level wolves; big yellow crit numbers.
 - **23 · Avoidance** — dodge & parry (wolf avoiding you), front-only parry, +0.5%/level
   dodge scaling; "Dodge!/Parry!" text. Table now miss→dodge→parry→crit→hit.
-- **24 · Tougher & weaker foes** — glancing blows (you vs higher-level wolf, 55–75% dmg)
-  + crushing blows (higher-level wolf vs you, 150%) + the player's own dodge/parry when
-  bitten. Completes full fidelity; pure level-gap drama.
+- **24 · Glancing blows** — completes the *player's* attack table: a Glancing band before
+  Crit (only vs higher-level targets; `10% + 10%/level`, reduced damage 55–99% by gap).
+  Pure "punching above your weight" drama. **Deferred (explained, not coded — would be dead
+  code at our levels):** crushing blows (need a +3/+4 gap; wolves are ≤+2) and the
+  *mob-side* table (the wolf rolling your dodge/parry/block when it bites) — a mirror of
+  L21–24, to add when the player gets a shield / we want defensive depth.
 
 ### Progression
 - **25 · Rage** — rage bar 0–100, generation from dealing/taking damage (the C formula),

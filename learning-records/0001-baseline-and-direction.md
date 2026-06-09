@@ -80,6 +80,27 @@
     current target, clicking another wolf redirects (no swing-timer reset = WoW-accurate).
     Gold-tint highlight via `set_targeted()`. **NOTE:** auto-attack stays single-target;
     the AoE (Area2D hitbox + "enemies" group) is deferred to a **Whirlwind** ability later.
+19. **Wielding the sword** — held `Sword` Sprite2D child on the Player + a Tween slash arc
+    (`rotation_degrees` out/back) fired from `swing()`; the L8 pickup now calls
+    `equip_sword()` to reveal it. Offset-pivot so it rotates at the hilt. Weapon visibility
+    is a deliberate stepping stone → data-driven `WeaponData` equip system at L27 (YAGNI).
+
+### Combat depth (numbers from `reference/wow-combat-values.md`)
+20. **Swing timing & levels** — white swing timer = `@export weapon_speed` (~2.0s, fed to
+    the Timer in `_ready`); GCD explained (1.5s, abilities only — deliberately not wired,
+    no dead code); `@export var level` on player + wolves with a per-wolf `LevelLabel`
+    (Wolf/Wolf2/Wolf3 = L1/L2/L3 via per-instance export). Foundation for the hit table.
+21. **Attack table I — hit or miss** — the one-roll model: `randf()*100` read against banded
+    outcomes. First band = Miss (`5% + Δ×0.1`, Δ = level-gap × 5); the rest = Hit. Routed
+    `swing()` → `attack(t)`; "Miss" floating text via a `damage_number.show_text` refactor
+    (numbers now route through it). Only the *player's* attacks roll the table so far.
+22. **Attack table II — crits** — carve a Crit band after Miss: `crit_chance = base_crit −
+    1%/level above`, floored at 0; **200% (double)** damage; big yellow numbers via a `size`
+    param on `show_text` + an `is_crit` flag (default false) on the wolf's `take_damage`.
+23. **Attack table III — dodge & parry** — two avoidance bands between Miss and Crit:
+    `dodge = 5% + 0.5%/level above`, `parry = 5% + 3%/level above` (matches WoW's ~8/11/14%
+    at +1/+2/+3); checked against running totals, before crit. Front-only parry noted but
+    not facing-gated (the wolf always faces you). Cyan "Dodge" / orange "Parry" text.
 
 ## Key decisions & teaching threads
 - **Events over polling.** The wolf moved from a polling state machine (L10) to an
@@ -92,9 +113,14 @@
   mask 1. The learner explicitly wants wolf + player solid. **Do NOT re-suggest
   separating collision layers.**
 - **Reusable scenes** are now in the toolkit (L16) — the move applied to the wolf in L18.
-- **Groups + Area2D hitbox** (L18) are now the scalable pattern: tag many nodes, hit a
-  region. Replaces name/path-based single-target. The recurring "stop pointing at one
-  named node" lesson.
+- **Click-to-target, single-target auto-attack** (L18): wolves are clickable
+  (`input_pickable` + `input_event`), the player is found via a `"player"` group, and the
+  white swing follows the current `target`. The recurring "stop pointing at one named node"
+  lesson. The *enemies*-group + Area2D AoE is deferred to the Whirlwind ability (L33).
+- **The attack table is built incrementally** (L21+): one `randf()*100` roll, outcomes as
+  ordered bands (Miss → … → Crit → Hit). Each combat lesson slots a new band into the
+  *same* roll. Numbers come from `reference/wow-combat-values.md`; only the player's swings
+  roll it so far (the wolves' side comes with dodge/parry/block).
 
 ## What's next
 - **See [`0002-roadmap-combat-quests-progression.md`](0002-roadmap-combat-quests-progression.md)** —
@@ -107,11 +133,18 @@
   `preload` + `instantiate` loop, waves/dungeons); **swing arc** (hit only wolves in
   front, not a full ring).
 
+## Game-feel / juice backlog (offered, take anytime)
+- **Crit punch** (teased L22): tiny **screen shake** and/or a **scale-pop** on the crit
+  number; **crit numbers drift sideways** so they don't overlap.
+- **Agility stat** that raises `base_crit` (and later feeds the stat/leveling system).
+- **Hit-stop**: a few-frame freeze on big/killing hits.
+- **Hurt flash** (white/red blink) on taking damage; **coloured (green→red) health bars**.
+- **Sound**: attack whoosh, impact, crit sting.
+- **Facing-aware sword**: held sword switches side/angle with movement direction.
+
 ## Deferred / backlog (only if asked)
 - Player `in_combat` flag to gate resting/regen — the learner wants the player put
   into combat too; meaningful once regen exists.
-- Teased but not taken: idle facing-frame poses; coloured (green→red) health bar +
-  hurt flash; crit damage numbers (bigger/yellow) + sideways drift; wolf sprints
-  home / untargetable while evading; de-aggro timer + heal-on-reset; sound;
-  character visibly holding the sword; XP/loot on kill.
+- Teased but not taken: idle facing-frame poses; wolf sprints home / untargetable while
+  evading; de-aggro timer + heal-on-reset; XP/loot on kill (now formalised in roadmap 0002).
 - **Offered, not yet taken:** a reference card on transforms + collision layers.

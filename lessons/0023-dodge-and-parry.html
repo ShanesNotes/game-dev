@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lesson 23 — Dodge & Parry</title>
+<link rel="stylesheet" href="_lesson.css">
+</head>
+<body>
+<main>
+<header class="hero">
+  <div class="kicker">Godot · Lesson 23 · Combat 4</div>
+  <h1>Dodge <span>& Parry</span></h1>
+  <p class="sub">The wolves fight back by avoiding you — two new bands slot into the same single roll, right between Miss and Crit.</p>
+</header>
+
+<div class="win">
+  <b>TODAY</b>
+  <p>Some swings get <span style="color:#56d3d3">Dodged</span> or <span style="color:#ff9e3d">Parried</span> — no damage, with a callout over the wolf. Tougher wolves avoid more. Your attack table now has five outcomes, all from one roll.</p>
+</div>
+
+<h2>Avoidance: the defender's bands</h2>
+<p>
+  Miss is <em>you</em> failing. Dodge and Parry are the <em>wolf</em> succeeding — it actively avoids the blow. In the
+  one-roll table they sit <strong>right after Miss</strong> and <strong>before Crit</strong> (reference §0):
+</p>
+<div class="callout idea">
+  <span class="ct">◇ the table so far</span>
+  <p><code class="inline">Miss → Dodge → Parry → Crit → Hit</code>. We're inserting Dodge and Parry into the gap we left. (Glancing and Block come next lesson; they slot in too — same roll, more bands.)</p>
+</div>
+<div class="defs">
+  <div class="def"><b>Dodge</b><p>Base <strong>5%</strong>, <strong>+0.5%</strong> per level the wolf is above you (reference §4). Smooth and gentle.</p></div>
+  <div class="def"><b>Parry</b><p>Base <strong>5%</strong>, but scales <em>hard</em> with level — and only from the <strong>front</strong>. Since the wolf chases and faces you, it's always your front to its front.</p></div>
+</div>
+
+<h2>Part A — the two chance functions</h2>
+<p>Add these to the Player, alongside <code class="inline">miss_chance</code> and <code class="inline">crit_chance</code>:</p>
+<div class="code">
+  <div class="bar"><span class="t">GDScript · sprite_2d.gd</span><button class="copy">copy</button></div>
+<pre><span class="kw">func</span> <span class="fn">dodge_chance</span>(<span class="var">t</span>):
+    <span class="kw">var</span> <span class="var">gap</span> = <span class="fn">max</span>(<span class="var">t</span>.<span class="var">level</span> - <span class="var">level</span>, <span class="num">0</span>)
+    <span class="kw">return</span> <span class="num">5.0</span> + <span class="var">gap</span> * <span class="num">0.5</span>        <span class="com"># +0.5% per level above you</span>
+
+<span class="kw">func</span> <span class="fn">parry_chance</span>(<span class="var">t</span>):
+    <span class="kw">var</span> <span class="var">gap</span> = <span class="fn">max</span>(<span class="var">t</span>.<span class="var">level</span> - <span class="var">level</span>, <span class="num">0</span>)
+    <span class="kw">return</span> <span class="num">5.0</span> + <span class="var">gap</span> * <span class="num">3.0</span>        <span class="com"># scales hard: +3 = 14% (front only)</span></pre>
+</div>
+<div class="annot">
+  <div class="line-note"><code>max(t.level - level, 0)</code> — <b>the level gap, floored at 0</b> (a lower-level wolf doesn't avoid <em>more</em> than base).</div>
+  <div class="line-note"><b>Why ×3 for parry?</b> WoW's parry jumps fast — ~8% / 11% / 14% at +1/+2/+3 (reference §4). <code>5 + gap×3</code> hits those exactly. Dodge's ×0.5 is the gentle WoW curve.</div>
+</div>
+
+<h2>Part B — slot the bands into the roll</h2>
+<p>Insert Dodge and Parry between Miss and Crit. Each is checked against a <em>running total</em> of the bands before it:</p>
+<div class="code">
+  <div class="bar"><span class="t">GDScript · sprite_2d.gd — attack()</span><button class="copy">copy</button></div>
+<pre><span class="kw">func</span> <span class="fn">attack</span>(<span class="var">t</span>):
+    <span class="kw">var</span> <span class="var">roll</span> = <span class="fn">randf</span>() * <span class="num">100.0</span>
+    <span class="kw">var</span> <span class="var">miss</span> = <span class="fn">miss_chance</span>(<span class="var">t</span>)
+    <span class="kw">var</span> <span class="var">dodge</span> = <span class="fn">dodge_chance</span>(<span class="var">t</span>)
+    <span class="kw">var</span> <span class="var">parry</span> = <span class="fn">parry_chance</span>(<span class="var">t</span>)
+    <span class="kw">var</span> <span class="var">crit</span> = <span class="fn">crit_chance</span>(<span class="var">t</span>)
+    <span class="kw">if</span> <span class="var">roll</span> &lt; <span class="var">miss</span>:
+        <span class="fn">spawn_text_over</span>(<span class="var">t</span>, <span class="str">"Miss"</span>, <span class="type">Color</span>.GRAY)
+    <span class="kw">elif</span> <span class="var">roll</span> &lt; <span class="var">miss</span> + <span class="var">dodge</span>:
+        <span class="fn">spawn_text_over</span>(<span class="var">t</span>, <span class="str">"Dodge"</span>, <span class="type">Color</span>.CYAN)
+    <span class="kw">elif</span> <span class="var">roll</span> &lt; <span class="var">miss</span> + <span class="var">dodge</span> + <span class="var">parry</span>:
+        <span class="fn">spawn_text_over</span>(<span class="var">t</span>, <span class="str">"Parry"</span>, <span class="type">Color</span>.ORANGE)
+    <span class="kw">elif</span> <span class="var">roll</span> &lt; <span class="var">miss</span> + <span class="var">dodge</span> + <span class="var">parry</span> + <span class="var">crit</span>:
+        <span class="var">t</span>.<span class="fn">take_damage</span>(<span class="var">attack_damage</span> * <span class="num">2</span>, <span class="kw">true</span>)   <span class="com"># crit</span>
+    <span class="kw">else</span>:
+        <span class="var">t</span>.<span class="fn">take_damage</span>(<span class="var">attack_damage</span>)            <span class="com"># hit</span></pre>
+</div>
+<div class="annot">
+  <div class="line-note"><b>Each band stacks on the last.</b> <code>miss + dodge</code>, then <code>miss + dodge + parry</code>, then <code>+ crit</code> — the running total walks the 0–100 line in priority order.</div>
+  <div class="line-note"><b>Order matters.</b> Avoidance (dodge/parry) is checked <em>before</em> crit — exactly WoW's order. A swing the wolf dodges never gets to "could it crit?".</div>
+</div>
+
+<div class="callout note">
+  <span class="ct">◈ "front only" — why we don't check facing</span>
+  <p>In WoW a parry only works against attacks from the <em>front</em>. Our wolf always turns to face its target (its <code class="inline">face_target</code> from L9), so you're always at its front — parry always applies, correctly. If we later add wolves you can <strong>flank</strong>, we'd add a facing check (a dot product) to disable parry from behind. Ask me when you want that.</p>
+</div>
+
+<div class="flow">
+  <div class="phase"><div class="rail"><div class="num">▶</div></div><div class="body"><p>Press <kbd>F5</kbd> and fight. <span style="color:#56d3d3">Dodge</span> and <span style="color:#ff9e3d">Parry</span> pops appear, more often on the L3 wolf than the L1. The pack is genuinely harder now. 🛡️</p></div></div>
+</div>
+
+<h2>Check yourself</h2>
+<div class="quiz">
+  <p class="q">1. Where do Dodge and Parry sit in the attack table?</p>
+  <button onclick="pick(this)" data-correct>After Miss, before Crit</button>
+  <button onclick="pick(this)">After Crit, before Hit</button>
+  <button onclick="pick(this)">Before Miss</button>
+  <div class="feedback"></div>
+</div>
+<div class="quiz">
+  <p class="q">2. What's the difference between a Miss and a Dodge?</p>
+  <button onclick="pick(this)" data-correct>A Miss is your swing failing; a Dodge is the wolf avoiding it</button>
+  <button onclick="pick(this)">Nothing — they're the same</button>
+  <button onclick="pick(this)">A Dodge still deals half damage</button>
+  <div class="feedback"></div>
+</div>
+<div class="quiz">
+  <p class="q">3. Why don't we check the wolf's facing for parry?</p>
+  <button onclick="pick(this)" data-correct>The wolf always faces its target, so you're always at its front</button>
+  <button onclick="pick(this)">Parry works from any direction in WoW</button>
+  <button onclick="pick(this)">Facing checks are impossible in Godot</button>
+  <div class="feedback"></div>
+</div>
+
+<div class="teacher">
+  <b>I'M YOUR TEACHER — ASK ME ANYTHING</b>
+  <p>Five bands now ride one roll — you're reading the real WoW combat table. Snags: see crits but never dodge/parry → they're 5–11%; crank a chance to 50 to verify, then restore. Pops in the wrong order/colour → check the <code class="inline">elif</code> chain matches Miss → Dodge → Parry → Crit → Hit.<br><br>
+  <b>Want more (ask me):</b> <strong>positional parry</strong> (flank a wolf to shut it off), or give yourself <strong>+hit / +crit</strong> gear stats that shrink the avoidance bands.<br><br>
+  Say <em>"done"</em> — next: <strong>Lesson 24, Glancing &amp; Crushing</strong> — the level gap cuts both ways: glancing blows when you punch above your weight, crushing blows when something punches down on you. ⚔️</p>
+</div>
+
+<footer>
+  LESSON 23 · Combat 4 · grounded in <a href="../MISSION.md">your mission</a> · numbers from <a href="../reference/wow-combat-values.md">wow-combat-values.md</a> §4<br>
+  Primary reference: <a href="https://warcraft.wiki.gg/wiki/Attack_table">WoW — Attack table</a> · <a href="https://vanilla-wow-archive.fandom.com/wiki/Parry">Parry</a>
+</footer>
+</main>
+<script src="_lesson.js"></script>
+</body>
+</html>

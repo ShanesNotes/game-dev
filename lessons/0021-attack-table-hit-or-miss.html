@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lesson 21 — The Attack Table: Hit or Miss</title>
+<link rel="stylesheet" href="_lesson.css">
+</head>
+<body>
+<main>
+<header class="hero">
+  <div class="kicker">Godot · Lesson 21 · Combat 2</div>
+  <h1>The Attack Table <span>Hit or Miss</span></h1>
+  <p class="sub">One roll of a hundred-sided die decides every swing. Today it decides hit vs miss — and the tougher the wolf, the more you whiff.</p>
+</header>
+
+<div class="win">
+  <b>TODAY</b>
+  <p>Every swing rolls the dice. Sometimes you <span style="color:#9aa3ad">Miss</span> — and a higher-level wolf is harder to hit than a same-level one. This is the literal heart of WoW combat, built one piece at a time.</p>
+</div>
+
+<h2>The one-roll attack table</h2>
+<p>
+  WoW doesn't roll separately "did I miss? did I crit? did they dodge?" — it makes <strong>one</strong> roll of a
+  d100 (a number from 0–100) and reads it against a <strong>table of outcomes laid end to end</strong>. Each outcome owns a
+  slice of the 0–100 range; whatever's left over at the end is an ordinary hit.
+</p>
+<div class="callout idea">
+  <span class="ct">◇ we build the table one band at a time</span>
+  <p>The full order is <code class="inline">Miss → Dodge → Parry → Glancing → Block → Crit → Hit</code> (reference doc §0). That's a lot at once — so today we lay down just the <strong>first band (Miss)</strong> and leave the rest as "hit." Later lessons slot Crit, Dodge, and Parry into the same single roll.</p>
+</div>
+<div class="defs">
+  <div class="def"><b>The roll</b><p><code class="inline">randf() * 100</code> gives a number from 0 to 100 — our d100.</p></div>
+  <div class="def"><b>The miss band</b><p>If the roll lands below your <em>miss chance</em>, it's a Miss. Otherwise (for now) it's a Hit.</p></div>
+  <div class="def"><b>The level gap (Δ)</b><p>Miss chance grows with how far the target's level is above yours — the foundation from L20, finally doing something.</p></div>
+</div>
+
+<h2>Part A — miss chance from the level gap</h2>
+<p>
+  From <a href="../reference/wow-combat-values.md"><code class="inline">wow-combat-values.md</code></a> §3: each level the target is above you = <strong>5 skill points</strong> of gap (Δ),
+  and miss is <code class="inline">5% + Δ × 0.1</code>. So vs a same-level wolf = 5%, +1 level = 5.5%, +2 = 6%. Add this to the Player:
+</p>
+<div class="code">
+  <div class="bar"><span class="t">GDScript · sprite_2d.gd</span><button class="copy">copy</button></div>
+<pre><span class="kw">func</span> <span class="fn">miss_chance</span>(<span class="var">t</span>):
+    <span class="kw">var</span> <span class="var">delta</span> = (<span class="var">t</span>.<span class="var">level</span> - <span class="var">level</span>) * <span class="num">5</span>    <span class="com"># target defense skill − your weapon skill</span>
+    <span class="kw">return</span> <span class="num">5.0</span> + <span class="var">delta</span> * <span class="num">0.1</span>            <span class="com"># exact for our level range (gap ≤ 2)</span></pre>
+</div>
+<div class="annot">
+  <div class="line-note"><code>(t.level - level) * 5</code> — <b>the skill gap Δ.</b> <code>t</code> is the target wolf, <code>level</code> is yours. A L3 wolf vs L1 you → Δ = 10.</div>
+  <div class="line-note"><code>5.0 + delta * 0.1</code> — <b>the WoW formula.</b> Δ=0 → 5%, Δ=5 → 5.5%, Δ=10 → 6%. (Bigger gaps get nastier, but our fights never go past Δ=10.)</div>
+</div>
+
+<h2>Part B — roll the die on every swing</h2>
+<p>Until now <code class="inline">swing()</code> just dealt damage when in range. We route that through a new <code class="inline">attack()</code> that rolls first:</p>
+<div class="code">
+  <div class="bar"><span class="t">GDScript · sprite_2d.gd — swing()</span><button class="copy">copy</button></div>
+<pre><span class="kw">func</span> <span class="fn">swing</span>():
+    <span class="kw">if</span> <span class="kw">not</span> <span class="fn">is_instance_valid</span>(<span class="var">target</span>):
+        <span class="var">swing_timer</span>.<span class="fn">stop</span>()
+        <span class="var">target</span> = <span class="kw">null</span>
+        <span class="kw">return</span>
+    <span class="fn">swing_sword</span>()
+    <span class="kw">if</span> <span class="var">global_position</span>.<span class="fn">distance_to</span>(<span class="var">target</span>.<span class="var">global_position</span>) &lt;= <span class="var">attack_range</span>:
+        <span class="fn">attack</span>(<span class="var">target</span>)        <span class="com"># in range -> roll the table</span>
+
+<span class="kw">func</span> <span class="fn">attack</span>(<span class="var">t</span>):
+    <span class="kw">var</span> <span class="var">roll</span> = <span class="fn">randf</span>() * <span class="num">100.0</span>          <span class="com"># the d100</span>
+    <span class="kw">if</span> <span class="var">roll</span> &lt; <span class="fn">miss_chance</span>(<span class="var">t</span>):
+        <span class="fn">spawn_text_over</span>(<span class="var">t</span>, <span class="str">"Miss"</span>, <span class="type">Color</span>.GRAY)
+    <span class="kw">else</span>:
+        <span class="var">t</span>.<span class="fn">take_damage</span>(<span class="var">attack_damage</span>)     <span class="com"># the leftover band: a hit</span></pre>
+</div>
+<div class="annot">
+  <div class="line-note"><code>var roll = randf() * 100.0</code> — <b>one roll</b> for the whole table (today: just two bands).</div>
+  <div class="line-note"><code>if roll &lt; miss_chance(t)</code> — <b>the miss band</b> sits at the bottom of the range. Land in it → Miss.</div>
+  <div class="line-note"><code>else: t.take_damage(...)</code> — <b>everything else is a hit</b> (for now). Crit and dodge will carve their own bands out of this "else" in the next lessons.</div>
+</div>
+
+<h2>Part C — show the "Miss"</h2>
+<p>A miss needs feedback. We'll reuse the damage-number scene, but teach it to show <em>words</em>, not just numbers. Update <code class="inline">damage_number.gd</code> so <code class="inline">setup</code> is a thin wrapper over a new <code class="inline">show_text</code>:</p>
+<div class="code">
+  <div class="bar"><span class="t">GDScript · damage_number.gd (full file)</span><button class="copy">copy</button></div>
+<pre><span class="kw">extends</span> <span class="type">Label</span>
+
+<span class="kw">func</span> <span class="fn">setup</span>(<span class="var">amount</span>, <span class="var">color</span>):
+    <span class="fn">show_text</span>(<span class="fn">str</span>(<span class="var">amount</span>), <span class="var">color</span>)   <span class="com"># numbers route through show_text</span>
+
+<span class="kw">func</span> <span class="fn">show_text</span>(<span class="var">s</span>, <span class="var">color</span>):
+    <span class="var">text</span> = <span class="var">s</span>
+    <span class="var">modulate</span> = <span class="var">color</span>
+    <span class="fn">add_theme_font_size_override</span>(<span class="str">"font_size"</span>, <span class="num">18</span>)
+    <span class="kw">var</span> <span class="var">tween</span> = <span class="fn">create_tween</span>()
+    <span class="var">tween</span>.tween_property(<span class="kw">self</span>, <span class="str">"position"</span>, <span class="var">position</span> + <span class="type">Vector2</span>(<span class="num">0</span>, -<span class="num">28</span>), <span class="num">0.6</span>)
+    <span class="var">tween</span>.parallel().tween_property(<span class="kw">self</span>, <span class="str">"modulate:a"</span>, <span class="num">0.0</span>, <span class="num">0.6</span>)
+    <span class="var">tween</span>.tween_callback(queue_free)</pre>
+</div>
+<p>Then add a helper on the Player that pops text over a target (the wolf you just whiffed on):</p>
+<div class="code">
+  <div class="bar"><span class="t">GDScript · sprite_2d.gd</span><button class="copy">copy</button></div>
+<pre><span class="kw">func</span> <span class="fn">spawn_text_over</span>(<span class="var">t</span>, <span class="var">s</span>, <span class="var">color</span>):
+    <span class="kw">var</span> <span class="var">n</span> = <span class="var">DAMAGE_NUMBER</span>.<span class="fn">instantiate</span>()
+    <span class="fn">get_parent</span>().<span class="fn">add_child</span>(<span class="var">n</span>)
+    <span class="var">n</span>.<span class="var">global_position</span> = <span class="var">t</span>.<span class="var">global_position</span> + <span class="type">Vector2</span>(-<span class="num">8</span>, -<span class="num">30</span>)
+    <span class="var">n</span>.<span class="fn">show_text</span>(<span class="var">s</span>, <span class="var">color</span>)</pre>
+</div>
+<div class="annot">
+  <div class="line-note"><code>setup</code> now calls <code>show_text(str(amount), ...)</code> — <b>your existing damage numbers keep working unchanged</b>; we just gave the scene a second door for words.</div>
+  <div class="line-note"><code>spawn_text_over(t, ...)</code> — <b>pops the text over the wolf</b>, not over you, so a "Miss" reads as <em>your swing missing that wolf</em>.</div>
+</div>
+
+<div class="callout note">
+  <span class="ct">◈ 5% is hard to see — force it to test</span>
+  <p>At 5–6% you'll miss only now and then. To prove it works, <em>temporarily</em> change <code class="inline">miss_chance</code> to <code class="inline">return 50.0</code>, run, watch half your swings whiff — then put the real formula back. (Pros do this constantly: crank a value to verify the wiring, then restore.)</p>
+</div>
+
+<div class="flow">
+  <div class="phase"><div class="rail"><div class="num">▶</div></div><div class="body"><p>Press <kbd>F5</kbd>. Fight the L3 wolf and the L1 wolf. Over many swings the higher-level one eats a few more "Miss" pops. Your level gap is now mechanical, not just a label. 🎲</p></div></div>
+</div>
+
+<h2>Check yourself</h2>
+<div class="quiz">
+  <p class="q">1. How many dice rolls does WoW make to resolve one swing?</p>
+  <button onclick="pick(this)" data-correct>One — read against a table of outcomes laid end to end</button>
+  <button onclick="pick(this)">One per outcome (miss, then crit, then dodge…)</button>
+  <button onclick="pick(this)">None — it's deterministic</button>
+  <div class="feedback"></div>
+</div>
+<div class="quiz">
+  <p class="q">2. Why does a higher-level wolf get missed more?</p>
+  <button onclick="pick(this)" data-correct>The level gap Δ raises miss chance (5% + Δ × 0.1)</button>
+  <button onclick="pick(this)">Higher-level wolves move faster</button>
+  <button onclick="pick(this)">It has more health</button>
+  <div class="feedback"></div>
+</div>
+<div class="quiz">
+  <p class="q">3. In <code class="inline">attack()</code>, what is the <code class="inline">else</code> branch?</p>
+  <button onclick="pick(this)" data-correct>Everything that isn't a miss — for now, a hit (later it splits into crit/hit)</button>
+  <button onclick="pick(this)">A second roll</button>
+  <button onclick="pick(this)">The wolf's turn</button>
+  <div class="feedback"></div>
+</div>
+
+<div class="teacher">
+  <b>I'M YOUR TEACHER — ASK ME ANYTHING</b>
+  <p>You just built the spine of WoW combat — one roll, banded outcomes. Snags: never see a miss → it's only 5–6%; use the <code class="inline">return 50.0</code> trick. "Miss" pops over you instead of the wolf → make sure <code class="inline">spawn_text_over</code> uses <code class="inline">t.global_position</code>. Error on <code class="inline">show_text</code> → re-save <code class="inline">damage_number.gd</code> with the new version.<br><br>
+  <b>Note:</b> right now only <em>your</em> attacks roll the table — the wolves still always hit. They get their own table (with your dodge/parry) in a later lesson; today is about your swing.<br><br>
+  Say <em>"done"</em> — next: <strong>Lesson 22, Critical strikes</strong> — we carve a crit band out of that <code class="inline">else</code>, with big yellow numbers and double damage. 💥</p>
+</div>
+
+<footer>
+  LESSON 21 · Combat 2 · grounded in <a href="../MISSION.md">your mission</a> · numbers from <a href="../reference/wow-combat-values.md">wow-combat-values.md</a> §0, §3<br>
+  Primary reference: <a href="https://warcraft.wiki.gg/wiki/Attack_table">WoW — Attack table</a> · <a href="https://docs.godotengine.org/en/stable/classes/class_%40globalscope.html#class-globalscope-method-randf">Godot randf()</a>
+</footer>
+</main>
+<script src="_lesson.js"></script>
+</body>
+</html>

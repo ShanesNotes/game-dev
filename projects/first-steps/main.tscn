@@ -194,7 +194,7 @@ wait_time = 1.5
 visible = false
 position = Vector2(10, 2)
 scale = Vector2(0.7, 0.7)
-skew = 0.61086524
+skew = -0.07679449
 texture = ExtResource("5_7mycd")
 offset = Vector2(0, -16)
 
@@ -235,11 +235,20 @@ offset_right = -0.25601196
 offset_bottom = 0.23999786
 show_percentage = false
 
+[node name="RageBar" type="ProgressBar" parent="HUD" unique_id=1503342817]
+offset_left = 66.0
+offset_top = 48.0
+offset_right = 176.0
+offset_bottom = 63.0
+show_percentage = false
+
 [node name="Wolf2" parent="." unique_id=704883021 instance=ExtResource("6_7mycd")]
 position = Vector2(270, 192)
+level = 2
 
 [node name="Wolf3" parent="." unique_id=933214363 instance=ExtResource("6_7mycd")]
 position = Vector2(385, -198)
+level = 3
 
 [connection signal="timeout" from="Player/SwingTimer" to="Player" method="_on_swing_timer_timeout"]
 [connection signal="body_entered" from="Sword" to="Sword" method="_on_body_entered"]

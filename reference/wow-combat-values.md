@@ -74,12 +74,15 @@ miss, dodge, and glancing numbers below. Source:
 ## 3. Miss
 
 ```
-If Δ ≤ 10:   miss% = 5 + Δ × 0.1
-If Δ ≥ 11:   miss% = 5 + 1 (suppression) + Δ × 0.2 − 2   →  effectively 5 + Δ×0.2 − 1
+If Δ ≤ 10:   miss% = 5 + Δ × 0.1            ← exact; this is all our game ever reaches
+If Δ > 10:   contested — see note below
 ```
-The Δ>10 branch **doubles the per-point penalty to 0.2%** and bakes in a flat **+1%
-"hit suppression"** (the first 1% of your +hit gear is eaten). That's why a +3 boss is
-**9%**, not 8%.
+The **Δ ≤ 10 branch is exact and uncontroversial** (every per-point step is +0.1%). Once
+Δ > 10 (a 3+ level gap, i.e. a "boss"), Vanilla applies a steeper per-point penalty **plus
+a flat ~1% "hit suppression"** (the first 1% of +hit gear is eaten) — producing the
+discontinuous jump to the famous **~8–9% vs a +3 boss**. ⚠ The exact closed form is
+**debated** (sources land between 8% and 9%; the simple "5 + Δ×0.2 − 1" undershoots), so
+don't hardcode a Δ>10 formula — just know the +3 case is "specially nasty."
 
 | Target (L60 player, 300 skill) | Δ | Miss % |
 |---|---|---|

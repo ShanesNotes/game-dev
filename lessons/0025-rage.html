@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lesson 25 — Rage</title>
+<link rel="stylesheet" href="_lesson.css">
+</head>
+<body>
+<main>
+<header class="hero">
+  <div class="kicker">Godot · Lesson 25 · Combat 6</div>
+  <h1>Rage</h1>
+  <p class="sub">A warrior's fuel. Dealing and taking blows builds it, and it drains away when you leave the fight — the meter your first ability will spend.</p>
+</header>
+
+<div class="win">
+  <b>TODAY</b>
+  <p>A rage bar fills as you trade blows with the pack — bigger hits and crits give more. Step out of combat and it bleeds back to zero. Next lesson's leveling, then Heroic Strike spends it.</p>
+</div>
+
+<h2>How rage works in WoW</h2>
+<p>
+  Unlike mana, you don't <em>start</em> with rage — you <strong>earn it by fighting</strong>. Every blow you land (and every one you take)
+  adds rage, scaled by a level-based <strong>conversion value</strong>. It caps at <strong>100</strong> and <strong>decays</strong> when you're out of combat.
+</p>
+<div class="defs">
+  <div class="def"><b>Conversion value (C)</b><p>A number that grows with your level (reference §8). It's the <em>divisor</em> in the rage formula — small at low level, so you make lots of rage early.</p></div>
+  <div class="def"><b>Dealing damage</b><p><code class="inline">7.5 × dmg / C + (f × speed) / 2</code>, where <code class="inline">f</code> is 3.5 (normal) or 7.0 (crit).</p></div>
+  <div class="def"><b>Taking damage</b><p><code class="inline">2.5 × dmg / C</code> — getting hit makes you angrier too.</p></div>
+</div>
+
+<h2>Part A — the rage bar</h2>
+<div class="flow">
+  <div class="phase"><div class="rail"><div class="num">1</div><div class="line"></div></div><div class="body"><p>Select the <code class="inline">HUD</code> node → <kbd>+ Add Child Node</kbd> → <code class="inline">ProgressBar</code>. Rename it <code class="inline">RageBar</code>.</p></div></div>
+  <div class="phase"><div class="rail"><div class="num">2</div><div class="line"></div></div><div class="body"><p>Position it just <strong>below the HealthBar</strong>. Turn <strong>Show Percentage</strong> off. (Optional: tint it — Inspector → <strong>Modulate</strong> → an orange-red.)</p></div></div>
+  <div class="phase"><div class="rail"><div class="num">3</div></div><div class="body"><p>It'll get its range and value from code next.</p></div></div>
+</div>
+<div class="code">
+  <div class="bar"><span class="t">GDScript · sprite_2d.gd</span><button class="copy">copy</button></div>
+<pre><span class="com"># vars near the top:</span>
+<span class="kw">@export</span> <span class="kw">var</span> <span class="var">max_rage</span> = <span class="num">100</span>
+<span class="kw">@export</span> <span class="kw">var</span> <span class="var">rage_decay</span> = <span class="num">1.0</span>      <span class="com"># rage per second out of combat</span>
+<span class="kw">var</span> <span class="var">rage</span> = <span class="num">0.0</span>
+
+<span class="kw">@onready</span> <span class="kw">var</span> <span class="var">rage_bar</span> = <span class="fn">get_node</span>(<span class="str">"../HUD/RageBar"</span>)
+
+<span class="com"># in _ready(), set up the bar:</span>
+    <span class="var">rage_bar</span>.max_value = <span class="var">max_rage</span>
+    <span class="var">rage_bar</span>.value = <span class="var">rage</span></pre>
+</div>
+
+<h2>Part B — earn rage from the fight</h2>
+<p>Add the conversion value and three small helpers. <code class="inline">add_rage</code> is the one place that changes rage and updates the bar:</p>
+<div class="code">
+  <div class="bar"><span class="t">GDScript · sprite_2d.gd</span><button class="copy">copy</button></div>
+<pre><span class="kw">func</span> <span class="fn">conversion_value</span>():
+    <span class="kw">return</span> <span class="num">0.0091107836</span> * <span class="var">level</span> * <span class="var">level</span> + <span class="num">3.225598133</span> * <span class="var">level</span> + <span class="num">4.2652911</span>
+
+<span class="kw">func</span> <span class="fn">add_rage</span>(<span class="var">amount</span>):
+    <span class="var">rage</span> = <span class="fn">clampf</span>(<span class="var">rage</span> + <span class="var">amount</span>, <span class="num">0</span>, <span class="var">max_rage</span>)
+    <span class="var">rage_bar</span>.value = <span class="var">rage</span>
+
+<span class="kw">func</span> <span class="fn">gain_rage_dealing</span>(<span class="var">damage</span>, <span class="var">is_crit</span>):
+    <span class="kw">var</span> <span class="var">f</span> = <span class="num">7.0</span> <span class="kw">if</span> <span class="var">is_crit</span> <span class="kw">else</span> <span class="num">3.5</span>
+    <span class="fn">add_rage</span>(<span class="num">7.5</span> * <span class="var">damage</span> / <span class="fn">conversion_value</span>() + <span class="var">f</span> * <span class="var">weapon_speed</span> / <span class="num">2.0</span>)
+
+<span class="kw">func</span> <span class="fn">gain_rage_taking</span>(<span class="var">damage</span>):
+    <span class="fn">add_rage</span>(<span class="num">2.5</span> * <span class="var">damage</span> / <span class="fn">conversion_value</span>())</pre>
+</div>
+<p>Now call them. A <em>landed</em> blow gives rage (misses/dodges/parries don't), so capture the damage in <code class="inline">attack()</code>:</p>
+<div class="code">
+  <div class="bar"><span class="t">GDScript · sprite_2d.gd — attack() landing branches</span><button class="copy">copy</button></div>
+<pre>    <span class="kw">elif</span> <span class="var">roll</span> &lt; <span class="var">miss</span> + <span class="var">dodge</span> + <span class="var">parry</span> + <span class="var">glancing</span>:
+        <span class="fn">spawn_text_over</span>(<span class="var">t</span>, <span class="str">"Glancing"</span>, <span class="type">Color</span>.GRAY)
+        <span class="kw">var</span> <span class="var">dmg</span> = <span class="fn">roundi</span>(<span class="fn">glancing_damage</span>(<span class="var">t</span>))
+        <span class="var">t</span>.<span class="fn">take_damage</span>(<span class="var">dmg</span>)
+        <span class="fn">gain_rage_dealing</span>(<span class="var">dmg</span>, <span class="kw">false</span>)
+    <span class="kw">elif</span> <span class="var">roll</span> &lt; <span class="var">miss</span> + <span class="var">dodge</span> + <span class="var">parry</span> + <span class="var">glancing</span> + <span class="var">crit</span>:
+        <span class="kw">var</span> <span class="var">dmg</span> = <span class="var">attack_damage</span> * <span class="num">2</span>
+        <span class="var">t</span>.<span class="fn">take_damage</span>(<span class="var">dmg</span>, <span class="kw">true</span>)
+        <span class="fn">gain_rage_dealing</span>(<span class="var">dmg</span>, <span class="kw">true</span>)
+    <span class="kw">else</span>:
+        <span class="var">t</span>.<span class="fn">take_damage</span>(<span class="var">attack_damage</span>)
+        <span class="fn">gain_rage_dealing</span>(<span class="var">attack_damage</span>, <span class="kw">false</span>)</pre>
+</div>
+<p>And earn rage when bitten — one line in <code class="inline">take_damage</code>:</p>
+<div class="code">
+  <div class="bar"><span class="t">GDScript · sprite_2d.gd — take_damage</span><button class="copy">copy</button></div>
+<pre>    <span class="var">health_bar</span>.value = <span class="var">health</span>
+    <span class="fn">spawn_number</span>(<span class="var">amount</span>, <span class="type">Color</span>.RED)
+    <span class="fn">gain_rage_taking</span>(<span class="var">amount</span>)      <span class="com"># getting hit builds rage too</span></pre>
+</div>
+<div class="annot">
+  <div class="line-note"><code>add_rage</code> is the <b>single chokepoint</b> — every change clamps to 0–100 and refreshes the bar. Funnel all rage changes through it.</div>
+  <div class="line-note"><b>Only landed blows generate rage.</b> The miss/dodge/parry branches don't call <code>gain_rage_dealing</code> — whiffs make no rage, just like WoW.</div>
+</div>
+
+<h2>Part C — rage drains out of combat</h2>
+<p>When you're not swinging, rage bleeds away. Add this to the end of <code class="inline">_physics_process</code>:</p>
+<div class="code">
+  <div class="bar"><span class="t">GDScript · sprite_2d.gd — in _physics_process</span><button class="copy">copy</button></div>
+<pre>    <span class="kw">if</span> <span class="var">swing_timer</span>.<span class="fn">is_stopped</span>() <span class="kw">and</span> <span class="var">rage</span> &gt; <span class="num">0</span>:
+        <span class="fn">add_rage</span>(-<span class="var">rage_decay</span> * <span class="var">delta</span>)   <span class="com"># out of combat -> drain</span></pre>
+</div>
+<div class="annot">
+  <div class="line-note"><code>swing_timer.is_stopped()</code> — <b>our simple "out of combat" check.</b> While you're auto-attacking the timer runs (no drain); when the fight ends it stops and rage bleeds down.</div>
+  <div class="line-note"><code>-rage_decay * delta</code> — <b>frame-rate independent</b>: ~1 rage/second no matter the FPS (delta is seconds-per-frame).</div>
+</div>
+
+<div class="flow">
+  <div class="phase"><div class="rail"><div class="num">▶</div></div><div class="body"><p>Press <kbd>F5</kbd>, target a wolf, and fight. The rage bar climbs fast (crits jump it). Kill or walk away → it drains to empty. You're generating the fuel for Heroic Strike. ⚡</p></div></div>
+</div>
+
+<h2>Check yourself</h2>
+<div class="quiz">
+  <p class="q">1. How do you start a fight, rage-wise?</p>
+  <button onclick="pick(this)" data-correct>At 0 — you earn rage by dealing and taking blows</button>
+  <button onclick="pick(this)">Full at 100</button>
+  <button onclick="pick(this)">At 50</button>
+  <div class="feedback"></div>
+</div>
+<div class="quiz">
+  <p class="q">2. Why funnel every rage change through <code class="inline">add_rage</code>?</p>
+  <button onclick="pick(this)" data-correct>One place clamps to 0–100 and updates the bar — no missed cases</button>
+  <button onclick="pick(this)">It makes rage build faster</button>
+  <button onclick="pick(this)">It's required for ProgressBars</button>
+  <div class="feedback"></div>
+</div>
+<div class="quiz">
+  <p class="q">3. Why multiply the decay by <code class="inline">delta</code>?</p>
+  <button onclick="pick(this)" data-correct>So it drains at the same real-time rate regardless of frame rate</button>
+  <button onclick="pick(this)">To make it drain per frame, faster on better PCs</button>
+  <button onclick="pick(this)">delta has no effect here</button>
+  <div class="feedback"></div>
+</div>
+
+<div class="teacher">
+  <b>I'M YOUR TEACHER — ASK ME ANYTHING</b>
+  <p>You built a resource economy — the spine of every class fantasy. Snags: bar doesn't move → check <code class="inline">../HUD/RageBar</code> path and that landing branches call <code class="inline">gain_rage_dealing</code>. Rage never drains → confirm the decay line is inside <code class="inline">_physics_process</code> and uses <code class="inline">delta</code>. Bar overflows → <code class="inline">add_rage</code> must <code class="inline">clampf</code> to <code class="inline">max_rage</code>.<br><br>
+  <b>Want more (ask me):</b> a number on the bar, a colour shift as it fills, or a tiny rage "pip" flash when you hit 100 (enough for Heroic Strike).<br><br>
+  Say <em>"done"</em> — next: <strong>Lesson 26, XP &amp; Leveling</strong> — kills grant XP on the real Classic curve, and dinging a level makes that combat math (and your rage) tangibly shift. 📈</p>
+</div>
+
+<footer>
+  LESSON 25 · Combat 6 · grounded in <a href="../MISSION.md">your mission</a> · numbers from <a href="../reference/wow-combat-values.md">wow-combat-values.md</a> §8<br>
+  Primary reference: <a href="https://warcraft.wiki.gg/wiki/Rage">WoW — Rage</a> · <a href="https://docs.godotengine.org/en/stable/classes/class_progressbar.html">Godot ProgressBar</a>
+</footer>
+</main>
+<script src="_lesson.js"></script>
+</body>
+</html>

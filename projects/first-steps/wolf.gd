@@ -2,13 +2,16 @@ extends CharacterBody2D
 
 @export var speed = 120
 @export var melee_range = 40.0
-@export var swing_damage = 3
+@export var swing_damage = 2
 @export var max_health = 12
+@export var level = 1
+
 var health = max_health
 
 @onready var sprite = $Sprite2D
 @onready var swing_timer = $SwingTimer
 @onready var health_bar = $HealthBar
+@onready var level_label = $LevelLabel
 
 var target = null
 var spawn = Vector2.ZERO
@@ -19,6 +22,7 @@ func _ready():
 	spawn = global_position
 	health_bar.max_value = max_health
 	health_bar.value = health
+	level_label.text = "Lv" + str(level)
 
 func _physics_process(delta):
 	if target != null:
@@ -34,20 +38,22 @@ func _physics_process(delta):
 	move_and_slide()
 	face_target()
 
-func take_damage(amount):
+func take_damage(amount, is_crit = false):
 	health -= amount
 	if health < 0: health = 0
 	health_bar.value = health
-	spawn_number(amount, Color.WHITE)
-	print("Wolf health: ", health)
+	if is_crit:
+		spawn_number(amount, Color.YELLOW, 28)   # loud
+	else:
+		spawn_number(amount, Color.WHITE, 18)
 	if health == 0:
-		queue_free()        # the wolf dies
+		queue_free()
 
-func spawn_number(amount, color):
+func spawn_number(amount, color, size = 18):
 	var n = DAMAGE_NUMBER.instantiate()
 	get_parent().add_child(n)
 	n.global_position = global_position + Vector2(-8, -30)
-	n.setup(amount, color)
+	n.show_text(str(amount), color, size)
 	
 func _on_aggro_area_body_entered(body):
 	if body.name == "Player":
