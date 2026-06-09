@@ -42,7 +42,7 @@ func _physics_process(delta):
 
 	# Abilities go here later, e.g.:
 	# if Input.is_action_just_pressed("ability_1"): cast_fireball()
-	
+
 func set_target(new_target):
 	if is_instance_valid(target):
 		target.set_targeted(false)   # un-highlight the old one
@@ -51,7 +51,7 @@ func set_target(new_target):
 
 func equip_sword():
 	sword.visible = true
-	
+
 func start_auto_attack():
 	if is_instance_valid(target) and swing_timer.is_stopped():
 		swing()                 # immediate first hit
@@ -64,7 +64,7 @@ func swing_sword():
 	var t = create_tween()
 	t.tween_property(sword, "rotation_degrees", -40, 0.08)   # slash across
 	t.tween_property(sword, "rotation_degrees", 35, 0.12)    # back to rest
-	
+
 func swing():
 	if not is_instance_valid(target):
 		swing_timer.stop()
@@ -99,13 +99,13 @@ func attack(t):
 	else:
 		t.take_damage(attack_damage)
 		gain_rage_dealing(attack_damage, false)
-		
+
 func spawn_text_over(t, s, color):
 	var n = DAMAGE_NUMBER.instantiate()
 	get_parent().add_child(n)
 	n.global_position = t.global_position + Vector2(-8, -30)
 	n.show_text(s, color)
-		
+
 func take_damage(amount, from = null):
 	health -= amount
 	if health < 0: health = 0
@@ -116,10 +116,11 @@ func take_damage(amount, from = null):
 		if not is_instance_valid(target):
 			set_target(from)          #no target = retaliate attacker
 		if swing_timer.is_stopped():
-			swing_timer.start()        
+			swing_timer.start()
 	if health == 0:
 		die()
-		
+
+# --- Attack table: outcome chances (one roll, walked in attack()) ---
 func crit_chance(t):
 	var c = base_crit - (t.level - level)   # -1% per level the target is above you
 	return max(c, 0.0)                       # never below 0
@@ -131,11 +132,11 @@ func dodge_chance(t):
 func parry_chance(t):
 	var gap = max(t.level - level, 0)
 	return 5.0 + gap * 3.0        # scales hard: +3 = 14% (front only)
-	
+
 func miss_chance(t):
 	var delta = (t.level - level) * 5    # target defense skill − your weapon skill
 	return 5.0 + delta * 0.1            # exact for our level range (gap ≤ 2)
-	
+
 func glancing_chance(t):
 	var gap = t.level - level
 	if gap <= 0:
@@ -147,7 +148,8 @@ func glancing_damage(t):
 	var low = clampf(1.3 - 0.05 * skill_diff, 0.01, 0.91)
 	var high = clampf(1.2 - 0.03 * skill_diff, 0.2, 0.99)
 	return attack_damage * randf_range(low, high)
-	
+
+# --- Rage ---
 func conversion_value():
 	return 0.0091107836 * level * level + 3.225598133 * level + 4.2652911
 
@@ -161,13 +163,13 @@ func gain_rage_dealing(damage, is_crit):
 
 func gain_rage_taking(damage):
 	add_rage(2.5 * damage / conversion_value())
-		
+
 func spawn_number(amount, color):
 	var n = DAMAGE_NUMBER.instantiate()
 	get_parent().add_child(n)
 	n.global_position = global_position + Vector2(-8, -30)
 	n.setup(amount, color)
-	
+
 func die():
 	print("- Memory Eternal -")
 	get_tree().reload_current_scene()

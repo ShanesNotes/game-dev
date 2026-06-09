@@ -54,7 +54,7 @@ func spawn_number(amount, color, size = 18):
 	get_parent().add_child(n)
 	n.global_position = global_position + Vector2(-8, -30)
 	n.show_text(str(amount), color, size)
-	
+
 func _on_aggro_area_body_entered(body):
 	if body.name == "Player":
 		target = body
