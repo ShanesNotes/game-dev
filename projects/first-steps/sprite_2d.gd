@@ -21,6 +21,7 @@ var target = null
 @onready var rage_bar = get_node("../HUD/RageBar")
 
 const DAMAGE_NUMBER = preload("res://damage_number.tscn")
+const SWORD_REST_DEGREES = 25.0
 
 func _ready():
 	add_to_group("player")            #so any wolf can find us
@@ -29,6 +30,7 @@ func _ready():
 	health_bar.value = health
 	rage_bar.max_value = max_rage
 	rage_bar.value = rage
+	sword.rotation_degrees = SWORD_REST_DEGREES
 
 func _physics_process(delta):
 	var direction = Input.get_vector("ui_left", "ui_right", "ui_up", "ui_down")
@@ -51,6 +53,7 @@ func set_target(new_target):
 
 func equip_sword():
 	sword.visible = true
+	sword.rotation_degrees = SWORD_REST_DEGREES
 
 func start_auto_attack():
 	if is_instance_valid(target) and swing_timer.is_stopped():
@@ -63,12 +66,13 @@ func _on_swing_timer_timeout():
 func swing_sword():
 	var t = create_tween()
 	t.tween_property(sword, "rotation_degrees", -40, 0.08)   # slash across
-	t.tween_property(sword, "rotation_degrees", 35, 0.12)    # back to rest
+	t.tween_property(sword, "rotation_degrees", SWORD_REST_DEGREES, 0.12)    # back to held rest angle (prevents perma "out" pose)
 
 func swing():
 	if not is_instance_valid(target):
 		swing_timer.stop()
 		target = null
+		sword.rotation_degrees = SWORD_REST_DEGREES
 		return
 	swing_sword()
 	if global_position.distance_to(target.global_position) <= attack_range:
