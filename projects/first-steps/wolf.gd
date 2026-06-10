@@ -24,7 +24,7 @@ func _ready():
 	health_bar.value = health
 	level_label.text = "Lv" + str(level)
 
-func _physics_process(delta):
+func _physics_process(_delta):
 	if target != null:
 		if global_position.distance_to(target.global_position) > melee_range:
 			velocity = (target.global_position - global_position).normalized() * speed
@@ -56,18 +56,18 @@ func spawn_number(amount, color, size = 18):
 	n.show_text(str(amount), color, size)
 
 func _on_aggro_area_body_entered(body):
-	if body.name == "Player":
+	if body.is_in_group("player"):
 		target = body
 		swing_timer.start()
 
 func _on_aggro_area_body_exited(body):
-	if body.name == "Player":
+	if body.is_in_group("player"):
 		target = null
 		swing_timer.stop()
 
 func _on_swing_timer_timeout():
 	if target != null and global_position.distance_to(target.global_position) <= melee_range + 16:
-		target.take_damage(swing_damage, self)   #pass self as the attacker
+		target.take_damage(swing_damage, self)   # pass self as the attacker
 
 func face_target():
 	var face_x = velocity.x
@@ -76,8 +76,7 @@ func face_target():
 	if face_x != 0:
 		sprite.flip_h = face_x < 0
 
-
-func _on_input_event(viewport, event, shape_idx):
+func _on_input_event(_viewport, event, _shape_idx):
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 		get_tree().get_first_node_in_group("player").set_target(self)
 

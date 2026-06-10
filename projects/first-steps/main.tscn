@@ -6,6 +6,7 @@
 [ext_resource type="Script" uid="uid://dc0hyve5lr8a4" path="res://sword.gd" id="4_lquwl"]
 [ext_resource type="Texture2D" uid="uid://dcaurreinfkrf" path="res://assets/sword.png" id="5_7mycd"]
 [ext_resource type="PackedScene" uid="uid://7sfswd6u4h5r" path="res://wolf.tscn" id="6_7mycd"]
+[ext_resource type="Script" uid="uid://dq4f7n3k2m8rw" path="res://forest_generator.gd" id="7_forest"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_1bvp3"]
 texture = ExtResource("1_h2yge")
@@ -168,9 +169,8 @@ position = Vector2(385, 430)
 
 [node name="Ground" type="TileMapLayer" parent="." unique_id=1813366233]
 position = Vector2(11, 3)
-script = "res://forest_generator.gd"
-tile_map_data = PackedByteArray("AAAAAAAA")  # runtime procedural (forest_generator.gd clears + generates Elwynn forest)
 tile_set = SubResource("TileSet_lquwl")
+script = ExtResource("7_forest")
 rendering_quadrant_size = 32
 physics_quadrant_size = 32
 
@@ -208,19 +208,19 @@ position = Vector2(-1334, 235)
 shape = SubResource("RectangleShape2D_0xm2m")
 
 [node name="Sword" type="Area2D" parent="." unique_id=563681166]
+position = Vector2(179, -93)
 script = ExtResource("4_lquwl")
 
 [node name="Sprite2D" type="Sprite2D" parent="Sword" unique_id=149845919]
-position = Vector2(179, -94)
+position = Vector2(0, -1)
 texture = ExtResource("5_7mycd")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Sword" unique_id=553355566]
-position = Vector2(180, -92)
+position = Vector2(1, 1)
 shape = SubResource("RectangleShape2D_272bh")
 
 [node name="Wolf" parent="." unique_id=125961179 instance=ExtResource("6_7mycd")]
 position = Vector2(339, 10)
-input_pickable = true
 
 [node name="HUD" type="CanvasLayer" parent="." unique_id=776590320]
 offset = Vector2(5, 5)

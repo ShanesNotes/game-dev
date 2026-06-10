@@ -24,7 +24,7 @@ const DAMAGE_NUMBER = preload("res://damage_number.tscn")
 const SWORD_REST_DEGREES = 25.0
 
 func _ready():
-	add_to_group("player")            #so any wolf can find us
+	add_to_group("player")            # so any wolf can find us
 	swing_timer.wait_time = weapon_speed
 	health_bar.max_value = max_health
 	health_bar.value = health
@@ -118,7 +118,7 @@ func take_damage(amount, from = null):
 	gain_rage_taking(amount)      # getting hit builds rage too
 	if is_instance_valid(from):       # hit by an enemy -> engage it
 		if not is_instance_valid(target):
-			set_target(from)          #no target = retaliate attacker
+			set_target(from)          # no target = retaliate attacker
 		if swing_timer.is_stopped():
 			swing_timer.start()
 	if health == 0:

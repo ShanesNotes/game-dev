@@ -1,15 +1,18 @@
 #!/usr/bin/env python3
 """
-AI Sprite -> Godot ready downscaler + bg fixer.
-Usage:
-  python downscale_ai.py my_highres_char.png 128 128 out.png
-  python downscale_ai.py sheet.png 32 32 --tile  --key-thresh 240
+AI sprite -> Godot-ready downscaler + background keyer.
 
-Good for taking Grok Imagine (or other AI) output and making clean 32px/frame sheets.
+Usage:
+  python downscale_ai_sprite.py character_source_1024.png 128 32 character.png
+  python downscale_ai_sprite.py wolf_source.png 32 32 wolf.png --key-thresh 240
+
+Takes high-res AI output (Grok Imagine etc.), resizes it to the target sheet
+size, keys out the near-white background to transparency, then restores
+contrast/saturation/sharpness lost in the downscale. See SPRITE_WORKFLOW.md.
 Requires Pillow.
 """
 from PIL import Image, ImageEnhance, ImageFilter
-import sys, argparse
+import argparse
 
 def main():
     ap = argparse.ArgumentParser()
