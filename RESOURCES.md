@@ -25,5 +25,12 @@ sharpens. Knowledge for lessons is drawn from here — not from parametric guess
 - [Godot Discord](https://discord.gg/godotengine)
   Use for: real-time troubleshooting.
 
+## Genre / domain
+- [`reference/wow-combat-values.md`](reference/wow-combat-values.md)
+  Our own research spike: Vanilla 1.12 combat/XP/rage values with sources.
+  Use for: every combat-depth lesson (20–33). The genre resource the old
+  "Gaps" note was waiting for.
+
 ## Gaps
-- No resource yet chosen for our specific game genre — pick once the mission names one.
+- No game-feel/"juice" source yet (screen shake, hit-stop, tweens) — pick one
+  when the juice backlog in learning-record 0001 gets taken.

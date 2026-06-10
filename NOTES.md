@@ -23,6 +23,8 @@ Scratchpad for your teaching preferences and working notes.
   `.defs/.def`, `.code` block (with copy button + `.kw/.fn/.var/.num/.com/.str/.type`
   token spans), `.annot/.line-note`, `.tree`, `.flow/.phase` steps, `.quiz` (buttons
   with `data-correct`), `.teacher` box, `footer`. `code.inline` + `kbd` for inline.
+- `lessons/index.html` is the course map — add each new lesson to it (right arc,
+  number, title, one-line description) when the lesson ships.
 
 ## Session setup
 - Split screen: terminal (Claude) on the LEFT, Godot editor on the RIGHT.
