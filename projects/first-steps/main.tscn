@@ -1,7 +1,7 @@
 [gd_scene format=4 uid="uid://x584hiir57lw"]
 
 [ext_resource type="Texture2D" uid="uid://bgpjumnh1fw3r" path="res://assets/tileset.png" id="1_h2yge"]
-[ext_resource type="Script" uid="uid://c3ncgr4ahy5b8" path="res://sprite_2d.gd" id="2_0xm2m"]
+[ext_resource type="Script" uid="uid://c3ncgr4ahy5b8" path="res://player.gd" id="2_0xm2m"]
 [ext_resource type="Texture2D" uid="uid://b1k7a8xscns3u" path="res://assets/character.png" id="3_h2yge"]
 [ext_resource type="Script" uid="uid://dc0hyve5lr8a4" path="res://sword.gd" id="4_lquwl"]
 [ext_resource type="Texture2D" uid="uid://dcaurreinfkrf" path="res://assets/sword.png" id="5_7mycd"]

@@ -9,7 +9,7 @@
 <body>
 <main>
 <header class="hero">
-  <div class="kicker">Godot · Lesson 21 · Combat 2</div>
+  <div class="kicker">Godot · Lesson 21 · Combat Depth 2 of 6</div>
   <h1>The Attack Table <span>Hit or Miss</span></h1>
   <p class="sub">One roll of a hundred-sided die decides every swing. Today it decides hit vs miss — and the tougher the wolf, the more you whiff.</p>
 </header>
@@ -41,7 +41,7 @@
   and miss is <code class="inline">5% + Δ × 0.1</code>. So vs a same-level wolf = 5%, +1 level = 5.5%, +2 = 6%. Add this to the Player:
 </p>
 <div class="code">
-  <div class="bar"><span class="t">GDScript · sprite_2d.gd</span><button class="copy">copy</button></div>
+  <div class="bar"><span class="t">GDScript · player.gd</span><button class="copy">copy</button></div>
 <pre><span class="kw">func</span> <span class="fn">miss_chance</span>(<span class="var">t</span>):
     <span class="kw">var</span> <span class="var">delta</span> = (<span class="var">t</span>.<span class="var">level</span> - <span class="var">level</span>) * <span class="num">5</span>    <span class="com"># target defense skill − your weapon skill</span>
     <span class="kw">return</span> <span class="num">5.0</span> + <span class="var">delta</span> * <span class="num">0.1</span>            <span class="com"># exact for our level range (gap ≤ 2)</span></pre>
@@ -97,7 +97,7 @@
 </div>
 <p>Then add a helper on the Player that pops text over a target (the wolf you just whiffed on):</p>
 <div class="code">
-  <div class="bar"><span class="t">GDScript · sprite_2d.gd</span><button class="copy">copy</button></div>
+  <div class="bar"><span class="t">GDScript · player.gd</span><button class="copy">copy</button></div>
 <pre><span class="kw">func</span> <span class="fn">spawn_text_over</span>(<span class="var">t</span>, <span class="var">s</span>, <span class="var">color</span>):
     <span class="kw">var</span> <span class="var">n</span> = <span class="var">DAMAGE_NUMBER</span>.<span class="fn">instantiate</span>()
     <span class="fn">get_parent</span>().<span class="fn">add_child</span>(<span class="var">n</span>)
@@ -141,6 +141,22 @@
   <div class="feedback"></div>
 </div>
 
+<h3>Codebase checkpoint</h3>
+<p>The project after this lesson:</p>
+<div class="tree">
+<span class="dim">projects/first-steps/</span>
+├─ project.godot
+├─ icon.svg
+├─ main.tscn
+├─ player.gd          <span class="dim"><span class="leaf">← changed: miss_chance(), attack() with roll table, spawn_text_over()</span></span>
+├─ wolf.gd
+├─ wolf.tscn
+├─ sword.gd
+├─ damage_number.gd   <span class="dim"><span class="leaf">← changed: show_text() replaces setup's innards</span></span>
+├─ damage_number.tscn
+└─ assets/            <span class="dim">· tileset, character, sword, wolf PNGs</span>
+</div>
+
 <div class="teacher">
   <b>I'M YOUR TEACHER — ASK ME ANYTHING</b>
   <p>You just built the spine of WoW combat — one roll, banded outcomes. Snags: never see a miss → it's only 5–6%; use the <code class="inline">return 50.0</code> trick. "Miss" pops over you instead of the wolf → make sure <code class="inline">spawn_text_over</code> uses <code class="inline">t.global_position</code>. Error on <code class="inline">show_text</code> → re-save <code class="inline">damage_number.gd</code> with the new version.<br><br>
@@ -149,7 +165,7 @@
 </div>
 
 <footer>
-  LESSON 21 · Combat 2 · grounded in <a href="../MISSION.md">your mission</a> · numbers from <a href="../reference/wow-combat-values.md">wow-combat-values.md</a> §0, §3<br>
+  GODOT · LESSON 21 · COMBAT DEPTH 2/6 · grounded in <a href="../MISSION.md">your mission</a> · numbers from <a href="../reference/wow-combat-values.md">wow-combat-values.md</a> §0, §3<br>
   Primary reference: <a href="https://warcraft.wiki.gg/wiki/Attack_table">WoW — Attack table</a> · <a href="https://docs.godotengine.org/en/stable/classes/class_%40globalscope.html#class-globalscope-method-randf">Godot randf()</a>
 </footer>
 </main>

@@ -9,7 +9,7 @@
 <body>
 <main>
 <header class="hero">
-  <div class="kicker">Godot · Lesson 22 · Combat 3</div>
+  <div class="kicker">Godot · Lesson 22 · Combat Depth 3 of 6</div>
   <h1>Critical <span>Strikes</span></h1>
   <p class="sub">Carve a crit band out of the attack table — double damage, big yellow numbers, and a crit chance that shrinks against tougher wolves.</p>
 </header>
@@ -34,7 +34,7 @@
 <h2>Part A — crit chance from the level gap</h2>
 <p>Add a base-crit stat and a chance function. From <a href="../reference/wow-combat-values.md"><code class="inline">wow-combat-values.md</code></a> §5: <code class="inline">base − 1% per level above you</code>, floored at 0.</p>
 <div class="code">
-  <div class="bar"><span class="t">GDScript · sprite_2d.gd</span><button class="copy">copy</button></div>
+  <div class="bar"><span class="t">GDScript · player.gd</span><button class="copy">copy</button></div>
 <pre><span class="com"># with the other @export vars:</span>
 <span class="kw">@export</span> <span class="kw">var</span> <span class="var">base_crit</span> = <span class="num">5.0</span>
 
@@ -137,6 +137,22 @@
   <div class="feedback"></div>
 </div>
 
+<h3>Codebase checkpoint</h3>
+<p>The project after this lesson:</p>
+<div class="tree">
+<span class="dim">projects/first-steps/</span>
+├─ project.godot
+├─ icon.svg
+├─ main.tscn
+├─ player.gd          <span class="dim"><span class="leaf">← changed: base_crit, crit_chance(), attack() with crit band</span></span>
+├─ wolf.gd            <span class="dim"><span class="leaf">← changed: take_damage(is_crit param), spawn_number(size param)</span></span>
+├─ wolf.tscn
+├─ sword.gd
+├─ damage_number.gd   <span class="dim"><span class="leaf">← changed: show_text(size param)</span></span>
+├─ damage_number.tscn
+└─ assets/            <span class="dim">· tileset, character, sword, wolf PNGs</span>
+</div>
+
 <div class="teacher">
   <b>I'M YOUR TEACHER — ASK ME ANYTHING</b>
   <p>The attack table is taking shape: Miss, Crit, Hit — one roll. Snags: crits look white/small → check the wolf passes <code class="inline">Color.YELLOW, 28</code> and that <code class="inline">show_text</code> has the <code class="inline">size</code> param. "Too many arguments to take_damage" → make sure the wolf's <code class="inline">take_damage</code> now has the <code class="inline">is_crit</code> parameter.<br><br>
@@ -145,7 +161,7 @@
 </div>
 
 <footer>
-  LESSON 22 · Combat 3 · grounded in <a href="../MISSION.md">your mission</a> · numbers from <a href="../reference/wow-combat-values.md">wow-combat-values.md</a> §5<br>
+  GODOT · LESSON 22 · COMBAT DEPTH 3/6 · grounded in <a href="../MISSION.md">your mission</a> · numbers from <a href="../reference/wow-combat-values.md">wow-combat-values.md</a> §5<br>
   Primary reference: <a href="https://warcraft.wiki.gg/wiki/Critical_strike">WoW — Critical strike</a> · <a href="https://warcraft.wiki.gg/wiki/Attack_table">Attack table</a>
 </footer>
 </main>

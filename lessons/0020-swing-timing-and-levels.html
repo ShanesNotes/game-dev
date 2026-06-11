@@ -9,7 +9,7 @@
 <body>
 <main>
 <header class="hero">
-  <div class="kicker">Godot · Lesson 20 · Combat 1</div>
+  <div class="kicker">Godot · Lesson 20 · Combat Depth 1 of 6</div>
   <h1>Swing Timing <span>& Levels</span></h1>
   <p class="sub">Your sword swings at a real weapon speed, and every fighter now has a level — the foundation the whole WoW combat system stands on.</p>
 </header>
@@ -41,7 +41,7 @@
 <h2>Part A — swing at your weapon's speed</h2>
 <p>Right now your <code class="inline">SwingTimer</code> has a fixed wait time set in the editor. Let's drive it from a <strong>weapon speed</strong> variable instead, so it's a real stat you can tune (and later, swap per weapon).</p>
 <div class="code">
-  <div class="bar"><span class="t">GDScript · sprite_2d.gd</span><button class="copy">copy</button></div>
+  <div class="bar"><span class="t">GDScript · player.gd</span><button class="copy">copy</button></div>
 <pre><span class="com"># with the other @export vars near the top:</span>
 <span class="kw">@export</span> <span class="kw">var</span> <span class="var">weapon_speed</span> = <span class="num">2.0</span>    <span class="com"># seconds per swing (Worn Shortsword is ~1.9 in Classic)</span>
 
@@ -74,7 +74,7 @@
 
 <h3>Player</h3>
 <div class="code">
-  <div class="bar"><span class="t">GDScript · sprite_2d.gd</span><button class="copy">copy</button></div>
+  <div class="bar"><span class="t">GDScript · player.gd</span><button class="copy">copy</button></div>
 <pre><span class="com"># with the other @export vars:</span>
 <span class="kw">@export</span> <span class="kw">var</span> <span class="var">level</span> = <span class="num">1</span></pre>
 </div>
@@ -135,6 +135,22 @@
   <div class="feedback"></div>
 </div>
 
+<h3>Codebase checkpoint</h3>
+<p>The project after this lesson:</p>
+<div class="tree">
+<span class="dim">projects/first-steps/</span>
+├─ project.godot
+├─ icon.svg
+├─ main.tscn          <span class="dim">· Player, three wolves with per-instance Level</span>
+├─ player.gd          <span class="dim"><span class="leaf">← changed: weapon_speed, level exports + initialization</span></span>
+├─ wolf.gd            <span class="dim"><span class="leaf">← changed: level export, level_label setup in _ready()</span></span>
+├─ wolf.tscn          <span class="dim"><span class="leaf">← changed: LevelLabel node added</span></span>
+├─ sword.gd
+├─ damage_number.gd
+├─ damage_number.tscn
+└─ assets/            <span class="dim">· tileset, character, sword, wolf PNGs</span>
+</div>
+
 <div class="teacher">
   <b>I'M YOUR TEACHER — ASK ME ANYTHING</b>
   <p>This lesson is foundation — modest on screen, huge underneath. Snags: "Invalid get index 'LevelLabel'" → the Label must be a child of the Wolf root and named exactly <code class="inline">LevelLabel</code>, and <code class="inline">wolf.tscn</code> saved. Level shows "L1" on all of them → you set the per-instance Level in <code class="inline">main.tscn</code>, right? The label edits the <em>scene</em>, the level is set per <em>instance</em>.<br><br>
@@ -143,7 +159,7 @@
 </div>
 
 <footer>
-  LESSON 20 · Combat 1 · grounded in <a href="../MISSION.md">your mission</a> · numbers from <a href="../reference/wow-combat-values.md">wow-combat-values.md</a><br>
+  GODOT · LESSON 20 · COMBAT DEPTH 1/6 · grounded in <a href="../MISSION.md">your mission</a> · numbers from <a href="../reference/wow-combat-values.md">wow-combat-values.md</a><br>
   Primary reference: <a href="https://warcraft.wiki.gg/wiki/Attack_speed">WoW — Attack speed</a> · <a href="https://docs.godotengine.org/en/stable/classes/class_timer.html">Godot Timer</a>
 </footer>
 </main>

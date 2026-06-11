@@ -76,6 +76,13 @@ player is now effectively a **Warrior** (sword auto-attack + rage + Heroic Strik
 
 Then the original next story leg remains: **travel north to the cabin** (scene transition).
 
+## Numbering update (2026-06-10, curriculum v2)
+Lessons 19–25 of this roadmap shipped (as v2 lessons 17 + 20–25), and **lesson 26
+is now the procedural forest** (covering `forest_generator.gd`, which entered the
+repo ahead of its lesson). Everything below from "26 · XP & leveling" onward
+shifts one number later: XP = **27**, inventory = **28**, chest = **29**, gather =
+**30**, wizard = **31**, tracking = **32**, Heroic Strike = **33**, Whirlwind = **34**.
+
 ## Notes
 - Numbered 19–33 here (15 lessons); granularity may shift as we build (e.g. 23/24 could
   split or merge). We do them **one at a time**.

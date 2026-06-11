@@ -4,8 +4,10 @@
 packaged so you can run it yourself.**
 
 This repository is a live example: a total beginner (never wrote code in any
-language) learning Godot game development, 25 lessons in, with a playable
-WoW-style combat system built entirely by their own hands. This guide explains
+language) learning Godot game development, 26 lessons in, with a playable
+WoW-style combat system built entirely by their own hands. The lessons double
+as the codebase's build order — each one ends with a "codebase checkpoint"
+showing exactly what the project looks like at that point. This guide explains
 the method that got there. Substitute your own subject freely — the method
 doesn't care that this one is game dev.
 
@@ -37,7 +39,7 @@ to guess at:
 | `learning-records/` | What has actually been learned? What decisions are locked? | Records 0001–0002: every lesson summarized, every decision logged |
 | `RESOURCES.md` | Where does knowledge come from (instead of AI guesswork)? | Official Godot docs + community wisdom, each with a "use for" |
 | `reference/` | What facts must stay pinned across many lessons? | WoW 1.12 combat values, researched once, cited by every combat lesson |
-| `lessons/` | The actual teaching: one self-contained HTML page per win | 25 lessons + [`index.html`](lessons/index.html) to browse them |
+| `lessons/` | The actual teaching: one self-contained HTML page per win | 26 lessons + [`index.html`](lessons/index.html) to browse them |
 | `projects/` | The real work, made by the learner's hands | A Godot project with click-targeting, a one-roll attack table, rage |
 | `TELOS.md` | What is all of it *for*? (See "The telos discipline" below) | [`TELOS.md`](TELOS.md) |
 

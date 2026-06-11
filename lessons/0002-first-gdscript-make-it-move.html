@@ -9,7 +9,7 @@
 <body>
 <main>
 <header class="hero">
-  <div class="kicker">Godot · Lesson 02</div>
+  <div class="kicker">Godot · Lesson 02 · Foundations 2 of 7</div>
   <h1>Your First GDScript: <span>Make It Move</span></h1>
   <p class="sub">Your first lines of code ever. We'll teach what each piece <em>is</em> — not just what to type.</p>
 </header>
@@ -37,7 +37,7 @@
 <h2>The code you'll write</h2>
 <p>Read the line-by-line breakdown under it before typing.</p>
 <div class="code">
-  <div class="bar"><span class="t">GDScript · sprite_2d.gd</span><button class="copy">copy</button></div>
+  <div class="bar"><span class="t">GDScript · player.gd</span><button class="copy">copy</button></div>
 <pre><span class="kw">extends</span> <span class="type">Sprite2D</span>
 
 <span class="kw">var</span> <span class="var">speed</span> = <span class="num">200</span>
@@ -63,10 +63,15 @@
 <div class="flow">
   <div class="phase"><div class="rail"><div class="num">1</div><div class="line"></div></div><div class="body"><p>Reopen the Lesson 1 project if closed: <code class="inline">godot --path ~/game-dev/projects/first-steps</code> (or pick it in the Project Manager).</p></div></div>
   <div class="phase"><div class="rail"><div class="num">2</div><div class="line"></div></div><div class="body"><p>In the <em>Scene</em> dock, click your <code class="inline">Sprite2D</code> node to select it.</p></div></div>
-  <div class="phase"><div class="rail"><div class="num">3</div><div class="line"></div></div><div class="body"><p>Click <strong>Attach Script</strong> (scroll icon with a <strong>+</strong>, top of the Scene dock). Leave defaults — language <strong>GDScript</strong> — click <kbd>Create</kbd>.</p></div></div>
+  <div class="phase"><div class="rail"><div class="num">3</div><div class="line"></div></div><div class="body"><p>Click <strong>Attach Script</strong> (scroll icon with a <strong>+</strong>, top of the Scene dock). Godot pre-fills the name as <code class="inline">sprite_2d.gd</code> — <strong>change it to <code class="inline">player.gd</code></strong> before clicking <kbd>Create</kbd>.</p></div></div>
   <div class="phase"><div class="rail"><div class="num">4</div><div class="line"></div></div><div class="body"><p>The <em>Script editor</em> opens with starter lines. <strong>Delete everything</strong> and type the 5 lines above. Type it — don't paste. Muscle memory matters when you're learning.</p></div></div>
   <div class="phase"><div class="rail"><div class="num">5</div><div class="line"></div></div><div class="body"><p>Press <kbd>F5</kbd>. The robot slides right and off screen. 🎉</p></div></div>
   <div class="phase"><div class="rail"><div class="num">6</div></div><div class="body"><p><strong>Experiment:</strong> stop, change <code class="inline">200</code> to <code class="inline">50</code>, run. Then try <code class="inline">600</code>. You just felt what a variable does.</p></div></div>
+</div>
+
+<div class="callout note">
+  <span class="ct">◈ Why player.gd, not sprite_2d.gd?</span>
+  <p>Godot suggests a name based on the <em>node type</em>. That's a fine default — for a one-file project. As your project grows, you'll have many Sprite2Ds: the player, coins, trees, enemies. A script named after the <em>role</em> (<code class="inline">player.gd</code>, <code class="inline">coin.gd</code>) tells you what it does at a glance. Build that habit now.</p>
 </div>
 
 <h2>Check yourself</h2>
@@ -92,13 +97,24 @@
   <div class="feedback"></div>
 </div>
 
+<h3>Codebase checkpoint</h3>
+<p>The project after this lesson:</p>
+<div class="tree">
+<span class="dim">projects/first-steps/</span>
+├─ project.godot            <span class="dim">· project settings</span>
+├─ icon.svg                 <span class="dim">· the robot picture</span>
+├─ main.tscn                <span class="dim">· Main (Node2D) → Sprite2D showing icon.svg</span>
+└─ <span class="leaf">player.gd</span>               <span class="dim">← new: script attached to Sprite2D, moves it right</span>
+</div>
+<p class="cite">One script file is the entire new addition. The scene file (<code class="inline">main.tscn</code>) also updated to record that the script is attached, but you didn't edit it by hand.</p>
+
 <div class="teacher">
   <b>I'M YOUR TEACHER — ASK ME ANYTHING</b>
   <p>Confused by <code class="inline">delta</code>? Wondering why <code class="inline">+=</code> not <code class="inline">=</code>? Got a red error? Paste it to me on the left — errors are normal, and reading them is a core skill. When the robot moves, say <em>"done"</em>. Lesson 3: move only when <strong>you</strong> press the arrow keys.</p>
 </div>
 
 <footer>
-  LESSON 02 · grounded in <a href="../MISSION.md">your mission</a> · sources in <a href="../RESOURCES.md">RESOURCES.md</a><br>
+  LESSON 02 · Foundations 2/7 · grounded in <a href="../MISSION.md">your mission</a> · sources in <a href="../RESOURCES.md">RESOURCES.md</a><br>
   Primary reference: <a href="https://docs.godotengine.org/en/stable/getting_started/step_by_step/scripting_first_script.html">Godot — Creating your first script</a>
 </footer>
 </main>

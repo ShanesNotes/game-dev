@@ -9,7 +9,7 @@
 <body>
 <main>
 <header class="hero">
-  <div class="kicker">Godot · Lesson 23 · Combat 4</div>
+  <div class="kicker">Godot · Lesson 23 · Combat Depth 4 of 6</div>
   <h1>Dodge <span>& Parry</span></h1>
   <p class="sub">The wolves fight back by avoiding you — two new bands slot into the same single roll, right between Miss and Crit.</p>
 </header>
@@ -36,7 +36,7 @@
 <h2>Part A — the two chance functions</h2>
 <p>Add these to the Player, alongside <code class="inline">miss_chance</code> and <code class="inline">crit_chance</code>:</p>
 <div class="code">
-  <div class="bar"><span class="t">GDScript · sprite_2d.gd</span><button class="copy">copy</button></div>
+  <div class="bar"><span class="t">GDScript · player.gd</span><button class="copy">copy</button></div>
 <pre><span class="kw">func</span> <span class="fn">dodge_chance</span>(<span class="var">t</span>):
     <span class="kw">var</span> <span class="var">gap</span> = <span class="fn">max</span>(<span class="var">t</span>.<span class="var">level</span> - <span class="var">level</span>, <span class="num">0</span>)
     <span class="kw">return</span> <span class="num">5.0</span> + <span class="var">gap</span> * <span class="num">0.5</span>        <span class="com"># +0.5% per level above you</span>
@@ -108,6 +108,22 @@
   <div class="feedback"></div>
 </div>
 
+<h3>Codebase checkpoint</h3>
+<p>The project after this lesson:</p>
+<div class="tree">
+<span class="dim">projects/first-steps/</span>
+├─ project.godot
+├─ icon.svg
+├─ main.tscn
+├─ player.gd          <span class="dim"><span class="leaf">← changed: dodge_chance(), parry_chance(), attack() with dodge/parry bands</span></span>
+├─ wolf.gd
+├─ wolf.tscn
+├─ sword.gd
+├─ damage_number.gd
+├─ damage_number.tscn
+└─ assets/            <span class="dim">· tileset, character, sword, wolf PNGs</span>
+</div>
+
 <div class="teacher">
   <b>I'M YOUR TEACHER — ASK ME ANYTHING</b>
   <p>Five bands now ride one roll — you're reading the real WoW combat table. Snags: see crits but never dodge/parry → they're 5–11%; crank a chance to 50 to verify, then restore. Pops in the wrong order/colour → check the <code class="inline">elif</code> chain matches Miss → Dodge → Parry → Crit → Hit.<br><br>
@@ -116,7 +132,7 @@
 </div>
 
 <footer>
-  LESSON 23 · Combat 4 · grounded in <a href="../MISSION.md">your mission</a> · numbers from <a href="../reference/wow-combat-values.md">wow-combat-values.md</a> §4<br>
+  GODOT · LESSON 23 · COMBAT DEPTH 4/6 · grounded in <a href="../MISSION.md">your mission</a> · numbers from <a href="../reference/wow-combat-values.md">wow-combat-values.md</a> §4<br>
   Primary reference: <a href="https://warcraft.wiki.gg/wiki/Attack_table">WoW — Attack table</a> · <a href="https://vanilla-wow-archive.fandom.com/wiki/Parry">Parry</a>
 </footer>
 </main>

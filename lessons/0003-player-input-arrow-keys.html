@@ -9,14 +9,14 @@
 <body>
 <main>
 <header class="hero">
-  <div class="kicker">Godot · Lesson 03</div>
+  <div class="kicker">Godot · Lesson 03 · Foundations 3 of 7</div>
   <h1>Take the Controls: <span>Arrow-Key Movement</span></h1>
   <p class="sub">From "it moves on its own" to "<em>I</em> move it." This is the heart of every game you named.</p>
 </header>
 
 <div class="win">
   <b>TODAY</b>
-  <p>Drive the robot around the screen with the arrow keys — up, down, left, right, and diagonals.</p>
+  <p>Drive the robot around the screen with the arrow keys — up, down, left, right, and diagonals that are <em>not</em> faster than straights.</p>
 </div>
 
 <h2>The new idea: <code class="inline">if</code></h2>
@@ -56,41 +56,65 @@
   <p>In 2D, <code class="inline">y</code> grows <em>downward</em>, so "up" is <code class="inline">-1</code>, not +1.</p>
 </div>
 
-<h2>The code</h2>
-<p>Replace your whole script with this. Read the notes under it as you type.</p>
+<h2>The obvious way — and its hidden flaw</h2>
+<p>Four separate <code class="inline">if</code>s feel natural. Here's what that looks like:</p>
 <div class="code">
-  <div class="bar"><span class="t">GDScript · sprite_2d.gd</span><button class="copy">copy</button></div>
+  <div class="bar"><span class="t">GDScript · the four-if approach</span></div>
+<pre><span class="kw">var</span> <span class="var">direction</span> = <span class="type">Vector2</span>.ZERO
+<span class="kw">if</span> <span class="fn">Input</span>.is_action_pressed(<span class="str">"ui_right"</span>): <span class="var">direction</span>.x += <span class="num">1</span>
+<span class="kw">if</span> <span class="fn">Input</span>.is_action_pressed(<span class="str">"ui_left"</span>):  <span class="var">direction</span>.x -= <span class="num">1</span>
+<span class="kw">if</span> <span class="fn">Input</span>.is_action_pressed(<span class="str">"ui_down"</span>):  <span class="var">direction</span>.y += <span class="num">1</span>
+<span class="kw">if</span> <span class="fn">Input</span>.is_action_pressed(<span class="str">"ui_up"</span>):    <span class="var">direction</span>.y -= <span class="num">1</span></pre>
+</div>
+<p>
+  It works — mostly. Hold right and down together and the direction is <code class="inline">(1, 1)</code>.
+  Mathematically, that vector is <strong>~1.41× longer</strong> than a straight direction. The character
+  runs about 41% faster on diagonals. That's a real bug — and it's hard to notice until someone speedruns your game.
+</p>
+<div class="callout note">
+  <span class="ct">◈ the diagonal-speed trap</span>
+  <p>A straight direction like <code class="inline">(1, 0)</code> has <em>length 1</em>. A diagonal like <code class="inline">(1, 1)</code> has length √2 ≈ 1.41 — so multiplying it by <code class="inline">speed</code> gives ~41% more velocity. The fix is <strong>normalizing</strong>: shrink any vector back to length 1 before using it. The four-if approach forces you to do this manually every time.</p>
+</div>
+
+<h2>The better way: <code class="inline">Input.get_vector()</code></h2>
+<p>
+  Godot has a single call that returns a ready-made direction Vector2 — and it fixes the diagonal bug
+  <em>automatically</em>, among other things:
+</p>
+<div class="defs">
+  <div class="def"><b>Normalized</b><p>The returned vector is always length ≤ 1, so diagonals are no faster than straights. You never have to think about it.</p></div>
+  <div class="def"><b>Analog</b><p>A gamepad stick reports <em>how far</em> it's pushed, not just on/off. <code class="inline">get_vector</code> preserves that, so a gentle tilt gives a gentle speed.</p></div>
+  <div class="def"><b>Deadzone handling</b><p>Sticks drift slightly at rest; <code class="inline">get_vector</code> ignores those tiny inputs so the character doesn't wander on its own.</p></div>
+</div>
+<div class="callout note">
+  <span class="ct">◈ controller support, for free</span>
+  <p>Godot's built-in <code class="inline">ui_left/right/up/down</code> actions come pre-bound to a gamepad's left stick and D-pad. Once movement reads them via <code class="inline">get_vector</code>, plug in a controller and the left stick already works — no Input Map changes needed.</p>
+</div>
+
+<h2>The code</h2>
+<p>Replace your whole script with this.</p>
+<div class="code">
+  <div class="bar"><span class="t">GDScript · player.gd</span><button class="copy">copy</button></div>
 <pre><span class="kw">extends</span> <span class="type">Sprite2D</span>
 
 <span class="kw">var</span> <span class="var">speed</span> = <span class="num">200</span>
 
 <span class="kw">func</span> <span class="fn">_process</span>(delta):
-    <span class="kw">var</span> <span class="var">direction</span> = <span class="type">Vector2</span>.ZERO
-
-    <span class="kw">if</span> <span class="fn">Input</span>.is_action_pressed(<span class="str">"ui_right"</span>):
-        <span class="var">direction</span>.x += <span class="num">1</span>
-    <span class="kw">if</span> <span class="fn">Input</span>.is_action_pressed(<span class="str">"ui_left"</span>):
-        <span class="var">direction</span>.x -= <span class="num">1</span>
-    <span class="kw">if</span> <span class="fn">Input</span>.is_action_pressed(<span class="str">"ui_down"</span>):
-        <span class="var">direction</span>.y += <span class="num">1</span>
-    <span class="kw">if</span> <span class="fn">Input</span>.is_action_pressed(<span class="str">"ui_up"</span>):
-        <span class="var">direction</span>.y -= <span class="num">1</span>
-
+    <span class="kw">var</span> <span class="var">direction</span> = <span class="fn">Input</span>.get_vector(<span class="str">"ui_left"</span>, <span class="str">"ui_right"</span>, <span class="str">"ui_up"</span>, <span class="str">"ui_down"</span>)
     <span class="var">position</span> += <span class="var">direction</span> * <span class="var">speed</span> * delta</pre>
 </div>
 
 <div class="annot">
-  <div class="line-note"><code>var direction = Vector2.ZERO</code> — <b>start each frame at "no movement"</b>, i.e. <code>(0, 0)</code>. We rebuild direction from scratch every frame based on what's held right now.</div>
-  <div class="line-note"><code>if ...("ui_right"): direction.x += 1</code> — <b>if right is held, push x toward the right.</b> Four independent ifs — holding two at once (right + up) adds both, giving a diagonal automatically.</div>
-  <div class="line-note"><code>position += direction * speed * delta</code> — <b>one movement line for all directions.</b> Nothing held → direction is <code>(0,0)</code> → robot stays put.</div>
+  <div class="line-note"><code>Input.get_vector("ui_left", "ui_right", "ui_up", "ui_down")</code> — <b>order is left, right, up, down</b> (negative-x, positive-x, negative-y, positive-y). Returns a direction Vector2, normalized, already handling diagonals and analog sticks.</div>
+  <div class="line-note"><code>position += direction * speed * delta</code> — <b>one line for all directions.</b> Nothing held → direction is <code>(0, 0)</code> → robot stays put. Delta keeps it frame-rate independent.</div>
 </div>
 
 <h2>Do it</h2>
 <div class="flow">
-  <div class="phase"><div class="rail"><div class="num">1</div><div class="line"></div></div><div class="body"><p>Open the project, select the <code class="inline">Sprite2D</code>, open its script (double-click the script icon next to it in the Scene dock).</p></div></div>
-  <div class="phase"><div class="rail"><div class="num">2</div><div class="line"></div></div><div class="body"><p>Replace the old code with the script above. Mind the indentation — lines under each <code class="inline">if</code> are indented <em>twice</em> (inside the function, then inside the if).</p></div></div>
-  <div class="phase"><div class="rail"><div class="num">3</div><div class="line"></div></div><div class="body"><p>Press <kbd>F5</kbd>. Hold an arrow — it moves. Release — it stops. Hold two — diagonal.</p></div></div>
-  <div class="phase"><div class="rail"><div class="num">4</div></div><div class="body"><p><strong>Experiment:</strong> notice diagonal is slightly faster (it adds two directions). That's a real bug in real games — ask me about <em>"normalizing"</em> for the one-line fix.</p></div></div>
+  <div class="phase"><div class="rail"><div class="num">1</div><div class="line"></div></div><div class="body"><p>Open the project, select the <code class="inline">Sprite2D</code>, open its script (double-click the script icon next to it in the Scene dock, or double-click <code class="inline">player.gd</code> in the FileSystem dock).</p></div></div>
+  <div class="phase"><div class="rail"><div class="num">2</div><div class="line"></div></div><div class="body"><p>Replace the old code with the script above. Mind the indentation — the two lines inside <code class="inline">_process</code> must be indented (one Tab).</p></div></div>
+  <div class="phase"><div class="rail"><div class="num">3</div><div class="line"></div></div><div class="body"><p>Press <kbd>F5</kbd>. Hold an arrow — it moves. Release — it stops. Hold two — diagonal, same speed as straight.</p></div></div>
+  <div class="phase"><div class="rail"><div class="num">4</div></div><div class="body"><p><strong>Experiment:</strong> if you have a gamepad, plug it in. The left stick and D-pad already move the robot — you didn't write any extra code.</p></div></div>
 </div>
 
 <h2>Check yourself</h2>
@@ -102,28 +126,39 @@
   <div class="feedback"></div>
 </div>
 <div class="quiz">
-  <p class="q">2. Why reset <code class="inline">direction</code> to <code class="inline">Vector2.ZERO</code> each frame?</p>
-  <button onclick="pick(this)" data-correct>So movement reflects only the keys held right now, not leftovers from before</button>
-  <button onclick="pick(this)">Because Vector2 must always start at zero</button>
-  <button onclick="pick(this)">To make the robot faster</button>
+  <p class="q">2. Why is the diagonal-speed bug hard to avoid with four separate <code class="inline">if</code>s?</p>
+  <button onclick="pick(this)" data-correct>Two directions added together produce a vector longer than 1, so speed is ~41% higher</button>
+  <button onclick="pick(this)">Godot processes the fourth if slower</button>
+  <button onclick="pick(this)">It only happens with a controller</button>
   <div class="feedback"></div>
 </div>
 <div class="quiz">
   <p class="q">3. Which makes a node move UP the screen in 2D Godot?</p>
-  <button onclick="pick(this)">direction.y += 1</button>
-  <button onclick="pick(this)" data-correct>direction.y -= 1</button>
-  <button onclick="pick(this)">direction.x -= 1</button>
+  <button onclick="pick(this)">y += 1</button>
+  <button onclick="pick(this)" data-correct>y -= 1</button>
+  <button onclick="pick(this)">x -= 1</button>
   <div class="feedback"></div>
 </div>
 
+<h3>Codebase checkpoint</h3>
+<p>The project after this lesson:</p>
+<div class="tree">
+<span class="dim">projects/first-steps/</span>
+├─ project.godot            <span class="dim">· project settings</span>
+├─ icon.svg                 <span class="dim">· the robot picture</span>
+├─ main.tscn                <span class="dim">· Main (Node2D) → Sprite2D with player.gd attached</span>
+└─ <span class="leaf">player.gd</span>               <span class="dim">← changed: now uses Input.get_vector for input-driven movement</span>
+</div>
+<p class="cite">Same files as Lesson 2 — only the inside of <code class="inline">player.gd</code> changed.</p>
+
 <div class="teacher">
   <b>I'M YOUR TEACHER — ASK ME ANYTHING</b>
-  <p>Want the diagonal-speed fix (<code class="inline">normalized()</code>)? Curious how to use WASD instead of arrows? Hit an error? Tell me on the left. When you can drive the robot around, say <em>"done"</em> — Lesson 4 turns this sprite into a real <strong>character that can't walk through walls</strong>.</p>
+  <p>Want to know how <code class="inline">get_vector</code> normalizes under the hood, or what "vector length" actually means geometrically? Ask — it's genuinely interesting math. Hit an error? Paste it on the left. When you can drive the robot around, say <em>"done"</em> — Lesson 4 turns this sprite into a real <strong>character that can't walk through walls</strong>.</p>
 </div>
 
 <footer>
-  LESSON 03 · grounded in <a href="../MISSION.md">your mission</a> · sources in <a href="../RESOURCES.md">RESOURCES.md</a><br>
-  Primary reference: <a href="https://docs.godotengine.org/en/stable/tutorials/inputs/input_examples.html">Godot — Input examples</a>
+  LESSON 03 · Foundations 3/7 · grounded in <a href="../MISSION.md">your mission</a> · sources in <a href="../RESOURCES.md">RESOURCES.md</a><br>
+  Primary reference: <a href="https://docs.godotengine.org/en/stable/tutorials/inputs/input_examples.html">Godot — Input examples</a> · <a href="https://docs.godotengine.org/en/stable/classes/class_input.html#class-input-method-get-vector">Godot — Input.get_vector()</a>
 </footer>
 </main>
 <script src="_lesson.js"></script>

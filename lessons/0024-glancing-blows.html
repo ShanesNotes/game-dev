@@ -9,7 +9,7 @@
 <body>
 <main>
 <header class="hero">
-  <div class="kicker">Godot · Lesson 24 · Combat 5</div>
+  <div class="kicker">Godot · Lesson 24 · Combat Depth 5 of 6</div>
   <h1>Glancing <span>Blows</span></h1>
   <p class="sub">Punch above your weight and your sword skids off — the last band in your attack table, and it only bites when the foe out-levels you.</p>
 </header>
@@ -36,7 +36,7 @@
 
 <h2>Part A — chance and damage</h2>
 <div class="code">
-  <div class="bar"><span class="t">GDScript · sprite_2d.gd</span><button class="copy">copy</button></div>
+  <div class="bar"><span class="t">GDScript · player.gd</span><button class="copy">copy</button></div>
 <pre><span class="kw">func</span> <span class="fn">glancing_chance</span>(<span class="var">t</span>):
     <span class="kw">var</span> <span class="var">gap</span> = <span class="var">t</span>.<span class="var">level</span> - <span class="var">level</span>
     <span class="kw">if</span> <span class="var">gap</span> &lt;= <span class="num">0</span>:
@@ -120,6 +120,22 @@
   <div class="feedback"></div>
 </div>
 
+<h3>Codebase checkpoint</h3>
+<p>The project after this lesson:</p>
+<div class="tree">
+<span class="dim">projects/first-steps/</span>
+├─ project.godot
+├─ icon.svg
+├─ main.tscn
+├─ player.gd          <span class="dim"><span class="leaf">← changed: glancing_chance(), glancing_damage(), attack() with glancing band</span></span>
+├─ wolf.gd
+├─ wolf.tscn
+├─ sword.gd
+├─ damage_number.gd
+├─ damage_number.tscn
+└─ assets/            <span class="dim">· tileset, character, sword, wolf PNGs</span>
+</div>
+
 <div class="teacher">
   <b>I'M YOUR TEACHER — ASK ME ANYTHING</b>
   <p>Your attack table is now the real thing — six outcomes, one roll, WoW-accurate order. Snags: never see glancing → you must be hitting the L1 wolf (gap 0); try the L2/L3. Glancing damage looks identical to a hit → that's expected at 4 base damage; bump <code class="inline">attack_damage</code> to ~20 temporarily to see the reduction clearly.<br><br>
@@ -128,7 +144,7 @@
 </div>
 
 <footer>
-  LESSON 24 · Combat 5 · grounded in <a href="../MISSION.md">your mission</a> · numbers from <a href="../reference/wow-combat-values.md">wow-combat-values.md</a> §6<br>
+  GODOT · LESSON 24 · COMBAT DEPTH 5/6 · grounded in <a href="../MISSION.md">your mission</a> · numbers from <a href="../reference/wow-combat-values.md">wow-combat-values.md</a> §6<br>
   Primary reference: <a href="https://warcraft.wiki.gg/wiki/Glancing_blow">WoW — Glancing blow</a> · <a href="https://warcraft.wiki.gg/wiki/Crushing_blow">Crushing blow</a>
 </footer>
 </main>

@@ -5,6 +5,8 @@ the work starts to feel busy instead of purposeful.*
 
 > **Changelog:** 2026-06-10 — first distillation, from MISSION.md,
 > learning-records 0001–0002, NOTES.md, and 7 commits of history.
+> 2026-06-10 (later) — curriculum v2: lessons re-sequenced/deepened so the course
+> is the codebase's build order (serves the packaging telos; the laws unchanged).
 
 ## Prime mover
 
