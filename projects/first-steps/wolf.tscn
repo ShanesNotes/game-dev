@@ -1,7 +1,56 @@
-[gd_scene format=3 uid="uid://7sfswd6u4h5r"]
+[gd_scene load_steps=13 format=3 uid="uid://7sfswd6u4h5r"]
 
 [ext_resource type="Script" uid="uid://bbyrwg8dycfbq" path="res://wolf.gd" id="1_6trwa"]
-[ext_resource type="Texture2D" uid="uid://bna80w5387mfb" path="res://assets/wolf.png" id="2_8rgm2"]
+[ext_resource type="Texture2D" path="res://assets/wolf_sheet.png" id="2_sheet"]
+[ext_resource type="Texture2D" path="res://assets/shadow.png" id="3_shdw"]
+[ext_resource type="Texture2D" path="res://assets/aggro_mark.png" id="4_aggro"]
+[ext_resource type="Texture2D" path="res://assets/target_ring.png" id="5_ring"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_wf0"]
+atlas = ExtResource("2_sheet")
+region = Rect2(0, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_wf1"]
+atlas = ExtResource("2_sheet")
+region = Rect2(32, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_wf2"]
+atlas = ExtResource("2_sheet")
+region = Rect2(64, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_wf3"]
+atlas = ExtResource("2_sheet")
+region = Rect2(96, 0, 32, 32)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_wolf"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_wf0")
+}],
+"loop": true,
+"name": &"idle",
+"speed": 2.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_wf1")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_wf2")
+}],
+"loop": true,
+"name": &"walk",
+"speed": 7.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_wf3")
+}],
+"loop": false,
+"name": &"attack",
+"speed": 4.0
+}]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_kek77"]
 size = Vector2(23, 14)
@@ -9,12 +58,41 @@ size = Vector2(23, 14)
 [sub_resource type="CircleShape2D" id="CircleShape2D_272bh"]
 radius = 122.80065
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_wbg"]
+bg_color = Color(0.133, 0.0902, 0.0627, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.42, 0.353, 0.227, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_wfill"]
+bg_color = Color(0.788, 0.184, 0.141, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.42, 0.353, 0.227, 1)
+
 [node name="Wolf" type="CharacterBody2D" unique_id=125961179]
 input_pickable = true
 script = ExtResource("1_6trwa")
 
-[node name="Sprite2D" type="Sprite2D" parent="." unique_id=395876319]
-texture = ExtResource("2_8rgm2")
+[node name="Shadow" type="Sprite2D" parent="."]
+z_index = -1
+position = Vector2(0, 11)
+texture = ExtResource("3_shdw")
+
+[node name="TargetRing" type="Sprite2D" parent="."]
+visible = false
+z_index = -1
+position = Vector2(0, 10)
+texture = ExtResource("5_ring")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=395876319]
+sprite_frames = SubResource("SpriteFrames_wolf")
+animation = &"idle"
+autoplay = "idle"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1937059484]
 shape = SubResource("RectangleShape2D_kek77")
@@ -31,17 +109,17 @@ shape = SubResource("CircleShape2D_272bh")
 [node name="HealthBar" type="ProgressBar" parent="." unique_id=1748578485]
 custom_minimum_size = Vector2(32, 5)
 offset_left = -16.0
-offset_top = -28.0
+offset_top = -18.0
 offset_right = 16.0
-offset_bottom = -23.0
+offset_bottom = -13.0
+theme_override_styles/background = SubResource("StyleBoxFlat_wbg")
+theme_override_styles/fill = SubResource("StyleBoxFlat_wfill")
 show_percentage = false
 
-[node name="LevelLabel" type="Label" parent="." unique_id=224505637]
-offset_left = -10.0
-offset_top = -42.0
-offset_right = 30.0
-offset_bottom = -19.0
-theme_override_font_sizes/font_size = 10
+[node name="AggroMark" type="Sprite2D" parent="."]
+visible = false
+position = Vector2(0, -26)
+texture = ExtResource("4_aggro")
 
 [connection signal="input_event" from="." to="." method="_on_input_event"]
 [connection signal="timeout" from="SwingTimer" to="." method="_on_swing_timer_timeout"]

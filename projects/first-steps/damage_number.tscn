@@ -1,8 +1,14 @@
-[gd_scene format=3 uid="uid://2vcqj82m1xgy"]
+[gd_scene load_steps=3 format=3 uid="uid://2vcqj82m1xgy"]
 
 [ext_resource type="Script" uid="uid://b4obthjuinibk" path="res://damage_number.gd" id="1_jany0"]
+[ext_resource type="FontFile" path="res://assets/fonts/VT323-Regular.ttf" id="2_font"]
 
 [node name="DamageNumber" type="Label" unique_id=641621063]
+z_index = 100
 offset_right = 40.0
 offset_bottom = 23.0
+theme_override_colors/font_outline_color = Color(0.102, 0.0784, 0.0588, 1)
+theme_override_constants/outline_size = 4
+theme_override_fonts/font = ExtResource("2_font")
+horizontal_alignment = 1
 script = ExtResource("1_jany0")

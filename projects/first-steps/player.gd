@@ -15,13 +15,17 @@ var health = max_health
 var target = null
 
 @onready var anim = $AnimatedSprite2D
-@onready var health_bar = get_node("../HUD/HealthBar")
+@onready var health_bar = get_node("../../HUD/UnitFrame/HealthBar")
 @onready var swing_timer = $SwingTimer
 @onready var sword = $Sword
-@onready var rage_bar = get_node("../HUD/RageBar")
+@onready var rage_bar = get_node("../../HUD/UnitFrame/RageBar")
+@onready var slash_arc = $SlashArc
+@onready var foot_dust = $FootDust
+@onready var camera = $Camera2D
 
 const DAMAGE_NUMBER = preload("res://damage_number.tscn")
-const SWORD_REST_DEGREES = 25.0
+const SPARK = preload("res://assets/spark.png")
+const SWORD_REST_DEGREES = 0.0   # 25-degree rest pose is baked into sword_held.png
 
 func _ready():
 	add_to_group("player")            # so any wolf can find us
@@ -33,10 +37,13 @@ func _ready():
 	sword.rotation_degrees = SWORD_REST_DEGREES
 
 func _physics_process(delta):
-	var direction = Input.get_vector("ui_left", "ui_right", "ui_up", "ui_down")
+	var direction = Input.get_vector("move_left", "move_right", "move_up", "move_down")
 	velocity = direction * speed
 	move_and_slide()
 	update_animation(direction)
+	foot_dust.emitting = direction != Vector2.ZERO
+	if Input.is_action_just_pressed("target_next"):
+		target_nearest_wolf()
 	if Input.is_action_just_pressed("attack"):
 		start_auto_attack()
 	if swing_timer.is_stopped() and rage > 0:
@@ -44,6 +51,19 @@ func _physics_process(delta):
 
 	# Abilities go here later, e.g.:
 	# if Input.is_action_just_pressed("ability_1"): cast_fireball()
+
+func target_nearest_wolf():
+	var best = null
+	var best_dist = INF
+	for w in get_tree().get_nodes_in_group("wolves"):
+		if w == target:
+			continue
+		var d = global_position.distance_to(w.global_position)
+		if d < best_dist:
+			best_dist = d
+			best = w
+	if best:
+		set_target(best)
 
 func set_target(new_target):
 	if is_instance_valid(target):
@@ -65,8 +85,18 @@ func _on_swing_timer_timeout():
 
 func swing_sword():
 	var t = create_tween()
-	t.tween_property(sword, "rotation_degrees", -40, 0.08)   # slash across
+	t.tween_property(sword, "rotation_degrees", -65, 0.08)   # slash across
 	t.tween_property(sword, "rotation_degrees", SWORD_REST_DEGREES, 0.12)    # back to held rest angle (prevents perma "out" pose)
+	# white swoosh flashed along the cut, aimed at the target
+	if is_instance_valid(target):
+		slash_arc.rotation = (target.global_position - global_position).angle()
+	slash_arc.visible = true
+	slash_arc.modulate.a = 0.9
+	slash_arc.scale = Vector2(0.6, 0.6)
+	var s = create_tween()
+	s.tween_property(slash_arc, "scale", Vector2(1.1, 1.1), 0.1)
+	s.parallel().tween_property(slash_arc, "modulate:a", 0.0, 0.16)
+	s.tween_callback(func(): slash_arc.visible = false)
 
 func swing():
 	if not is_instance_valid(target):
@@ -100,9 +130,12 @@ func attack(t):
 		var dmg = attack_damage * 2
 		t.take_damage(dmg, true)
 		gain_rage_dealing(dmg, true)
+		spawn_sparks(t.global_position, Color(1.0, 0.85, 0.3), 10)
+		shake_camera(4.0)
 	else:
 		t.take_damage(attack_damage)
 		gain_rage_dealing(attack_damage, false)
+		spawn_sparks(t.global_position, Color(1, 1, 1), 5)
 
 func spawn_text_over(t, s, color):
 	var n = DAMAGE_NUMBER.instantiate()
@@ -167,6 +200,32 @@ func gain_rage_dealing(damage, is_crit):
 
 func gain_rage_taking(damage):
 	add_rage(2.5 * damage / conversion_value())
+
+func spawn_sparks(at: Vector2, color: Color, count: int):
+	var p = CPUParticles2D.new()
+	p.texture = SPARK
+	p.amount = count
+	p.one_shot = true
+	p.explosiveness = 1.0
+	p.lifetime = 0.35
+	p.initial_velocity_min = 40.0
+	p.initial_velocity_max = 90.0
+	p.gravity = Vector2(0, 160)
+	p.scale_amount_min = 0.5
+	p.scale_amount_max = 1.0
+	p.color = color
+	p.z_index = 30
+	get_parent().add_child(p)
+	p.global_position = at + Vector2(0, -10)
+	p.emitting = true
+	p.finished.connect(p.queue_free)
+
+func shake_camera(strength: float):
+	var t = create_tween()
+	for i in 4:
+		var off = Vector2(randf_range(-strength, strength), randf_range(-strength, strength))
+		t.tween_property(camera, "offset", off, 0.04)
+	t.tween_property(camera, "offset", Vector2.ZERO, 0.05)
 
 func spawn_number(amount, color):
 	var n = DAMAGE_NUMBER.instantiate()

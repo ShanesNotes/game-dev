@@ -1,106 +1,174 @@
-[gd_scene format=4 uid="uid://x584hiir57lw"]
+[gd_scene load_steps=43 format=4 uid="uid://x584hiir57lw"]
 
-[ext_resource type="Texture2D" uid="uid://bgpjumnh1fw3r" path="res://assets/tileset.png" id="1_h2yge"]
-[ext_resource type="Script" uid="uid://c3ncgr4ahy5b8" path="res://player.gd" id="2_0xm2m"]
-[ext_resource type="Texture2D" uid="uid://b1k7a8xscns3u" path="res://assets/character.png" id="3_h2yge"]
-[ext_resource type="Script" uid="uid://dc0hyve5lr8a4" path="res://sword.gd" id="4_lquwl"]
-[ext_resource type="Texture2D" uid="uid://dcaurreinfkrf" path="res://assets/sword.png" id="5_7mycd"]
-[ext_resource type="PackedScene" uid="uid://7sfswd6u4h5r" path="res://wolf.tscn" id="6_7mycd"]
+[ext_resource type="Texture2D" path="res://assets/terrain.png" id="1_terrain"]
+[ext_resource type="Script" uid="uid://c3ncgr4ahy5b8" path="res://player.gd" id="2_player"]
+[ext_resource type="Texture2D" path="res://assets/character_clean.png" id="3_char"]
+[ext_resource type="Script" uid="uid://dc0hyve5lr8a4" path="res://sword.gd" id="4_swordgd"]
+[ext_resource type="Texture2D" path="res://assets/sword_clean.png" id="5_sword"]
+[ext_resource type="Texture2D" path="res://assets/sword_held.png" id="5_swordheld"]
+[ext_resource type="PackedScene" uid="uid://7sfswd6u4h5r" path="res://wolf.tscn" id="6_wolf"]
 [ext_resource type="Script" uid="uid://dq4f7n3k2m8rw" path="res://forest_generator.gd" id="7_forest"]
+[ext_resource type="Texture2D" path="res://assets/shadow.png" id="8_shdw"]
+[ext_resource type="Texture2D" path="res://assets/ui_panel.png" id="9_panel"]
+[ext_resource type="Texture2D" path="res://assets/ui_bar_bg.png" id="10_barbg"]
+[ext_resource type="Texture2D" path="res://assets/ui_bar_fill_hp.png" id="11_hpfill"]
+[ext_resource type="Texture2D" path="res://assets/ui_bar_fill_rage.png" id="12_ragefill"]
+[ext_resource type="Texture2D" path="res://assets/portrait_hero.png" id="13_portrait"]
+[ext_resource type="Texture2D" path="res://assets/vignette.png" id="14_vig"]
+[ext_resource type="Texture2D" path="res://assets/slash_arc.png" id="15_slash"]
+[ext_resource type="Texture2D" path="res://assets/soft_dot.png" id="16_dot"]
+[ext_resource type="FontFile" path="res://assets/fonts/PressStart2P-Regular.ttf" id="17_ps2p"]
+[ext_resource type="FontFile" path="res://assets/fonts/VT323-Regular.ttf" id="18_vt"]
+[ext_resource type="Script" path="res://hud.gd" id="19_hud"]
 
-[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_1bvp3"]
-texture = ExtResource("1_h2yge")
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_terrain"]
+texture = ExtResource("1_terrain")
 texture_region_size = Vector2i(32, 32)
 0:0/0 = 0
 1:0/0 = 0
 2:0/0 = 0
 3:0/0 = 0
+0:1/0 = 0
+1:1/0 = 0
+2:1/0 = 0
+3:1/0 = 0
+0:2/0 = 0
+1:2/0 = 0
+2:2/0 = 0
+3:2/0 = 0
+0:3/0 = 0
+1:3/0 = 0
+2:3/0 = 0
+3:3/0 = 0
+0:4/0 = 0
+1:4/0 = 0
+2:4/0 = 0
+3:4/0 = 0
+0:5/0 = 0
+1:5/0 = 0
+2:5/0 = 0
+3:5/0 = 0
+0:6/0 = 0
+1:6/0 = 0
+2:6/0 = 0
+3:6/0 = 0
+0:7/0 = 0
+1:7/0 = 0
+2:7/0 = 0
+3:7/0 = 0
+0:8/0 = 0
+1:8/0 = 0
+2:8/0 = 0
+3:8/0 = 0
+0:9/0 = 0
+1:9/0 = 0
+2:9/0 = 0
+3:9/0 = 0
+0:10/0 = 0
+1:10/0 = 0
+2:10/0 = 0
+3:10/0 = 0
+0:11/0 = 0
+1:11/0 = 0
+2:11/0 = 0
+3:11/0 = 0
+0:12/0 = 0
+1:12/0 = 0
+2:12/0 = 0
+3:12/0 = 0
+0:13/0 = 0
+1:13/0 = 0
+2:13/0 = 0
+3:13/0 = 0
 
-[sub_resource type="TileSet" id="TileSet_lquwl"]
+[sub_resource type="TileSet" id="TileSet_terrain"]
 tile_size = Vector2i(32, 32)
-sources/0 = SubResource("TileSetAtlasSource_1bvp3")
+sources/0 = SubResource("TileSetAtlasSource_terrain")
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_ig7tw"]
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_player"]
 size = Vector2(15, 30)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_1bvp3"]
-atlas = ExtResource("3_h2yge")
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_pickup"]
+size = Vector2(7, 22)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_d0"]
+atlas = ExtResource("3_char")
 region = Rect2(0, 0, 32, 32)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_lquwl"]
-atlas = ExtResource("3_h2yge")
+[sub_resource type="AtlasTexture" id="AtlasTexture_d1"]
+atlas = ExtResource("3_char")
 region = Rect2(32, 0, 32, 32)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_7mycd"]
-atlas = ExtResource("3_h2yge")
+[sub_resource type="AtlasTexture" id="AtlasTexture_d2"]
+atlas = ExtResource("3_char")
 region = Rect2(64, 0, 32, 32)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_272bh"]
-atlas = ExtResource("3_h2yge")
+[sub_resource type="AtlasTexture" id="AtlasTexture_d3"]
+atlas = ExtResource("3_char")
 region = Rect2(96, 0, 32, 32)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_5vw27"]
-atlas = ExtResource("3_h2yge")
+[sub_resource type="AtlasTexture" id="AtlasTexture_l0"]
+atlas = ExtResource("3_char")
 region = Rect2(0, 32, 32, 32)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_kek77"]
-atlas = ExtResource("3_h2yge")
+[sub_resource type="AtlasTexture" id="AtlasTexture_l1"]
+atlas = ExtResource("3_char")
 region = Rect2(32, 32, 32, 32)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_4c57u"]
-atlas = ExtResource("3_h2yge")
+[sub_resource type="AtlasTexture" id="AtlasTexture_l2"]
+atlas = ExtResource("3_char")
 region = Rect2(64, 32, 32, 32)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_efxa6"]
-atlas = ExtResource("3_h2yge")
+[sub_resource type="AtlasTexture" id="AtlasTexture_l3"]
+atlas = ExtResource("3_char")
 region = Rect2(96, 32, 32, 32)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_dg77c"]
-atlas = ExtResource("3_h2yge")
+[sub_resource type="AtlasTexture" id="AtlasTexture_r0"]
+atlas = ExtResource("3_char")
 region = Rect2(0, 64, 32, 32)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_ycdy4"]
-atlas = ExtResource("3_h2yge")
+[sub_resource type="AtlasTexture" id="AtlasTexture_r1"]
+atlas = ExtResource("3_char")
 region = Rect2(32, 64, 32, 32)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_w48qg"]
-atlas = ExtResource("3_h2yge")
+[sub_resource type="AtlasTexture" id="AtlasTexture_r2"]
+atlas = ExtResource("3_char")
 region = Rect2(64, 64, 32, 32)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_vivmo"]
-atlas = ExtResource("3_h2yge")
+[sub_resource type="AtlasTexture" id="AtlasTexture_r3"]
+atlas = ExtResource("3_char")
 region = Rect2(96, 64, 32, 32)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_2cqfq"]
-atlas = ExtResource("3_h2yge")
+[sub_resource type="AtlasTexture" id="AtlasTexture_u0"]
+atlas = ExtResource("3_char")
 region = Rect2(0, 96, 32, 32)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_yaehf"]
-atlas = ExtResource("3_h2yge")
+[sub_resource type="AtlasTexture" id="AtlasTexture_u1"]
+atlas = ExtResource("3_char")
 region = Rect2(32, 96, 32, 32)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_074og"]
-atlas = ExtResource("3_h2yge")
+[sub_resource type="AtlasTexture" id="AtlasTexture_u2"]
+atlas = ExtResource("3_char")
 region = Rect2(64, 96, 32, 32)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_cegan"]
-atlas = ExtResource("3_h2yge")
+[sub_resource type="AtlasTexture" id="AtlasTexture_u3"]
+atlas = ExtResource("3_char")
 region = Rect2(96, 96, 32, 32)
 
-[sub_resource type="SpriteFrames" id="SpriteFrames_82xsv"]
+[sub_resource type="SpriteFrames" id="SpriteFrames_hero"]
 animations = [{
 "frames": [{
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_1bvp3")
+"texture": SubResource("AtlasTexture_d0")
 }, {
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_lquwl")
+"texture": SubResource("AtlasTexture_d1")
 }, {
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_7mycd")
+"texture": SubResource("AtlasTexture_d2")
 }, {
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_272bh")
+"texture": SubResource("AtlasTexture_d3")
 }],
 "loop": true,
 "name": &"walk_down",
@@ -108,16 +176,16 @@ animations = [{
 }, {
 "frames": [{
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_dg77c")
+"texture": SubResource("AtlasTexture_l0")
 }, {
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_ycdy4")
+"texture": SubResource("AtlasTexture_l1")
 }, {
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_w48qg")
+"texture": SubResource("AtlasTexture_l2")
 }, {
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_vivmo")
+"texture": SubResource("AtlasTexture_l3")
 }],
 "loop": true,
 "name": &"walk_left",
@@ -125,16 +193,16 @@ animations = [{
 }, {
 "frames": [{
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_dg77c")
+"texture": SubResource("AtlasTexture_r0")
 }, {
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_ycdy4")
+"texture": SubResource("AtlasTexture_r1")
 }, {
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_w48qg")
+"texture": SubResource("AtlasTexture_r2")
 }, {
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_vivmo")
+"texture": SubResource("AtlasTexture_r3")
 }],
 "loop": true,
 "name": &"walk_right",
@@ -142,116 +210,272 @@ animations = [{
 }, {
 "frames": [{
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_2cqfq")
+"texture": SubResource("AtlasTexture_u0")
 }, {
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_yaehf")
+"texture": SubResource("AtlasTexture_u1")
 }, {
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_074og")
+"texture": SubResource("AtlasTexture_u2")
 }, {
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_cegan")
+"texture": SubResource("AtlasTexture_u3")
 }],
 "loop": true,
 "name": &"walk_up",
 "speed": 8.0
 }]
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_0xm2m"]
-size = Vector2(17.25, 2382)
+[node name="Main" type="Node2D"]
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_272bh"]
-size = Vector2(7, 22)
+[node name="Ambience" type="CanvasModulate" parent="."]
+color = Color(1.06, 1, 0.82, 1)
 
-[node name="Main" type="Node2D" unique_id=697232748]
-position = Vector2(385, 430)
-
-[node name="Ground" type="TileMapLayer" parent="." unique_id=1813366233]
-position = Vector2(11, 3)
-tile_set = SubResource("TileSet_lquwl")
+[node name="Ground" type="TileMapLayer" parent="."]
+z_index = -10
+tile_set = SubResource("TileSet_terrain")
 script = ExtResource("7_forest")
-rendering_quadrant_size = 32
-physics_quadrant_size = 32
 
-[node name="Player" type="CharacterBody2D" parent="." unique_id=267973226]
-script = ExtResource("2_0xm2m")
+[node name="Road" type="TileMapLayer" parent="."]
+z_index = -9
+position = Vector2(-16, -16)
+tile_set = SubResource("TileSet_terrain")
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Player" unique_id=1683321420]
-shape = SubResource("RectangleShape2D_ig7tw")
+[node name="World" type="Node2D" parent="."]
+y_sort_enabled = true
 
-[node name="Camera2D" type="Camera2D" parent="Player" unique_id=1145820717]
-position = Vector2(-2, 0)
+[node name="Player" type="CharacterBody2D" parent="World"]
+script = ExtResource("2_player")
+
+[node name="Shadow" type="Sprite2D" parent="World/Player"]
+z_index = -1
+position = Vector2(0, 14)
+texture = ExtResource("8_shdw")
+
+[node name="Glow" type="Sprite2D" parent="World/Player"]
+z_index = -1
+position = Vector2(0, 10)
+scale = Vector2(3.4, 2.2)
+modulate = Color(1, 0.9, 0.6, 0.14)
+texture = ExtResource("16_dot")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="World/Player"]
+shape = SubResource("RectangleShape2D_player")
+
+[node name="Camera2D" type="Camera2D" parent="World/Player"]
+zoom = Vector2(2, 2)
 position_smoothing_enabled = true
 
-[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="Player" unique_id=2135365542]
-sprite_frames = SubResource("SpriteFrames_82xsv")
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="World/Player"]
+sprite_frames = SubResource("SpriteFrames_hero")
 animation = &"walk_down"
-autoplay = "walk_down"
-frame_progress = 0.13589074
 
-[node name="SwingTimer" type="Timer" parent="Player" unique_id=2121176342]
+[node name="SwingTimer" type="Timer" parent="World/Player"]
 wait_time = 1.5
 
-[node name="Sword" type="Sprite2D" parent="Player" unique_id=2027497664]
+[node name="Sword" type="Sprite2D" parent="World/Player"]
 visible = false
 position = Vector2(10, 2)
 scale = Vector2(0.7, 0.7)
-skew = -0.07679449
-texture = ExtResource("5_7mycd")
+texture = ExtResource("5_swordheld")
 offset = Vector2(0, -16)
 
-[node name="Wall" type="StaticBody2D" parent="." unique_id=108019413]
+[node name="SlashArc" type="Sprite2D" parent="World/Player"]
+visible = false
+z_index = 5
+position = Vector2(0, -2)
+offset = Vector2(18, 0)
+texture = ExtResource("15_slash")
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Wall" unique_id=1176145586]
-position = Vector2(-1334, 235)
-shape = SubResource("RectangleShape2D_0xm2m")
+[node name="FootDust" type="CPUParticles2D" parent="World/Player"]
+position = Vector2(0, 13)
+emitting = false
+amount = 8
+texture = ExtResource("16_dot")
+lifetime = 0.45
+local_coords = false
+direction = Vector2(0, -1)
+spread = 60.0
+gravity = Vector2(0, -12)
+initial_velocity_min = 5.0
+initial_velocity_max = 14.0
+scale_amount_min = 0.3
+scale_amount_max = 0.6
+color = Color(0.62, 0.5, 0.36, 0.55)
 
-[node name="Sword" type="Area2D" parent="." unique_id=563681166]
-position = Vector2(179, -93)
-script = ExtResource("4_lquwl")
+[node name="Pollen" type="CPUParticles2D" parent="World/Player"]
+z_index = 60
+amount = 18
+texture = ExtResource("16_dot")
+lifetime = 7.0
+preprocess = 4.0
+local_coords = false
+emission_shape = 3
+emission_rect_extents = Vector2(320, 200)
+direction = Vector2(1, 0)
+spread = 180.0
+gravity = Vector2(0, -2)
+initial_velocity_min = 3.0
+initial_velocity_max = 8.0
+scale_amount_min = 0.25
+scale_amount_max = 0.55
+color = Color(0.93, 0.88, 0.55, 0.32)
 
-[node name="Sprite2D" type="Sprite2D" parent="Sword" unique_id=149845919]
-position = Vector2(0, -1)
-texture = ExtResource("5_7mycd")
+[node name="Sword" type="Area2D" parent="World"]
+script = ExtResource("4_swordgd")
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Sword" unique_id=553355566]
-position = Vector2(1, 1)
-shape = SubResource("RectangleShape2D_272bh")
+[node name="Sprite2D" type="Sprite2D" parent="World/Sword"]
+position = Vector2(0, -12)
+texture = ExtResource("5_sword")
 
-[node name="Wolf" parent="." unique_id=125961179 instance=ExtResource("6_7mycd")]
-position = Vector2(339, 10)
+[node name="CollisionShape2D" type="CollisionShape2D" parent="World/Sword"]
+position = Vector2(0, -11)
+shape = SubResource("RectangleShape2D_pickup")
 
-[node name="HUD" type="CanvasLayer" parent="." unique_id=776590320]
-offset = Vector2(5, 5)
-transform = Transform2D(1, 0, 0, 1, 5, 5)
+[node name="Wolf" parent="World" instance=ExtResource("6_wolf")]
+position = Vector2(1010, 1150)
 
-[node name="HealthBar" type="ProgressBar" parent="HUD" unique_id=1547552646]
-anchors_preset = -1
-anchor_left = 0.057000004
-anchor_top = 0.079
-anchor_right = 0.15300001
-anchor_bottom = 0.120000005
-offset_left = 0.33599854
-offset_top = -0.19200134
-offset_right = -0.25601196
-offset_bottom = 0.23999786
-show_percentage = false
-
-[node name="RageBar" type="ProgressBar" parent="HUD" unique_id=1503342817]
-offset_left = 66.0
-offset_top = 48.0
-offset_right = 176.0
-offset_bottom = 63.0
-show_percentage = false
-
-[node name="Wolf2" parent="." unique_id=704883021 instance=ExtResource("6_7mycd")]
-position = Vector2(270, 192)
+[node name="Wolf2" parent="World" instance=ExtResource("6_wolf")]
+position = Vector2(880, 830)
 level = 2
 
-[node name="Wolf3" parent="." unique_id=933214363 instance=ExtResource("6_7mycd")]
-position = Vector2(385, -198)
+[node name="Wolf3" parent="World" instance=ExtResource("6_wolf")]
+position = Vector2(1010, 330)
 level = 3
 
-[connection signal="timeout" from="Player/SwingTimer" to="Player" method="_on_swing_timer_timeout"]
-[connection signal="body_entered" from="Sword" to="Sword" method="_on_body_entered"]
+[node name="HUD" type="CanvasLayer" parent="."]
+layer = 2
+script = ExtResource("19_hud")
+
+[node name="UnitFrame" type="NinePatchRect" parent="HUD"]
+offset_left = 12.0
+offset_top = 10.0
+offset_right = 212.0
+offset_bottom = 72.0
+texture = ExtResource("9_panel")
+patch_margin_left = 10
+patch_margin_top = 10
+patch_margin_right = 10
+patch_margin_bottom = 10
+
+[node name="PortraitBack" type="ColorRect" parent="HUD/UnitFrame"]
+offset_left = 9.0
+offset_top = 11.0
+offset_right = 49.0
+offset_bottom = 51.0
+color = Color(0.27, 0.21, 0.12, 1)
+
+[node name="Portrait" type="TextureRect" parent="HUD/UnitFrame"]
+offset_left = 9.0
+offset_top = 11.0
+offset_right = 49.0
+offset_bottom = 51.0
+texture = ExtResource("13_portrait")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="NameLabel" type="Label" parent="HUD/UnitFrame"]
+offset_left = 56.0
+offset_top = 12.0
+offset_right = 200.0
+offset_bottom = 24.0
+theme_override_colors/font_color = Color(0.941, 0.824, 0.478, 1)
+theme_override_colors/font_outline_color = Color(0.102, 0.0784, 0.0588, 1)
+theme_override_constants/outline_size = 2
+theme_override_fonts/font = ExtResource("17_ps2p")
+theme_override_font_sizes/font_size = 8
+text = "Will"
+
+[node name="HealthBar" type="TextureProgressBar" parent="HUD/UnitFrame"]
+offset_left = 56.0
+offset_top = 28.0
+offset_right = 192.0
+offset_bottom = 40.0
+texture_under = ExtResource("10_barbg")
+texture_progress = ExtResource("11_hpfill")
+max_value = 30.0
+value = 30.0
+
+[node name="RageBar" type="TextureProgressBar" parent="HUD/UnitFrame"]
+offset_left = 56.0
+offset_top = 44.0
+offset_right = 192.0
+offset_bottom = 56.0
+texture_under = ExtResource("10_barbg")
+texture_progress = ExtResource("12_ragefill")
+max_value = 100.0
+value = 0.0
+
+[node name="TargetFrame" type="NinePatchRect" parent="HUD"]
+visible = false
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -90.0
+offset_top = 10.0
+offset_right = 90.0
+offset_bottom = 58.0
+texture = ExtResource("9_panel")
+patch_margin_left = 10
+patch_margin_top = 10
+patch_margin_right = 10
+patch_margin_bottom = 10
+
+[node name="TargetName" type="Label" parent="HUD/TargetFrame"]
+offset_left = 12.0
+offset_top = 9.0
+offset_right = 168.0
+offset_bottom = 21.0
+theme_override_colors/font_color = Color(0.878, 0.902, 0.937, 1)
+theme_override_colors/font_outline_color = Color(0.102, 0.0784, 0.0588, 1)
+theme_override_constants/outline_size = 2
+theme_override_fonts/font = ExtResource("17_ps2p")
+theme_override_font_sizes/font_size = 8
+text = "Wolf"
+
+[node name="TargetHealthBar" type="TextureProgressBar" parent="HUD/TargetFrame"]
+offset_left = 12.0
+offset_top = 26.0
+offset_right = 168.0
+offset_bottom = 38.0
+texture_under = ExtResource("10_barbg")
+texture_progress = ExtResource("12_ragefill")
+max_value = 12.0
+value = 12.0
+
+[node name="HintStrip" type="ColorRect" parent="HUD"]
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -34.0
+grow_vertical = 0
+color = Color(0.078, 0.063, 0.047, 0.62)
+
+[node name="ControlsHint" type="Label" parent="HUD"]
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 14.0
+offset_top = -32.0
+offset_right = 900.0
+offset_bottom = -4.0
+grow_vertical = 0
+theme_override_colors/font_color = Color(0.95, 0.9, 0.75, 1)
+theme_override_colors/font_outline_color = Color(0.102, 0.0784, 0.0588, 1)
+theme_override_constants/outline_size = 3
+theme_override_fonts/font = ExtResource("18_vt")
+theme_override_font_sizes/font_size = 16
+text = "Move: WASD / Left Stick    Target: Tab / RB (or click a wolf)    Attack: Space / A button"
+
+[node name="Vignette" type="CanvasLayer" parent="."]
+layer = 1
+
+[node name="TextureRect" type="TextureRect" parent="Vignette"]
+texture_filter = 2
+anchor_right = 1.0
+anchor_bottom = 1.0
+texture = ExtResource("14_vig")
+expand_mode = 1
+stretch_mode = 0
+mouse_filter = 2
+
+[connection signal="timeout" from="World/Player/SwingTimer" to="World/Player" method="_on_swing_timer_timeout"]
+[connection signal="body_entered" from="World/Sword" to="World/Sword" method="_on_body_entered"]
