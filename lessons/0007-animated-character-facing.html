@@ -9,7 +9,7 @@
 <body>
 <main>
 <header class="hero">
-  <div class="kicker">Godot · Lesson 07 · ★ Milestone</div>
+  <div class="kicker">Godot · Lesson 07 · Foundations 7 of 7 · ★ Milestone</div>
   <h1>An Animated Character <span>That Faces Where It Walks</span></h1>
   <p class="sub">The leap from "a sprite that slides" to "a character that's alive." Three new code ideas, paced gently.</p>
 </header>
@@ -49,21 +49,16 @@
 </div>
 
 <h2>Part C — the code</h2>
-<p>Open the Player's script. Here's the whole thing — three new ideas explained underneath.</p>
+<p>Open <code class="inline">player.gd</code>. Here's the whole thing — three new ideas explained underneath.</p>
 <div class="code">
-  <div class="bar"><span class="t">GDScript · sprite_2d.gd</span><button class="copy">copy</button></div>
+  <div class="bar"><span class="t">GDScript · player.gd</span><button class="copy">copy</button></div>
 <pre><span class="kw">extends</span> <span class="type">CharacterBody2D</span>
 
 <span class="kw">var</span> <span class="var">speed</span> = <span class="num">200</span>
 <span class="kw">@onready</span> <span class="kw">var</span> <span class="var">anim</span> = <span class="var">$AnimatedSprite2D</span>
 
 <span class="kw">func</span> <span class="fn">_physics_process</span>(delta):
-    <span class="kw">var</span> <span class="var">direction</span> = <span class="type">Vector2</span>.ZERO
-    <span class="kw">if</span> <span class="fn">Input</span>.is_action_pressed(<span class="str">"ui_right"</span>): <span class="var">direction</span>.x += <span class="num">1</span>
-    <span class="kw">if</span> <span class="fn">Input</span>.is_action_pressed(<span class="str">"ui_left"</span>):  <span class="var">direction</span>.x -= <span class="num">1</span>
-    <span class="kw">if</span> <span class="fn">Input</span>.is_action_pressed(<span class="str">"ui_down"</span>):  <span class="var">direction</span>.y += <span class="num">1</span>
-    <span class="kw">if</span> <span class="fn">Input</span>.is_action_pressed(<span class="str">"ui_up"</span>):    <span class="var">direction</span>.y -= <span class="num">1</span>
-
+    <span class="kw">var</span> <span class="var">direction</span> = <span class="fn">Input</span>.get_vector(<span class="str">"ui_left"</span>, <span class="str">"ui_right"</span>, <span class="str">"ui_up"</span>, <span class="str">"ui_down"</span>)
     <span class="var">velocity</span> = <span class="var">direction</span> * <span class="var">speed</span>
     <span class="fn">move_and_slide</span>()
     <span class="fn">update_animation</span>(<span class="var">direction</span>)
@@ -86,7 +81,7 @@
   <div class="line-note"><code>@onready var anim = ...</code> — <b>grab that node once, when the Player is ready, and keep it in a variable</b> called <code>anim</code>. Now we type <code>anim</code> instead of <code>$AnimatedSprite2D</code> everywhere. <code>@onready</code> waits until the child actually exists.</div>
   <div class="line-note"><code>func update_animation(direction):</code> — <b>your first hand-written function with a parameter.</b> We <em>defined</em> it, then <em>called</em> it on the line <code>update_animation(direction)</code>. Splitting logic into named functions keeps <code>_physics_process</code> readable.</div>
   <div class="line-note"><code>else</code> / <code>return</code> — <b>else</b> = "otherwise do this"; <b>return</b> = "stop running this function now." If there's no movement we stop the animation and bail early.</div>
-  <div class="line-note"><code>abs(direction.x) > abs(direction.y)</code> — <b>which axis is stronger?</b> <code>abs()</code> strips the minus sign, so we compare <em>amount</em> of horizontal vs vertical movement to decide whether to face sideways or up/down.</div>
+  <div class="line-note"><code>abs(direction.x) > abs(direction.y)</code> — <b>which axis is stronger?</b> <code>abs()</code> strips the minus sign, so we compare <em>amount</em> of horizontal vs vertical movement to decide whether to face sideways or up/down. Because <code>get_vector</code> returns fractional values on a gamepad stick, this comparison handles analog diagonals naturally.</div>
 </div>
 
 <div class="flow">
@@ -116,13 +111,27 @@
   <div class="feedback"></div>
 </div>
 
+<h3>Codebase checkpoint</h3>
+<p>The full Foundations project — everything you've built across Lessons 1–7:</p>
+<div class="tree">
+<span class="dim">projects/first-steps/</span>
+├─ project.godot            <span class="dim">· project settings (from Lesson 1)</span>
+├─ icon.svg                 <span class="dim">· Godot robot — still our placeholder texture</span>
+├─ assets/
+│   ├─ tileset.png          <span class="dim">· grass/dirt/stone/variant tiles (from Lesson 5)</span>
+│   └─ <span class="leaf">character.png</span>       <span class="dim">← new: 4×4 walk spritesheet, 32px frames</span>
+├─ <span class="leaf">main.tscn</span>               <span class="dim">← changed: Sprite2D replaced by AnimatedSprite2D under Player</span>
+└─ <span class="leaf">player.gd</span>               <span class="dim">← changed: @onready anim, update_animation(direction)</span>
+</div>
+<p class="cite">This is the complete Foundations codebase. From here the next arc adds enemies, combat, and UI — all layered on top of this structure.</p>
+
 <div class="teacher">
   <b>I'M YOUR TEACHER — ASK ME ANYTHING</b>
   <p>Lots of moving parts here. Common snags: animation names not matching the strings in code, the node not named exactly <code class="inline">AnimatedSprite2D</code>, or frames added from the wrong row. Tell me the symptom and we'll fix it. Want the character to freeze on a <em>facing</em> frame instead of resetting when idle (proper "idle" poses)? Ask — it's a great next tweak. Say <em>"done"</em> when your character walks. We've built a complete movement foundation — next we can branch toward whatever excites you: <strong>picking things up</strong>, <strong>an enemy</strong>, or <strong>a door to a new room</strong>.</p>
 </div>
 
 <footer>
-  LESSON 07 ★ · grounded in <a href="../MISSION.md">your mission</a> · sources in <a href="../RESOURCES.md">RESOURCES.md</a><br>
+  LESSON 07 · Foundations 7/7 · ★ Milestone · grounded in <a href="../MISSION.md">your mission</a> · sources in <a href="../RESOURCES.md">RESOURCES.md</a><br>
   Primary reference: <a href="https://docs.godotengine.org/en/stable/classes/class_animatedsprite2d.html">Godot — AnimatedSprite2D</a>
 </footer>
 </main>

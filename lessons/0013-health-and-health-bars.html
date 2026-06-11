@@ -9,7 +9,7 @@
 <body>
 <main>
 <header class="hero">
-  <div class="kicker">Godot · Lesson 13 · Combat 3</div>
+  <div class="kicker">Godot · Lesson 13 · The Encounter 6 of 6</div>
   <h1>Health: <span>Taking Damage &amp; a Health Bar</span></h1>
   <p class="sub">The bites finally bite. A health bar drains as the wolf hits you — and at zero, you die.</p>
 </header>
@@ -35,14 +35,14 @@
 <div class="flow">
   <div class="phase"><div class="rail"><div class="num">1</div><div class="line"></div></div><div class="body"><p>Right-click <code class="inline">Main</code> → <kbd>Add Child Node</kbd> → <code class="inline">CanvasLayer</code> → rename <code class="inline">HUD</code>. <span class="cite">(A CanvasLayer draws in screen space — fixed, ignores the camera.)</span></p></div></div>
   <div class="phase"><div class="rail"><div class="num">2</div><div class="line"></div></div><div class="body"><p>Right-click <code class="inline">HUD</code> → <kbd>Add Child Node</kbd> → <code class="inline">ProgressBar</code> → rename <code class="inline">HealthBar</code> (exact name).</p></div></div>
-  <div class="phase"><div class="rail"><div class="num">3</div><div class="line"></div></div><div class="body"><p>Select <code class="inline">HealthBar</code>. Drag it to the <strong>top-left</strong> of the screen and stretch it to a bar shape (≈ 220 × 26). In the Inspector you can untick <strong>Show Percentage</strong> if you don't want the number on it.</p></div></div>
+  <div class="phase"><div class="rail"><div class="num">3</div><div class="line"></div></div><div class="body"><p>Select <code class="inline">HealthBar</code>. Drag it to the <strong>top-left</strong> of the screen and stretch it to a bar shape (≈ 220 × 26). In the Inspector you can untick <strong>Show Percentage</strong> if you prefer.</p></div></div>
   <div class="phase"><div class="rail"><div class="num">4</div></div><div class="body"><p>Leave Min Value 0 / Max Value 100 for now — our code will set the real max from the player's health.</p></div></div>
 </div>
 
 <h2>Part B — give the player health</h2>
-<p>Open the Player's script and add the health bits. Here's the full file (movement unchanged from L7):</p>
+<p>Open <code class="inline">player.gd</code>. Add the health variables, wire up the bar in <code class="inline">_ready()</code>, and add the <code class="inline">take_damage()</code> and <code class="inline">die()</code> functions. Here's the full file — movement and animation are unchanged from Lesson 7:</p>
 <div class="code">
-  <div class="bar"><span class="t">GDScript · sprite_2d.gd (Player)</span><button class="copy">copy</button></div>
+  <div class="bar"><span class="t">GDScript · player.gd</span><button class="copy">copy</button></div>
 <pre><span class="kw">extends</span> <span class="type">CharacterBody2D</span>
 
 <span class="kw">@export</span> <span class="kw">var</span> <span class="var">speed</span> = <span class="num">200</span>
@@ -53,98 +53,102 @@
 <span class="kw">@onready</span> <span class="kw">var</span> <span class="var">health_bar</span> = <span class="fn">get_node</span>(<span class="str">"../HUD/HealthBar"</span>)
 
 <span class="kw">func</span> <span class="fn">_ready</span>():
+    <span class="fn">add_to_group</span>(<span class="str">"player"</span>)
     <span class="var">health_bar</span>.max_value = <span class="var">max_health</span>
     <span class="var">health_bar</span>.value = <span class="var">health</span>
 
 <span class="kw">func</span> <span class="fn">_physics_process</span>(delta):
-    <span class="kw">var</span> <span class="var">direction</span> = <span class="type">Vector2</span>.ZERO
-    <span class="kw">if</span> <span class="fn">Input</span>.is_action_pressed(<span class="str">"ui_right"</span>): <span class="var">direction</span>.x += <span class="num">1</span>
-    <span class="kw">if</span> <span class="fn">Input</span>.is_action_pressed(<span class="str">"ui_left"</span>):  <span class="var">direction</span>.x -= <span class="num">1</span>
-    <span class="kw">if</span> <span class="fn">Input</span>.is_action_pressed(<span class="str">"ui_down"</span>):  <span class="var">direction</span>.y += <span class="num">1</span>
-    <span class="kw">if</span> <span class="fn">Input</span>.is_action_pressed(<span class="str">"ui_up"</span>):    <span class="var">direction</span>.y -= <span class="num">1</span>
+    <span class="kw">var</span> <span class="var">direction</span> = <span class="type">Input</span>.<span class="fn">get_vector</span>(<span class="str">"ui_left"</span>, <span class="str">"ui_right"</span>, <span class="str">"ui_up"</span>, <span class="str">"ui_down"</span>)
     <span class="var">velocity</span> = <span class="var">direction</span> * <span class="var">speed</span>
     <span class="fn">move_and_slide</span>()
     <span class="fn">update_animation</span>(<span class="var">direction</span>)
 
 <span class="kw">func</span> <span class="fn">take_damage</span>(<span class="var">amount</span>):
     <span class="var">health</span> -= <span class="var">amount</span>
-    <span class="kw">if</span> <span class="var">health</span> &lt; <span class="num">0</span>:
-        <span class="var">health</span> = <span class="num">0</span>
+    <span class="kw">if</span> <span class="var">health</span> &lt; <span class="num">0</span>: <span class="var">health</span> = <span class="num">0</span>
     <span class="var">health_bar</span>.value = <span class="var">health</span>
     <span class="fn">print</span>(<span class="str">"Player health: "</span>, <span class="var">health</span>)
     <span class="kw">if</span> <span class="var">health</span> == <span class="num">0</span>:
         <span class="fn">die</span>()
 
 <span class="kw">func</span> <span class="fn">die</span>():
-    <span class="fn">print</span>(<span class="str">"You died!"</span>)
-    <span class="fn">get_tree</span>().reload_current_scene()
+    <span class="fn">print</span>(<span class="str">"- Memory Eternal -"</span>)
+    <span class="fn">get_tree</span>().<span class="fn">reload_current_scene</span>()
 
 <span class="kw">func</span> <span class="fn">update_animation</span>(<span class="var">direction</span>):
     <span class="kw">if</span> <span class="var">direction</span> == <span class="type">Vector2</span>.ZERO:
-        <span class="var">anim</span>.stop()
+        <span class="var">anim</span>.<span class="fn">stop</span>()
         <span class="kw">return</span>
     <span class="kw">if</span> <span class="fn">abs</span>(<span class="var">direction</span>.x) &gt; <span class="fn">abs</span>(<span class="var">direction</span>.y):
-        <span class="kw">if</span> <span class="var">direction</span>.x &gt; <span class="num">0</span>: <span class="var">anim</span>.play(<span class="str">"walk_right"</span>)
-        <span class="kw">else</span>: <span class="var">anim</span>.play(<span class="str">"walk_left"</span>)
+        <span class="kw">if</span> <span class="var">direction</span>.x &gt; <span class="num">0</span>: <span class="var">anim</span>.<span class="fn">play</span>(<span class="str">"walk_right"</span>)
+        <span class="kw">else</span>: <span class="var">anim</span>.<span class="fn">play</span>(<span class="str">"walk_left"</span>)
     <span class="kw">else</span>:
-        <span class="kw">if</span> <span class="var">direction</span>.y &gt; <span class="num">0</span>: <span class="var">anim</span>.play(<span class="str">"walk_down"</span>)
-        <span class="kw">else</span>: <span class="var">anim</span>.play(<span class="str">"walk_up"</span>)</pre>
+        <span class="kw">if</span> <span class="var">direction</span>.y &gt; <span class="num">0</span>: <span class="var">anim</span>.<span class="fn">play</span>(<span class="str">"walk_down"</span>)
+        <span class="kw">else</span>: <span class="var">anim</span>.<span class="fn">play</span>(<span class="str">"walk_up"</span>)</pre>
 </div>
 <div class="annot">
   <div class="line-note"><code>var health = max_health</code> — <b>start full.</b> One variable that goes down as you're hit.</div>
   <div class="line-note"><code>health_bar = get_node("../HUD/HealthBar")</code> — <b>grab the bar</b> so the player can update it. (Player and HUD are both children of Main, so <code>..</code> then into HUD.)</div>
   <div class="line-note"><code>_ready()</code> — <b>sync the bar to health at startup</b>: set its max and fill it. Otherwise the bar wouldn't match.</div>
-  <div class="line-note"><code>func take_damage(amount):</code> — <b>the method the wolf calls.</b> Subtract, clamp at 0, update the bar, and die if empty.</div>
-  <div class="line-note"><code>get_tree().reload_current_scene()</code> — <b>restart the level</b> on death — a dead-simple respawn. (We'll make death fancier later if you want.)</div>
+  <div class="line-note"><code>func take_damage(amount):</code> — <b>one argument, the amount.</b> Subtract, clamp at 0, update the bar, die if empty. (A second argument for the attacker arrives in Lesson 16 — not yet.)</div>
+  <div class="line-note"><code>get_tree().reload_current_scene()</code> — <b>restart the level</b> on death — a dead-simple respawn.</div>
 </div>
 
 <h2>Part C — make the wolf's bite deal damage</h2>
 <p>In <code class="inline">wolf.gd</code>, change <em>only</em> the swing handler so the bite calls the player's new method:</p>
 <div class="code">
-  <div class="bar"><span class="t">GDScript · wolf.gd (one function)</span><button class="copy">copy</button></div>
+  <div class="bar"><span class="t">GDScript · wolf.gd — one function</span><button class="copy">copy</button></div>
 <pre><span class="kw">func</span> <span class="fn">_on_swing_timer_timeout</span>():
-    <span class="kw">if</span> <span class="var">target</span> != <span class="kw">null</span> <span class="kw">and</span> global_position.distance_to(<span class="var">target</span>.global_position) &lt;= <span class="var">melee_range</span> + <span class="num">16</span>:
-        <span class="var">target</span>.take_damage(<span class="var">swing_damage</span>)     <span class="com"># was: print(...)</span></pre>
+    <span class="kw">if</span> <span class="var">target</span> != <span class="kw">null</span> <span class="kw">and</span> global_position.<span class="fn">distance_to</span>(<span class="var">target</span>.global_position) &lt;= <span class="var">melee_range</span> + <span class="num">16</span>:
+        <span class="var">target</span>.<span class="fn">take_damage</span>(<span class="var">swing_damage</span>)     <span class="com"># was: print(...)</span></pre>
 </div>
 <div class="callout warn">
   <span class="ct">⚠ tune the numbers</span>
   <p>The wolf's <strong>Swing Damage</strong> is <code class="inline">3</code> — with 30 health that's a brisk handful of bites. Select the <strong>Wolf</strong> and tune Swing Damage in the Inspector to taste; that's exactly why we made it <code class="inline">@export</code>.</p>
 </div>
+<div class="callout note">
+  <span class="ct">◈ one argument for now</span>
+  <p><code class="inline">take_damage(swing_damage)</code> passes exactly one value — the amount. In Lesson 16, when the wolf can fight back, <code class="inline">take_damage</code> will gain a second argument (<code class="inline">from</code>) so the player can retaliate against the attacker. Don't add that yet — keep it simple.</p>
+</div>
 
 <div class="flow">
-  <div class="phase"><div class="rail"><div class="num">▶</div></div><div class="body"><p>Press <kbd>F5</kbd>. Walk into the wolf — every couple seconds your health bar drops a chunk and the Output prints your health. Stand there too long and <strong>"You died!"</strong> → the scene reloads and you're back, full health. 🎉 You can now lose.</p></div></div>
+  <div class="phase"><div class="rail"><div class="num">▶</div></div><div class="body"><p>Press <kbd>F5</kbd>. Walk into the wolf — every couple seconds your health bar drops a chunk and the Output prints your health. Stand there too long and the scene reloads, full health. You can now lose.</p></div></div>
 </div>
 
 <h2>Check yourself</h2>
 <div class="quiz">
-  <p class="q">1. Why is the health bar on a <code class="inline">CanvasLayer</code>?</p>
+  <p class="q">Why is the health bar on a <code class="inline">CanvasLayer</code>?</p>
   <button onclick="pick(this)" data-correct>So it stays fixed on screen instead of scrolling with the world/camera</button>
   <button onclick="pick(this)">CanvasLayer makes it red</button>
   <button onclick="pick(this)">ProgressBars only work there</button>
   <div class="feedback"></div>
 </div>
-<div class="quiz">
-  <p class="q">2. How does the wolf damage the player?</p>
-  <button onclick="pick(this)" data-correct>It calls the player's take_damage() method directly via its target reference</button>
-  <button onclick="pick(this)">It edits the player's health variable from afar by magic</button>
-  <button onclick="pick(this)">It emits a global signal</button>
-  <div class="feedback"></div>
-</div>
-<div class="quiz">
-  <p class="q">3. What does <code class="inline">if health &lt; 0: health = 0</code> prevent?</p>
-  <button onclick="pick(this)" data-correct>Health (and the bar) going negative below empty</button>
-  <button onclick="pick(this)">The wolf from attacking</button>
-  <button onclick="pick(this)">The game from saving</button>
-  <div class="feedback"></div>
+
+<h3>Codebase checkpoint</h3>
+<p>The project after this lesson:</p>
+<div class="tree">
+<span class="dim">projects/first-steps/</span>
+├─ project.godot
+├─ icon.svg
+├─ <span class="leaf">main.tscn</span>            <span class="dim">← changed: HUD (CanvasLayer) + HealthBar (ProgressBar) added</span>
+├─ sword.gd
+├─ <span class="leaf">wolf.gd</span>              <span class="dim">← changed: _on_swing_timer_timeout calls target.take_damage()</span>
+├─ <span class="leaf">player.gd</span>            <span class="dim">← changed: max_health, health, health_bar, take_damage(), die()</span>
+└─ assets/
+   ├─ tileset.png
+   ├─ character.png
+   ├─ sword.png
+   └─ wolf.png
 </div>
 
 <div class="teacher">
   <b>I'M YOUR TEACHER — ASK ME ANYTHING</b>
-  <p>Snags: bar not moving? Check it's named <code class="inline">HealthBar</code> under <code class="inline">HUD</code>, and that you swapped the wolf's <code class="inline">print</code> for <code class="inline">target.take_damage(swing_damage)</code>. "null instance" on the bar? The path <code class="inline">"../HUD/HealthBar"</code> must match your tree. Want a coloured bar (green→red), a floating bar over the wolf, or a brief <strong>hurt flash</strong> when hit? All great next touches. Say <em>"done"</em> — Lesson 14 is the one the whole story has been building to: <strong>swing your sword and fight back.</strong> ⚔️</p>
+  <p>Snags: bar not moving? Check it's named <code class="inline">HealthBar</code> under <code class="inline">HUD</code>, and that you swapped the wolf's <code class="inline">print</code> for <code class="inline">target.take_damage(swing_damage)</code>. "null instance" on the bar? The path <code class="inline">"../HUD/HealthBar"</code> must match your tree. Want a coloured bar (green→red), a floating bar over the wolf, or a brief hurt flash when hit? All great next touches — ask.<br><br>
+  Say <em>"done"</em> — Lesson 14 shows you the damage <em>as a number in the world</em> (floating combat text), before you swing back. Next: <strong>seeing the damage.</strong></p>
 </div>
 
 <footer>
-  LESSON 13 · Combat 3 · grounded in <a href="../MISSION.md">your mission</a> · sources in <a href="../RESOURCES.md">RESOURCES.md</a><br>
+  LESSON 13 · The Encounter 6/6 · grounded in <a href="../MISSION.md">your mission</a> · sources in <a href="../RESOURCES.md">RESOURCES.md</a><br>
   Primary reference: <a href="https://docs.godotengine.org/en/stable/classes/class_progressbar.html">Godot — ProgressBar</a> · <a href="https://docs.godotengine.org/en/stable/classes/class_canvaslayer.html">CanvasLayer</a>
 </footer>
 </main>

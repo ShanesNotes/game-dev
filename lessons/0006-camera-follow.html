@@ -9,7 +9,7 @@
 <body>
 <main>
 <header class="hero">
-  <div class="kicker">Godot · Lesson 06</div>
+  <div class="kicker">Godot · Lesson 06 · Foundations 6 of 7</div>
   <h1>Bigger Than the Screen: <span>Camera Follow</span></h1>
   <p class="sub">One node, dropped in the right place. The world scrolls; the robot stays centred.</p>
 </header>
@@ -78,13 +78,26 @@
   <div class="feedback"></div>
 </div>
 
+<h3>Codebase checkpoint</h3>
+<p>The project after this lesson:</p>
+<div class="tree">
+<span class="dim">projects/first-steps/</span>
+├─ project.godot            <span class="dim">· project settings</span>
+├─ icon.svg                 <span class="dim">· the robot picture</span>
+├─ assets/
+│   └─ tileset.png          <span class="dim">· the 4-tile tileset</span>
+├─ <span class="leaf">main.tscn</span>               <span class="dim">← changed: Camera2D added as child of Player</span>
+└─ player.gd                <span class="dim">· unchanged</span>
+</div>
+<p class="cite">No script changes — this lesson's win is entirely in the scene structure. One child node in the right place and the camera is done.</p>
+
 <div class="teacher">
   <b>I'M YOUR TEACHER — ASK ME ANYTHING</b>
   <p>Camera not following? Check it's a child of <em>Player</em> (not Main) and that there's only one Camera2D. Want to stop the camera from showing the void past the map edges (camera "limits")? Ask me. When the world scrolls as you walk, say <em>"done"</em>. Lesson 7 is a milestone — we'll turn the robot into an <strong>animated character</strong> that faces the way it walks.</p>
 </div>
 
 <footer>
-  LESSON 06 · grounded in <a href="../MISSION.md">your mission</a> · sources in <a href="../RESOURCES.md">RESOURCES.md</a><br>
+  LESSON 06 · Foundations 6/7 · grounded in <a href="../MISSION.md">your mission</a> · sources in <a href="../RESOURCES.md">RESOURCES.md</a><br>
   Primary reference: <a href="https://docs.godotengine.org/en/stable/classes/class_camera2d.html">Godot — Camera2D</a>
 </footer>
 </main>

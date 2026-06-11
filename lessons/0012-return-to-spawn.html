@@ -9,7 +9,7 @@
 <body>
 <main>
 <header class="hero">
-  <div class="kicker">Godot · Lesson 12 · Combat 2 · quick one</div>
+  <div class="kicker">Godot · Lesson 12 · The Encounter 5 of 6</div>
   <h1>Reset: <span>Return to Spawn</span></h1>
   <p class="sub">Drop aggro and the wolf trots home — the WoW "evade/reset." A few lines on what you already have.</p>
 </header>
@@ -50,34 +50,34 @@
 <span class="kw">func</span> <span class="fn">_ready</span>():
     <span class="var">spawn</span> = global_position          <span class="com"># remember home, once</span>
 
-<span class="kw">func</span> <span class="fn">_physics_process</span>(delta):
+<span class="kw">func</span> <span class="fn">_physics_process</span>(_delta):
     <span class="kw">if</span> <span class="var">target</span> != <span class="kw">null</span>:
         <span class="com"># in combat: close to melee, then hold</span>
-        <span class="kw">if</span> global_position.distance_to(<span class="var">target</span>.global_position) &gt; <span class="var">melee_range</span>:
-            <span class="var">velocity</span> = (<span class="var">target</span>.global_position - global_position).normalized() * <span class="var">speed</span>
+        <span class="kw">if</span> global_position.<span class="fn">distance_to</span>(<span class="var">target</span>.global_position) &gt; <span class="var">melee_range</span>:
+            <span class="var">velocity</span> = (<span class="var">target</span>.global_position - global_position).<span class="fn">normalized</span>() * <span class="var">speed</span>
         <span class="kw">else</span>:
             <span class="var">velocity</span> = <span class="type">Vector2</span>.ZERO
     <span class="kw">else</span>:
         <span class="com"># no target: walk back to spawn</span>
-        <span class="kw">if</span> global_position.distance_to(<span class="var">spawn</span>) &gt; <span class="num">4.0</span>:
-            <span class="var">velocity</span> = (<span class="var">spawn</span> - global_position).normalized() * <span class="var">speed</span>
+        <span class="kw">if</span> global_position.<span class="fn">distance_to</span>(<span class="var">spawn</span>) &gt; <span class="num">4.0</span>:
+            <span class="var">velocity</span> = (<span class="var">spawn</span> - global_position).<span class="fn">normalized</span>() * <span class="var">speed</span>
         <span class="kw">else</span>:
             <span class="var">velocity</span> = <span class="type">Vector2</span>.ZERO
     <span class="fn">move_and_slide</span>()
     <span class="fn">face_target</span>()
 
 <span class="kw">func</span> <span class="fn">_on_aggro_area_body_entered</span>(body):
-    <span class="kw">if</span> <span class="var">body</span>.name == <span class="str">"Player"</span>:
+    <span class="kw">if</span> <span class="var">body</span>.<span class="fn">is_in_group</span>(<span class="str">"player"</span>):
         <span class="var">target</span> = <span class="var">body</span>
-        <span class="var">swing_timer</span>.start()
+        <span class="var">swing_timer</span>.<span class="fn">start</span>()
 
 <span class="kw">func</span> <span class="fn">_on_aggro_area_body_exited</span>(body):
-    <span class="kw">if</span> <span class="var">body</span>.name == <span class="str">"Player"</span>:
+    <span class="kw">if</span> <span class="var">body</span>.<span class="fn">is_in_group</span>(<span class="str">"player"</span>):
         <span class="var">target</span> = <span class="kw">null</span>
-        <span class="var">swing_timer</span>.stop()
+        <span class="var">swing_timer</span>.<span class="fn">stop</span>()
 
 <span class="kw">func</span> <span class="fn">_on_swing_timer_timeout</span>():
-    <span class="kw">if</span> <span class="var">target</span> != <span class="kw">null</span> <span class="kw">and</span> global_position.distance_to(<span class="var">target</span>.global_position) &lt;= <span class="var">melee_range</span> + <span class="num">16</span>:
+    <span class="kw">if</span> <span class="var">target</span> != <span class="kw">null</span> <span class="kw">and</span> global_position.<span class="fn">distance_to</span>(<span class="var">target</span>.global_position) &lt;= <span class="var">melee_range</span> + <span class="num">16</span>:
         <span class="fn">print</span>(<span class="str">"The wolf bites you for "</span>, <span class="var">swing_damage</span>, <span class="str">"!"</span>)
 
 <span class="kw">func</span> <span class="fn">face_target</span>():
@@ -93,39 +93,42 @@
 </div>
 
 <div class="flow">
-  <div class="phase"><div class="rail"><div class="num">▶</div></div><div class="body"><p>Press <kbd>F5</kbd>. Pull the wolf, lead it across the field, then step out of its aura — it turns and walks straight back to its spawn, then waits. Pull it again and it re-engages. 🎉</p></div></div>
+  <div class="phase"><div class="rail"><div class="num">▶</div></div><div class="body"><p>Press <kbd>F5</kbd>. Pull the wolf, lead it across the field, then step out of its aura — it turns and walks straight back to its spawn, then waits. Pull it again and it re-engages.</p></div></div>
 </div>
 
 <h2>Check yourself</h2>
 <div class="quiz">
-  <p class="q">1. Why store <code class="inline">spawn</code> in <code class="inline">_ready()</code> rather than every frame?</p>
+  <p class="q">Why store <code class="inline">spawn</code> in <code class="inline">_ready()</code> rather than every frame?</p>
   <button onclick="pick(this)" data-correct>_ready runs once at start, so it captures the original spot before the wolf moves</button>
   <button onclick="pick(this)">_ready is the only place variables can be set</button>
   <button onclick="pick(this)">It makes the wolf faster</button>
   <div class="feedback"></div>
 </div>
-<div class="quiz">
-  <p class="q">2. The "walk home" code is basically the same as…</p>
-  <button onclick="pick(this)" data-correct>the chase code, but aimed at spawn instead of the player</button>
-  <button onclick="pick(this)">the swing timer</button>
-  <button onclick="pick(this)">the camera follow</button>
-  <div class="feedback"></div>
-</div>
-<div class="quiz">
-  <p class="q">3. What's the <code class="inline">&gt; 4.0</code> check for?</p>
-  <button onclick="pick(this)" data-correct>Stop moving once it's essentially home, so it doesn't jitter on the spot</button>
-  <button onclick="pick(this)">Wait 4 seconds</button>
-  <button onclick="pick(this)">Deal 4 damage</button>
-  <div class="feedback"></div>
+
+<h3>Codebase checkpoint</h3>
+<p>The project after this lesson:</p>
+<div class="tree">
+<span class="dim">projects/first-steps/</span>
+├─ project.godot
+├─ icon.svg
+├─ main.tscn
+├─ sword.gd
+├─ <span class="leaf">wolf.gd</span>              <span class="dim">← changed: spawn var + _ready() + home-walk in _physics_process</span>
+├─ player.gd
+└─ assets/
+   ├─ tileset.png
+   ├─ character.png
+   ├─ sword.png
+   └─ wolf.png
 </div>
 
 <div class="teacher">
   <b>I'M YOUR TEACHER — ASK ME ANYTHING</b>
-  <p>Want the wolf to <strong>sprint home faster</strong> when resetting (WoW mobs do), or to be <strong>untargetable while evading</strong>? Easy add-ons — ask. Say <em>"done"</em> and we finally build the thing you're itching for: <strong>health and health bars</strong>. The bites start to matter. 🩸</p>
+  <p>Want the wolf to <strong>sprint home faster</strong> when resetting (WoW mobs do), or to be <strong>untargetable while evading</strong>? Easy add-ons — ask. Say <em>"done"</em> and we finally build the thing you're itching for: <strong>health and health bars</strong>. The bites start to matter.</p>
 </div>
 
 <footer>
-  LESSON 12 · Combat 2 · grounded in <a href="../MISSION.md">your mission</a> · sources in <a href="../RESOURCES.md">RESOURCES.md</a><br>
+  LESSON 12 · The Encounter 5/6 · grounded in <a href="../MISSION.md">your mission</a> · sources in <a href="../RESOURCES.md">RESOURCES.md</a><br>
   Primary reference: <a href="https://docs.godotengine.org/en/stable/getting_started/step_by_step/scripting_first_script.html#the-ready-function">Godot — the _ready function</a>
 </footer>
 </main>
