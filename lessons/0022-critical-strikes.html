@@ -50,7 +50,7 @@
 <h2>Part B — add the crit band to the roll</h2>
 <p>In <code class="inline">attack()</code>, slot Crit between Miss and Hit. The crit deals <strong>double</strong> damage and flags itself so the wolf can show it big and yellow:</p>
 <div class="code">
-  <div class="bar"><span class="t">GDScript · sprite_2d.gd — attack()</span><button class="copy">copy</button></div>
+  <div class="bar"><span class="t">GDScript · player.gd — attack()</span><button class="copy">copy</button></div>
 <pre><span class="kw">func</span> <span class="fn">attack</span>(<span class="var">t</span>):
     <span class="kw">var</span> <span class="var">roll</span> = <span class="fn">randf</span>() * <span class="num">100.0</span>
     <span class="kw">var</span> <span class="var">miss</span> = <span class="fn">miss_chance</span>(<span class="var">t</span>)

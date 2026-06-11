@@ -54,7 +54,7 @@
 <h2>Part B — roll the die on every swing</h2>
 <p>Until now <code class="inline">swing()</code> just dealt damage when in range. We route that through a new <code class="inline">attack()</code> that rolls first:</p>
 <div class="code">
-  <div class="bar"><span class="t">GDScript · sprite_2d.gd — swing()</span><button class="copy">copy</button></div>
+  <div class="bar"><span class="t">GDScript · player.gd — swing()</span><button class="copy">copy</button></div>
 <pre><span class="kw">func</span> <span class="fn">swing</span>():
     <span class="kw">if</span> <span class="kw">not</span> <span class="fn">is_instance_valid</span>(<span class="var">target</span>):
         <span class="var">swing_timer</span>.<span class="fn">stop</span>()

@@ -70,7 +70,7 @@
 </div>
 <p>Now call them. A <em>landed</em> blow gives rage (misses/dodges/parries don't), so capture the damage in <code class="inline">attack()</code>:</p>
 <div class="code">
-  <div class="bar"><span class="t">GDScript · sprite_2d.gd — attack() landing branches</span><button class="copy">copy</button></div>
+  <div class="bar"><span class="t">GDScript · player.gd — attack() landing branches</span><button class="copy">copy</button></div>
 <pre>    <span class="kw">elif</span> <span class="var">roll</span> &lt; <span class="var">miss</span> + <span class="var">dodge</span> + <span class="var">parry</span> + <span class="var">glancing</span>:
         <span class="fn">spawn_text_over</span>(<span class="var">t</span>, <span class="str">"Glancing"</span>, <span class="type">Color</span>.GRAY)
         <span class="kw">var</span> <span class="var">dmg</span> = <span class="fn">roundi</span>(<span class="fn">glancing_damage</span>(<span class="var">t</span>))
@@ -86,7 +86,7 @@
 </div>
 <p>And earn rage when bitten — one line in <code class="inline">take_damage</code>:</p>
 <div class="code">
-  <div class="bar"><span class="t">GDScript · sprite_2d.gd — take_damage</span><button class="copy">copy</button></div>
+  <div class="bar"><span class="t">GDScript · player.gd — take_damage</span><button class="copy">copy</button></div>
 <pre>    <span class="var">health_bar</span>.value = <span class="var">health</span>
     <span class="fn">spawn_number</span>(<span class="var">amount</span>, <span class="type">Color</span>.RED)
     <span class="fn">gain_rage_taking</span>(<span class="var">amount</span>)      <span class="com"># getting hit builds rage too</span></pre>
@@ -99,7 +99,7 @@
 <h2>Part C — rage drains out of combat</h2>
 <p>When you're not swinging, rage bleeds away. Add this to the end of <code class="inline">_physics_process</code>:</p>
 <div class="code">
-  <div class="bar"><span class="t">GDScript · sprite_2d.gd — in _physics_process</span><button class="copy">copy</button></div>
+  <div class="bar"><span class="t">GDScript · player.gd — in _physics_process</span><button class="copy">copy</button></div>
 <pre>    <span class="kw">if</span> <span class="var">swing_timer</span>.<span class="fn">is_stopped</span>() <span class="kw">and</span> <span class="var">rage</span> &gt; <span class="num">0</span>:
         <span class="fn">add_rage</span>(-<span class="var">rage_decay</span> * <span class="var">delta</span>)   <span class="com"># out of combat -> drain</span></pre>
 </div>
