@@ -3,62 +3,73 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Lesson 19 — Wielding the Sword</title>
+<title>Lesson 17 — Wielding the Sword</title>
 <link rel="stylesheet" href="_lesson.css">
 </head>
 <body>
 <main>
 <header class="hero">
-  <div class="kicker">Godot · Lesson 19 · Polish 4</div>
+  <div class="kicker">Godot · Lesson 17 · Fighting Back 4 of 4</div>
   <h1>Wielding <span>the Sword</span></h1>
-  <p class="sub">Your character finally holds the blade — and swings it in a quick arc every time you attack.</p>
+  <p class="sub">The blade you've been fighting with is finally visible — pick it up and it snaps into your hand, slashing with every auto-attack.</p>
 </header>
 
 <div class="win">
   <b>TODAY</b>
-  <p>Pick up the sword and it appears <em>in your hand</em>. Every auto-attack swings it in a fast slash. The blade you've been fighting with is finally visible.</p>
+  <p>Walk over the ground sword and it appears in your hand. Every auto-attack animates a quick slash arc — forward and back — synced with the damage. The "Fighting Back" arc is complete.</p>
 </div>
 
-<h2>The idea: a sword is just another node, parented to you</h2>
+<h2>The idea: a sword is just another child node</h2>
 <p>
-  Your character art (the walk frames) has no sword in it — so instead of redrawing it, we
-  <strong>hang a separate sword sprite off the Player</strong>. Because it's a <em>child</em>, it follows you everywhere
-  automatically (same trick as the Camera in L6). And because it's its own node, we can animate it on its own —
-  a quick rotation arc — without touching the walk animation at all.
+  Your character art has no sword in it — so instead of redrawing every frame, we
+  <strong>hang a separate Sprite2D off the Player</strong>. Because it's a <em>child</em>, it follows you
+  everywhere automatically — same principle as the Camera in Lesson 6. And because it's its own node,
+  we can rotate it independently for a slash without touching the walk animation at all.
 </p>
+<div class="callout note">
+  <span class="ct">◈ single-target only for now</span>
+  <p>This lesson comes before the wolf pack (Lesson 18). <code class="inline">swing()</code> still hits the one wolf on the
+  <code class="inline">target</code> variable. The sword animation and the targeting system are independent — wiring
+  them together doesn't require any changes here.</p>
+</div>
 <div class="defs">
-  <div class="def"><b>Child Sprite2D</b><p>A second sprite parented to the Player. It rides along with you and can be shown, hidden, and rotated independently.</p></div>
-  <div class="def"><b>Offset (pivot)</b><p>A Sprite2D rotates around its origin. Shifting the texture's <code class="inline">Offset</code> lets it spin around the <em>handle</em> instead of its middle — so it slashes, not spins.</p></div>
-  <div class="def"><b>Tween</b><p>From L16 — animate a property over time. Here we tween <code class="inline">rotation_degrees</code> out and back for the swing.</p></div>
+  <div class="def"><b>Child Sprite2D</b><p>A second sprite parented to the Player. It rides along with you and can be shown, hidden, and rotated independently of the walk animation.</p></div>
+  <div class="def"><b>Offset (pivot)</b><p>A Sprite2D rotates around its node's origin. Shifting the texture's <code class="inline">Offset</code> lets that origin land on the handle so the blade <em>slashes</em> instead of spinning in place.</p></div>
+  <div class="def"><b>SWORD_REST_DEGREES</b><p>A named constant for the "at the ready" angle. Having one name instead of <code class="inline">25.0</code> scattered through the code makes it easy to tune — and ensures <code class="inline">equip_sword</code> and the tween return to exactly the same pose.</p></div>
 </div>
 
-<h2>Part A — put a sword in the Player's hand</h2>
+<h2>Part A — add a Sword sprite to the Player</h2>
 <div class="flow">
   <div class="phase"><div class="rail"><div class="num">1</div><div class="line"></div></div><div class="body"><p>Select the <code class="inline">Player</code> node → <kbd>+ Add Child Node</kbd> → <code class="inline">Sprite2D</code>. Rename it <code class="inline">Sword</code>.</p></div></div>
-  <div class="phase"><div class="rail"><div class="num">2</div><div class="line"></div></div><div class="body"><p>In the Inspector, set its <strong>Texture</strong> to <code class="inline">res://assets/sword.png</code> (drag it from the FileSystem dock onto the Texture slot).</p></div></div>
-  <div class="phase"><div class="rail"><div class="num">3</div><div class="line"></div></div><div class="body"><p><strong>Offset</strong> (under Sprite2D): set <strong>Y ≈ −16</strong> (about minus-half the image height). This slides the texture up so the <em>handle</em> sits on the node's origin — now it rotates around the grip.</p></div></div>
-  <div class="phase"><div class="rail"><div class="num">4</div><div class="line"></div></div><div class="body"><p><strong>Transform</strong> (under Node2D): <strong>Position ≈ (10, 2)</strong> (the right hand), <strong>Scale ≈ (0.7, 0.7)</strong>, <strong>Rotation ≈ 35°</strong> (a relaxed "at the ready" tilt). Nudge these until it looks right.</p></div></div>
-  <div class="phase"><div class="rail"><div class="num">5</div></div><div class="body"><p>Under <strong>Visibility</strong>, uncheck <strong>Visible</strong> — the sword starts hidden, and we'll reveal it when you pick it up.</p></div></div>
+  <div class="phase"><div class="rail"><div class="num">2</div><div class="line"></div></div><div class="body"><p>In the Inspector, drag <code class="inline">assets/sword.png</code> from the FileSystem dock onto the <strong>Texture</strong> slot.</p></div></div>
+  <div class="phase"><div class="rail"><div class="num">3</div><div class="line"></div></div><div class="body"><p><strong>Offset → Y ≈ −16</strong> (about minus-half the image height). This slides the picture up so the node's origin sits at the handle — rotation now happens around the grip, not the blade's centre.</p></div></div>
+  <div class="phase"><div class="rail"><div class="num">4</div><div class="line"></div></div><div class="body"><p><strong>Transform → Position ≈ (10, 2)</strong> (right hand), <strong>Scale ≈ (0.7, 0.7)</strong>, <strong>Rotation ≈ 25°</strong>. Nudge until it looks right — the exact values are just aesthetics.</p></div></div>
+  <div class="phase"><div class="rail"><div class="num">5</div></div><div class="body"><p>Under <strong>Visibility</strong>, uncheck <strong>Visible</strong> — the sword starts hidden until you pick up the ground item.</p></div></div>
 </div>
 <div class="callout note">
-  <span class="ct">◈ why Offset, not Position, for the pivot</span>
-  <p><code class="inline">Position</code> moves the whole node (where the sword sits on your body). <code class="inline">Offset</code> moves just the <em>picture</em> relative to the node's origin — so the origin can land on the handle while the node sits at your hand. Rotation always spins around the origin, so this is what makes it a slash.</p>
+  <span class="ct">◈ Offset vs Position</span>
+  <p><code class="inline">Position</code> moves the whole node (where on your body the sword sits). <code class="inline">Offset</code> moves just the <em>texture</em> relative to the node's origin — so the origin can land exactly on the handle while the node sits at your hand. Rotation always spins around the origin, which is why this is the correct control for a slash pivot.</p>
 </div>
 
-<h2>Part B — find the sword, wield the sword</h2>
-<p>Remember the sword pickup from L8? Right now it just vanishes. Let's make it <strong>reveal the held sword</strong>. First, a tiny method on the Player:</p>
+<h2>Part B — equip it from the pickup</h2>
+<p>Add the onready reference, the constant, and a small <code class="inline">equip_sword()</code> method to the Player. Then call it from <code class="inline">sword.gd</code>.</p>
 <div class="code">
-  <div class="bar"><span class="t">GDScript · sprite_2d.gd</span><button class="copy">copy</button></div>
-<pre><span class="com"># with the other @onready vars near the top:</span>
-<span class="kw">@onready</span> <span class="kw">var</span> <span class="var">sword</span> = $<span class="var">Sword</span>
+  <div class="bar"><span class="t">GDScript · player.gd — additions</span><button class="copy">copy</button></div>
+<pre><span class="com"># near the top, with other @onready vars:</span>
+<span class="kw">@onready</span> <span class="kw">var</span> <span class="var">sword</span> = $<span class="type">Sword</span>
 
-<span class="com"># a small method anywhere in the script:</span>
+<span class="kw">const</span> <span class="var">SWORD_REST_DEGREES</span> = <span class="num">25.0</span>
+
+<span class="com"># in _ready(), after health bar setup:</span>
+    <span class="var">sword</span>.rotation_degrees = <span class="var">SWORD_REST_DEGREES</span>
+
+<span class="com"># anywhere in the script:</span>
 <span class="kw">func</span> <span class="fn">equip_sword</span>():
-    <span class="var">sword</span>.visible = <span class="kw">true</span></pre>
+    <span class="var">sword</span>.visible = <span class="kw">true</span>
+    <span class="var">sword</span>.rotation_degrees = <span class="var">SWORD_REST_DEGREES</span></pre>
 </div>
-<p>Then have the pickup call it:</p>
 <div class="code">
-  <div class="bar"><span class="t">GDScript · sword.gd</span><button class="copy">copy</button></div>
+  <div class="bar"><span class="t">GDScript · sword.gd (the ground pickup)</span><button class="copy">copy</button></div>
 <pre><span class="kw">func</span> <span class="fn">_on_body_entered</span>(<span class="var">body</span>):
     <span class="kw">if</span> <span class="var">body</span>.name == <span class="str">"Player"</span>:
         <span class="fn">print</span>(<span class="str">"- The blade is thin -"</span>)
@@ -66,70 +77,97 @@
         <span class="fn">queue_free</span>()</pre>
 </div>
 <div class="annot">
-  <div class="line-note"><code>body.equip_sword()</code> — <b>the pickup tells the Player to draw its blade.</b> Same node-calls-a-method pattern you used for <code>take_damage</code>; the L8 pickup finally <em>does</em> something you can see.</div>
+  <div class="line-note"><code>body.equip_sword()</code> — <b>the pickup tells the Player to draw its blade.</b> Same node-calls-a-method pattern as <code>take_damage</code>. The ground sword finally does something you can see.</div>
+  <div class="line-note"><code>SWORD_REST_DEGREES</code> — <b>one name, used in three places:</b> <code>_ready</code> init, <code>equip_sword</code>, and the tween return. Change the number once and all three update — no magic literals scattered through the code.</div>
 </div>
 
-<h2>Part C — swing it on every attack</h2>
-<p>One Tween makes the slash: rotate the sword across, then back to rest. Add the helper, then call it from <code class="inline">swing</code>:</p>
+<div class="callout note">
+  <span class="ct">◈ deliberate stepping stone</span>
+  <p><code class="inline">equip_sword()</code> just makes the sprite visible. A future "WeaponData" equip system (where different weapons have different ranges, speeds, and sprites) would replace this — but that system needs Lessons 20+ to motivate it. YAGNI: don't build the system until you need it.</p>
+</div>
+
+<h2>Part C — swing it on every auto-attack</h2>
+<p>Two tween steps in sequence make the slash: rotate to −40° (fast), then back to rest (slightly slower). Then call it from <code class="inline">swing()</code>.</p>
 <div class="code">
-  <div class="bar"><span class="t">GDScript · sprite_2d.gd</span><button class="copy">copy</button></div>
+  <div class="bar"><span class="t">GDScript · player.gd — swing_sword() and updated swing()</span><button class="copy">copy</button></div>
 <pre><span class="kw">func</span> <span class="fn">swing_sword</span>():
     <span class="kw">var</span> <span class="var">t</span> = <span class="fn">create_tween</span>()
-    <span class="var">t</span>.tween_property(<span class="var">sword</span>, <span class="str">"rotation_degrees"</span>, -<span class="num">40</span>, <span class="num">0.08</span>)   <span class="com"># slash across</span>
-    <span class="var">t</span>.tween_property(<span class="var">sword</span>, <span class="str">"rotation_degrees"</span>, <span class="num">35</span>, <span class="num">0.12</span>)    <span class="com"># back to rest</span></pre>
-</div>
-<div class="code">
-  <div class="bar"><span class="t">GDScript · sprite_2d.gd — swing()</span><button class="copy">copy</button></div>
-<pre><span class="kw">func</span> <span class="fn">swing</span>():
-    <span class="kw">if</span> <span class="kw">not</span> <span class="fn">is_instance_valid</span>(<span class="var">target</span>):     <span class="com"># target dead/gone -> stop</span>
+    <span class="var">t</span>.<span class="fn">tween_property</span>(<span class="var">sword</span>, <span class="str">"rotation_degrees"</span>, -<span class="num">40</span>, <span class="num">0.08</span>)          <span class="com"># slash across</span>
+    <span class="var">t</span>.<span class="fn">tween_property</span>(<span class="var">sword</span>, <span class="str">"rotation_degrees"</span>, <span class="var">SWORD_REST_DEGREES</span>, <span class="num">0.12</span>)  <span class="com"># back to rest</span>
+
+<span class="kw">func</span> <span class="fn">swing</span>():
+    <span class="kw">if</span> <span class="kw">not</span> <span class="fn">is_instance_valid</span>(<span class="var">target</span>):
         <span class="var">swing_timer</span>.<span class="fn">stop</span>()
         <span class="var">target</span> = <span class="kw">null</span>
+        <span class="var">sword</span>.rotation_degrees = <span class="var">SWORD_REST_DEGREES</span>
         <span class="kw">return</span>
-    <span class="fn">swing_sword</span>()                       <span class="com"># NEW: animate the slash</span>
-    <span class="kw">if</span> <span class="var">global_position</span>.<span class="fn">distance_to</span>(<span class="var">target</span>.<span class="var">global_position</span>) &lt;= <span class="var">attack_range</span>:
+    <span class="fn">swing_sword</span>()                       <span class="com"># animate the slash</span>
+    <span class="kw">if</span> global_position.<span class="fn">distance_to</span>(<span class="var">target</span>.global_position) &lt;= <span class="var">attack_range</span>:
         <span class="var">target</span>.<span class="fn">take_damage</span>(<span class="var">attack_damage</span>)</pre>
 </div>
 <div class="annot">
-  <div class="line-note"><code>create_tween()</code> + two <code>tween_property</code> calls — <b>they run in sequence</b>: first the fast slash to −40°, then the slower return to 35°. Total ~0.2s, so it finishes well before your next swing.</div>
-  <div class="line-note"><code>swing_sword()</code> inside <code>swing()</code> — <b>the visual fires on every swing tick</b>, right alongside the damage. Animation and gameplay, linked.</div>
+  <div class="line-note"><code>tween_property(sword, "rotation_degrees", -40, 0.08)</code> — <b>first step: the slash.</b> 80ms across. Then the second step plays <em>after</em> it finishes (tweens in a sequence run one after another by default).</div>
+  <div class="line-note"><code>tween_property(sword, "rotation_degrees", SWORD_REST_DEGREES, 0.12)</code> — <b>second step: back to rest.</b> 120ms return — slightly slower so the slash reads as snappy but not robotic.</div>
+  <div class="line-note"><code>sword.rotation_degrees = SWORD_REST_DEGREES</code> in the dead-target branch — <b>prevents a "stuck-out" pose</b> if the wolf dies mid-slash. Reset to rest immediately.</div>
+  <div class="line-note"><code>swing_sword()</code> fires <em>before</em> the distance check — <b>the animation runs on every swing tick</b> regardless of range, so swinging in the air still looks deliberate.</div>
 </div>
 
 <div class="flow">
-  <div class="phase"><div class="rail"><div class="num">▶</div></div><div class="body"><p>Press <kbd>F5</kbd>. Walk over the sword — it snaps into your hand. Click a wolf and attack: the blade slashes out and back with every swing. ⚔️</p></div></div>
+  <div class="phase"><div class="rail"><div class="num">▶</div></div><div class="body"><p>Press <kbd>F5</kbd>. Walk over the ground sword — it snaps into your hand. Auto-attack the wolf and watch the blade slash forward and return with every hit. ⚔</p></div></div>
 </div>
 
 <h2>Check yourself</h2>
 <div class="quiz">
-  <p class="q">1. Why make the sword a <em>child</em> of the Player?</p>
-  <button onclick="pick(this)" data-correct>So it follows the Player automatically and can be animated on its own</button>
-  <button onclick="pick(this)">Children deal more damage</button>
-  <button onclick="pick(this)">It's the only way to load a texture</button>
+  <p class="q">1. Why make the sword a <em>child</em> of the Player node?</p>
+  <button onclick="pick(this)" data-correct>So it automatically follows the player and can be rotated independently of the walk animation</button>
+  <button onclick="pick(this)">Children nodes deal more damage</button>
+  <button onclick="pick(this)">It's the only way to load a PNG texture</button>
   <div class="feedback"></div>
 </div>
 <div class="quiz">
-  <p class="q">2. What does setting the sprite's <code class="inline">Offset</code> do here?</p>
-  <button onclick="pick(this)" data-correct>Moves the picture so the node's origin sits on the handle — so it rotates around the grip</button>
-  <button onclick="pick(this)">Makes the sword bigger</button>
-  <button onclick="pick(this)">Changes how much damage a swing does</button>
+  <p class="q">2. What does setting the sprite's <code class="inline">Offset Y</code> accomplish?</p>
+  <button onclick="pick(this)" data-correct>Moves the picture so the node's origin sits at the handle — rotation then pivots around the grip</button>
+  <button onclick="pick(this)">Makes the sword larger on screen</button>
+  <button onclick="pick(this)">Changes how much damage a swing deals</button>
   <div class="feedback"></div>
 </div>
 <div class="quiz">
-  <p class="q">3. Why do the two <code class="inline">tween_property</code> calls produce a slash-and-return?</p>
-  <button onclick="pick(this)" data-correct>They run one after another: rotate out, then rotate back</button>
-  <button onclick="pick(this)">They run at the same time and cancel out</button>
-  <button onclick="pick(this)">The second one deletes the sword</button>
+  <p class="q">3. Two sequential <code class="inline">tween_property</code> calls produce a slash-and-return because…</p>
+  <button onclick="pick(this)" data-correct>They run one after the other: rotate out first, then rotate back</button>
+  <button onclick="pick(this)">They cancel each other and the sword stays still</button>
+  <button onclick="pick(this)">The second call deletes the sword</button>
   <div class="feedback"></div>
 </div>
+
+<h3>Codebase checkpoint</h3>
+<p>The project after this lesson:</p>
+<div class="tree">
+<span class="dim">projects/first-steps/</span>
+├─ project.godot
+├─ icon.svg
+├─ main.tscn                    <span class="dim">← changed: Sword Sprite2D child added under Player (visible=false)</span>
+├─ <span class="leaf">player.gd</span>                   <span class="dim">← changed: sword @onready, SWORD_REST_DEGREES, equip_sword(), swing_sword(), swing() updated</span>
+├─ <span class="leaf">sword.gd</span>                    <span class="dim">← changed: _on_body_entered calls equip_sword()</span>
+├─ wolf.gd
+├─ damage_number.tscn
+├─ damage_number.gd
+└─ assets/
+    ├─ tileset.png
+    ├─ character.png
+    ├─ sword.png
+    └─ wolf.png
+</div>
+<p class="cite">Still one wolf hand-built inside main.tscn — no wolf.tscn yet. That arrives in Lesson 18.</p>
 
 <div class="teacher">
   <b>I'M YOUR TEACHER — ASK ME ANYTHING</b>
-  <p>You linked a visual to a gameplay event — the core of game feel. Snags: sword doesn't appear → check the pickup's <code class="inline">body.equip_sword()</code> and that the child is named exactly <code class="inline">Sword</code>. Spins around its middle instead of slashing → adjust the <strong>Offset Y</strong> (more negative) until the pivot is at the handle. Slash looks wrong-way → flip the <code class="inline">-40</code>/<code class="inline">35</code> angles.<br><br>
-  <b>Want more (ask me):</b> make the sword <strong>switch sides / angle with your facing</strong> (left/right/up/down), add a <strong>whoosh sound</strong> or a faint <strong>arc trail</strong>, or <strong>gate attacking</strong> so you can't fight until you've picked the sword up. All small, all fun.<br><br>
-  Say <em>"done"</em> — next we start the combat-depth arc with <strong>Lesson 20: real swing timing &amp; the global cooldown</strong> (your first numbers straight from <code class="inline">wow-combat-values.md</code>). ⏱️</p>
+  <p>You linked a visual to a gameplay event — the core of game feel. Snags: sword doesn't appear after pickup → check <code class="inline">body.equip_sword()</code> in sword.gd and that the child is named exactly <code class="inline">Sword</code>. Spins around its centre instead of slashing → adjust <strong>Offset Y</strong> more negative until the pivot lands at the handle. Slash goes the wrong way → flip the <code class="inline">-40</code> to positive.<br><br>
+  <b>Want more (ask me):</b> make the sword face the direction you're walking, add a <strong>whoosh sound</strong> on slash, or gate attacking so you can't swing until the sword is picked up (<code class="inline">if sword.visible: swing()</code>). All small, all fun.<br><br>
+  Say <em>"done"</em> — Lesson 18 is the wolf pack: Save Branch as Scene turns your lone wolf into a reusable stamp, and three wolves close in at once.</p>
 </div>
 
 <footer>
-  LESSON 19 · Polish 4 · grounded in <a href="../MISSION.md">your mission</a> · sources in <a href="../RESOURCES.md">RESOURCES.md</a><br>
+  LESSON 17 · Fighting Back 4/4 · grounded in <a href="../MISSION.md">your mission</a> · sources in <a href="../RESOURCES.md">RESOURCES.md</a><br>
   Primary reference: <a href="https://docs.godotengine.org/en/stable/tutorials/animation/using_tweens.html">Godot — Tweens</a> · <a href="https://docs.godotengine.org/en/stable/classes/class_sprite2d.html">Sprite2D</a>
 </footer>
 </main>
