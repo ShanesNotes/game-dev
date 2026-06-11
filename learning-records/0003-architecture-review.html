@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+<meta charset="utf-8">
+<title>Architecture Review — first-steps (2026-06-11)</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+  mermaid.initialize({ startOnLoad: true, theme: 'dark', themeVariables: {
+    primaryColor: '#1c2430', primaryTextColor: '#e8e3d8', primaryBorderColor: '#d4a843',
+    lineColor: '#8a8f98', secondaryColor: '#15202b', tertiaryColor: '#0f1620',
+    fontFamily: 'ui-monospace, monospace', fontSize: '13px'
+  }});
+</script>
+<style>
+  body { background: #0b0f14; color: #e8e3d8; }
+  .badge-strong { background:#2fbf4a22; color:#5fdf78; border:1px solid #2fbf4a66; }
+  .badge-explore { background:#d4a84322; color:#f0d27a; border:1px solid #d4a84366; }
+  .badge-spec { background:#8a8f9822; color:#aeb4bd; border:1px solid #8a8f9866; }
+  .card { background:#11161d; border:1px solid #232b36; }
+  .mono { font-family: ui-monospace, SFMono-Regular, monospace; }
+  .mass { background:linear-gradient(180deg,#1c2430,#15202b); border:1px solid #2c3645; }
+  .iface { background:#d4a843; }
+  .law { border-left:3px solid #d4a843; background:#15131066; }
+  code { color:#7fd4cf; }
+  .filechip { background:#0f1620; border:1px solid #2c3645; color:#9fb6c9; }
+</style>
+</head>
+<body class="max-w-5xl mx-auto px-6 py-10">
+
+<header class="mb-10">
+  <p class="text-amber-300/80 mono text-sm tracking-widest uppercase">Architecture review · 2026-06-11</p>
+  <h1 class="text-3xl font-bold mt-1">first-steps — deepening opportunities</h1>
+  <p class="mt-3 text-slate-400 max-w-3xl">
+    Scope: <span class="mono">projects/first-steps</span> (6 GDScript modules, 2 scenes) and the
+    teaching exhibit (<span class="mono">lessons/</span>, 26 lessons). Lens: module <b>depth</b> —
+    a lot of behaviour behind a small <b>interface</b> — judged by the <b>deletion test</b>, with
+    testability and AI-navigability as the payoff. The repo's telos shapes everything here:
+    <em>the game is the curriculum, not the product</em>.
+  </p>
+  <div class="law mt-4 p-3 rounded text-sm text-slate-300">
+    <b class="text-amber-300">Honored locked decisions (TELOS laws 5–6):</b> the
+    <span class="mono">WeaponData</span> refactor stays parked until a second weapon exists (L27/L33
+    trigger); collision layers stay unified (“do NOT re-suggest”). Neither appears below.
+    Law 5 also sets the bar for every card: <em>refactors wait for their trigger</em> — each candidate
+    names the trigger that has already fired.
+  </div>
+</header>
+
+<!-- ============================ CANDIDATE 1 ============================ -->
+<section class="card rounded-xl p-6 mb-8">
+  <div class="flex items-start justify-between gap-4">
+    <h2 class="text-2xl font-semibold">1 · The attack table as a deep module</h2>
+    <span class="badge-strong px-3 py-1 rounded-full text-sm font-semibold whitespace-nowrap">Strong</span>
+  </div>
+  <div class="flex flex-wrap gap-2 mt-3">
+    <span class="filechip mono text-xs px-2 py-1 rounded">player.gd:111–202</span>
+    <span class="filechip mono text-xs px-2 py-1 rounded">reference/wow-combat-values.md</span>
+  </div>
+
+  <h3 class="text-amber-300 mt-5 font-semibold">Problem</h3>
+  <p class="text-slate-300 mt-1">
+    The combat formulas — <code>miss_chance</code>, <code>dodge_chance</code>, <code>parry_chance</code>,
+    <code>glancing_chance</code>, <code>crit_chance</code>, <code>glancing_damage</code>, the one-roll
+    band-walk in <code>attack()</code>, and the three rage-conversion functions — are pure math
+    (TELOS law 4: real numbers, cited from <span class="mono">wow-combat-values.md</span>). But they live
+    interleaved with node calls inside the Player module. The <b>interface</b> to “how combat resolves” is
+    currently <em>all of player.gd</em>: to trust the band ordering
+    (<code>roll &lt; miss + dodge + parry + …</code>) you must read the implementation. That ordering is
+    exactly where this class of bug hides, and today it is untestable — <code>attack()</code> cannot run
+    without a scene tree, a HUD, and a live wolf.
+  </p>
+
+  <h3 class="text-amber-300 mt-4 font-semibold">Solution</h3>
+  <p class="text-slate-300 mt-1">
+    Extract a <b>CombatTable</b> module (<span class="mono">combat_table.gd</span>,
+    <code>class_name CombatTable</code>, static functions, zero node references):
+    <code>CombatTable.roll(attacker, defender, rng) → Outcome</code> where Outcome is
+    <code>{kind: MISS|DODGE|PARRY|GLANCING|CRIT|HIT, damage: int}</code>, plus
+    <code>CombatTable.rage_from_dealing(...)</code> / <code>rage_from_taking(...)</code>.
+    The Player’s <code>attack()</code> shrinks to: roll the table, then <em>present</em> the outcome
+    (floating text, sparks, shake). The WoW citation moves to the top of the new file.
+  </p>
+
+  <h3 class="text-amber-300 mt-4 font-semibold">Benefits</h3>
+  <ul class="list-disc ml-6 text-slate-300 mt-1 space-y-1">
+    <li><b>Leverage:</b> one two-function interface hides ~90 lines of researched formulas and the band-walk invariant.</li>
+    <li><b>Locality:</b> every future combat change (L27 XP scaling, L33 Whirlwind per the roadmap) lands in one cited file.</li>
+    <li><b>The interface is the test surface:</b> the repo gets its <em>first</em> headless test seam —
+      <span class="mono">godot --headless --script tests/test_combat_table.gd</span> asserting exact values
+      against the reference doc (e.g. “+3 levels ⇒ parry 14%”). A seeded RNG makes the band-walk deterministic.</li>
+    <li><b>Deletion test: passes.</b> Delete CombatTable and seven formulas + an ordering invariant scatter back into Player. It concentrates complexity; it doesn’t move it.</li>
+    <li><b>Teachability:</b> the attack table becomes one artifact a lesson can point at whole — and lesson 27 will extend exactly this code. <em>Trigger: fired</em> (combat arc L27–33 is the declared next step).</li>
+  </ul>
+
+  <div class="grid md:grid-cols-2 gap-4 mt-5">
+    <div>
+      <p class="text-xs uppercase tracking-widest text-slate-500 mb-2">Before — shallow: interface ≈ implementation</p>
+      <div class="mass rounded-lg p-3">
+        <div class="iface h-2 rounded-t" style="width:100%"></div>
+        <div class="p-3 text-sm mono text-slate-300 leading-6">
+          player.gd (249 lines)<br>
+          <span class="text-slate-500">— input · movement · animation</span><br>
+          <span class="text-rose-300">— 7 combat formulas</span><br>
+          <span class="text-rose-300">— band-walk in attack()</span><br>
+          <span class="text-rose-300">— 3 rage conversions</span><br>
+          <span class="text-slate-500">— FX · HUD writes · death</span>
+        </div>
+        <p class="text-xs text-slate-500 px-3 pb-2">To know combat, read everything. Interface as wide as the file.</p>
+      </div>
+    </div>
+    <div>
+      <p class="text-xs uppercase tracking-widest text-slate-500 mb-2">After — deep: narrow interface, big implementation</p>
+      <div class="flex gap-3">
+        <div class="mass rounded-lg p-0 flex-1">
+          <div class="iface h-2 rounded-t" style="width:38%"></div>
+          <div class="p-3 text-sm mono text-slate-300 leading-6">
+            CombatTable<br>
+            <span class="text-amber-200">roll() · rage_*()</span><br>
+            <span class="text-slate-500">↓ hides ↓</span><br>
+            7 formulas · band order<br>
+            <span class="text-emerald-300">+ headless tests</span><br>
+            <span class="text-slate-500">cites wow-combat-values.md</span>
+          </div>
+        </div>
+        <div class="mass rounded-lg p-0 flex-1">
+          <div class="iface h-2 rounded-t" style="width:100%"></div>
+          <div class="p-3 text-sm mono text-slate-300 leading-6">
+            player.gd (~160 lines)<br>
+            <span class="text-slate-500">input · movement · anim</span><br>
+            outcome = CombatTable.roll()<br>
+            present(outcome)
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ CANDIDATE 2 ============================ -->
+<section class="card rounded-xl p-6 mb-8">
+  <div class="flex items-start justify-between gap-4">
+    <h2 class="text-2xl font-semibold">2 · Player announces, HUD listens — a signal seam</h2>
+    <span class="badge-strong px-3 py-1 rounded-full text-sm font-semibold whitespace-nowrap">Strong</span>
+  </div>
+  <div class="flex flex-wrap gap-2 mt-3">
+    <span class="filechip mono text-xs px-2 py-1 rounded">player.gd:18,21</span>
+    <span class="filechip mono text-xs px-2 py-1 rounded">hud.gd:16–27</span>
+    <span class="filechip mono text-xs px-2 py-1 rounded">wolf.gd</span>
+  </div>
+
+  <h3 class="text-amber-300 mt-5 font-semibold">Problem</h3>
+  <p class="text-slate-300 mt-1">
+    The Player module’s interface currently <em>includes the HUD’s internal layout</em>:
+    <code>get_node("../../HUD/UnitFrame/HealthBar")</code>. The seam leaks both ways — the HUD module
+    polls <code>player.target</code> and reads <code>target.health</code> <em>every frame</em>.
+    This fragility already bit: when Player moved under <span class="mono">World</span> during the visual
+    overhaul, the hard paths broke and had to be hand-patched. Worse, the curriculum itself teaches the
+    fix — TELOS law 5 celebrates <b>“events over polling (L11)”</b> — so the exhibit currently contradicts
+    its own doctrine.
+  </p>
+
+  <h3 class="text-amber-300 mt-4 font-semibold">Solution</h3>
+  <p class="text-slate-300 mt-1">
+    Player emits <code>health_changed(value, max)</code>, <code>rage_changed(value)</code>,
+    <code>target_changed(target)</code>; Wolf emits <code>health_changed</code>. The HUD module connects
+    in <code>_ready()</code> and its <code>_process()</code> polling disappears. Player loses all knowledge
+    that a HUD exists.
+  </p>
+
+  <h3 class="text-amber-300 mt-4 font-semibold">Benefits</h3>
+  <ul class="list-disc ml-6 text-slate-300 mt-1 space-y-1">
+    <li><b>Deletion test (run as a thought experiment on the HUD):</b> today, deleting the HUD scene crashes
+      Player in <code>_ready()</code>. After: the game runs headless without UI — which is also what makes
+      combat simulation tests possible.</li>
+    <li><b>Locality:</b> HUD layout changes (and the L27/28 XP bar the roadmap implies) never touch player.gd again.</li>
+    <li><b>Leverage:</b> any future listener — nameplates, portraits, an XP bar, a sound module — subscribes to the same four signals.</li>
+    <li><b>Teachability:</b> this is a lesson, not just a refactor: “wire the HUD the way we wired aggro in L11.”
+      <em>Trigger: fired twice</em> (paths already broke once; L11 doctrine already taught).</li>
+  </ul>
+
+  <div class="grid md:grid-cols-2 gap-4 mt-5">
+    <div>
+      <p class="text-xs uppercase tracking-widest text-slate-500 mb-2">Before — both modules leak across the seam</p>
+      <pre class="mermaid">
+flowchart LR
+  P[Player] -- "hard path<br/>../../HUD/UnitFrame/HealthBar" --> H[HUD]
+  H -- "polls player.target<br/>every frame" --> P
+  H -- "reads target.health<br/>every frame" --> W[Wolf]
+      </pre>
+    </div>
+    <div>
+      <p class="text-xs uppercase tracking-widest text-slate-500 mb-2">After — one-way announcements</p>
+      <pre class="mermaid">
+flowchart LR
+  P[Player] -. "health_changed<br/>rage_changed<br/>target_changed" .-> H[HUD]
+  W[Wolf] -. "health_changed" .-> H
+  H --- N["knows only signal names<br/>(Player runs without HUD)"]
+  style N fill:none,stroke:none
+      </pre>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ CANDIDATE 3 ============================ -->
+<section class="card rounded-xl p-6 mb-8">
+  <div class="flex items-start justify-between gap-4">
+    <h2 class="text-2xl font-semibold">3 · One CombatFX module for floating text &amp; bursts</h2>
+    <span class="badge-explore px-3 py-1 rounded-full text-sm font-semibold whitespace-nowrap">Worth exploring</span>
+  </div>
+  <div class="flex flex-wrap gap-2 mt-3">
+    <span class="filechip mono text-xs px-2 py-1 rounded">player.gd:140,204,230</span>
+    <span class="filechip mono text-xs px-2 py-1 rounded">wolf.gd:70,101</span>
+  </div>
+  <h3 class="text-amber-300 mt-5 font-semibold">Problem</h3>
+  <p class="text-slate-300 mt-1">
+    Five near-identical presentation spawners exist across two modules: <code>spawn_text_over</code>,
+    <code>spawn_number</code> ×2, <code>spawn_sparks</code>, <code>spawn_blood</code>. Each is a shallow
+    helper (interface ≈ implementation) and each bakes in a scene-tree assumption
+    (<code>get_parent().add_child(...)</code>) — the same assumption class that broke during restructuring.
+    Changing how damage numbers look means visiting three call sites in two files.
+  </p>
+  <h3 class="text-amber-300 mt-4 font-semibold">Solution</h3>
+  <p class="text-slate-300 mt-1">
+    One <b>CombatFX</b> module (autoload): <code>CombatFX.number(at, amount, opts)</code>,
+    <code>CombatFX.text(at, s, color)</code>, <code>CombatFX.burst(at, color, count)</code> — spawning into
+    a dedicated FX layer instead of whatever <code>get_parent()</code> happens to be.
+  </p>
+  <h3 class="text-amber-300 mt-4 font-semibold">Benefits</h3>
+  <ul class="list-disc ml-6 text-slate-300 mt-1 space-y-1">
+    <li><b>Deletion test: passes, modestly.</b> Five helpers collapse into one adapter behind a three-function interface.</li>
+    <li><b>Locality:</b> crit styling, fonts, rise curves — one file. Y-sort/z-index quirks of world-space labels get one home.</li>
+    <li>Natural companion to candidate 2 (could be the same lesson’s second half), or folded in when combat FX next changes. Smaller win on its own — hence the badge.</li>
+  </ul>
+  <div class="grid md:grid-cols-2 gap-4 mt-5">
+    <div>
+      <p class="text-xs uppercase tracking-widest text-slate-500 mb-2">Before</p>
+      <pre class="mermaid">
+flowchart TD
+  P[Player] --> a[spawn_text_over]
+  P --> b[spawn_number]
+  P --> c[spawn_sparks]
+  W[Wolf] --> d[spawn_number']
+  W --> e[spawn_blood]
+  a & b & c & d & e --> T["get_parent().add_child(...)<br/>(5 copies of the same idea)"]
+      </pre>
+    </div>
+    <div>
+      <p class="text-xs uppercase tracking-widest text-slate-500 mb-2">After</p>
+      <pre class="mermaid">
+flowchart TD
+  P[Player] --> FX["CombatFX<br/>number() · text() · burst()"]
+  W[Wolf] --> FX
+  FX --> L[FX layer]
+      </pre>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ CANDIDATE 4 ============================ -->
+<section class="card rounded-xl p-6 mb-8">
+  <div class="flex items-start justify-between gap-4">
+    <h2 class="text-2xl font-semibold">4 · ForestPlan: split the plan from the planting</h2>
+    <span class="badge-explore px-3 py-1 rounded-full text-sm font-semibold whitespace-nowrap">Worth exploring</span>
+  </div>
+  <div class="flex flex-wrap gap-2 mt-3">
+    <span class="filechip mono text-xs px-2 py-1 rounded">forest_generator.gd (298 lines)</span>
+  </div>
+  <h3 class="text-amber-300 mt-5 font-semibold">Problem</h3>
+  <p class="text-slate-300 mt-1">
+    The forest generator is already <em>deep from the outside</em> (drop it on a TileMapLayer, set four
+    exports) — but internally, pure planning math (path winding, dirt mask, dual-grid corner bits, scatter
+    and grove rules) is fused with node construction and three hard scene paths
+    (<span class="mono">Road</span>, <span class="mono">World</span>, <span class="mono">Player</span>).
+    Invariants like “props never sit on dirt” or “road half-width stays within 0.7–1.7” can only be checked
+    by booting the full game and looking.
+  </p>
+  <h3 class="text-amber-300 mt-4 font-semibold">Solution</h3>
+  <p class="text-slate-300 mt-1">
+    <code>ForestPlan.build(seed, width, height) → plan</code> — pure data: dirt mask, ground tiles, road
+    cells with their transition bits, prop placements (type + position), spawn cells. The node script
+    becomes a thin applier that walks the plan. Two adapters of the same plan are plausible later
+    (apply-to-scene, draw-to-debug-image), which would make this a <b>real seam</b> rather than a
+    hypothetical one.
+  </p>
+  <h3 class="text-amber-300 mt-4 font-semibold">Benefits</h3>
+  <ul class="list-disc ml-6 text-slate-300 mt-1 space-y-1">
+    <li><b>Testability:</b> placement invariants become headless assertions over data; seed regressions become diffs of plans, not screenshots.</li>
+    <li><b>AI-navigability:</b> the plan is inspectable — “why is there a rock on the road?” becomes a data question.</li>
+    <li><b>Law-5 caution (why not Strong):</b> the trigger hasn’t fully fired. Recent forest bugs were wiring,
+      not planning logic, and there is only one consumer of the plan today. Park it until the next real
+      generation bug or a second consumer (minimap? lesson visual?) appears.</li>
+  </ul>
+  <div class="mt-5">
+    <p class="text-xs uppercase tracking-widest text-slate-500 mb-2">After — the seam</p>
+    <pre class="mermaid">
+flowchart LR
+  S[seed · width · height] --> PL["ForestPlan.build()<br/>(pure: mask · tiles · props · spawns)"]
+  PL --> A1["scene applier<br/>(TileMapLayer + World)"]
+  PL -.-> A2["debug image / tests<br/>(second adapter, later)"]
+  style A2 stroke-dasharray: 5 5
+    </pre>
+  </div>
+</section>
+
+<!-- ============================ CANDIDATE 5 ============================ -->
+<section class="card rounded-xl p-6 mb-8">
+  <div class="flex items-start justify-between gap-4">
+    <h2 class="text-2xl font-semibold">5 · A contract between lessons and code (drift check)</h2>
+    <span class="badge-strong px-3 py-1 rounded-full text-sm font-semibold whitespace-nowrap">Strong</span>
+  </div>
+  <div class="flex flex-wrap gap-2 mt-3">
+    <span class="filechip mono text-xs px-2 py-1 rounded">lessons/*.html (26)</span>
+    <span class="filechip mono text-xs px-2 py-1 rounded">lessons/index.html</span>
+    <span class="filechip mono text-xs px-2 py-1 rounded">projects/first-steps/*</span>
+  </div>
+  <h3 class="text-amber-300 mt-5 font-semibold">Problem <span class="text-rose-300 text-sm">(actively on fire)</span></h3>
+  <p class="text-slate-300 mt-1">
+    Lessons anchor to the code through prose: copy-paste snippets, node names, asset filenames, input-action
+    names. There is no machine-checkable link — so yesterday’s visual overhaul silently contradicted at least
+    four lessons: L03 teaches <code>ui_left/ui_right…</code> (code now uses <code>move_*</code>); L13/15/16/25
+    teach <code>get_node("../HUD/HealthBar")</code> (now <code>../../HUD/UnitFrame/HealthBar</code>); L05 slices
+    <span class="mono">tileset.png</span> (now <span class="mono">terrain.png</span> + a Road layer); L17 drags
+    <span class="mono">sword.png</span> (scene now uses <span class="mono">sword_held.png</span>).
+    The exhibit’s public promise — <em>the course is the codebase’s build order</em> — is breakable by any
+    refactor, and breakage is discovered by a learner mid-lesson.
+  </p>
+  <h3 class="text-amber-300 mt-4 font-semibold">Solution</h3>
+  <p class="text-slate-300 mt-1">
+    Give each lesson a tiny <b>claims manifest</b> (front-matter JSON or a sibling
+    <span class="mono">.claims.json</span>): the input actions, node paths, asset files, and named constants
+    the lesson’s snippets rely on. One <span class="mono">check_lessons.py</span> validates claims against
+    <span class="mono">project.godot</span>, the scenes, and <span class="mono">assets/</span> — runnable
+    locally or in CI. Drift becomes a failing check naming the lesson and the claim.
+  </p>
+  <h3 class="text-amber-300 mt-4 font-semibold">Benefits</h3>
+  <ul class="list-disc ml-6 text-slate-300 mt-1 space-y-1">
+    <li><b>Locality:</b> the lesson↔code contract — currently smeared across 26 HTML files and one human memory — gets one home and one checker.</li>
+    <li><b>Leverage:</b> every future refactor (including AI-driven ones like yesterday’s) gets an immediate, named list of curriculum repairs.</li>
+    <li><b>Telos guard:</b> this is exhibit tooling, so it must stay small (anti-telos: “polishing the exhibit instead of learning”). A claims file is ~10 lines per lesson; the checker is one script. It protects the public promise without becoming a project.</li>
+    <li><em>Trigger: fired</em> — four concrete drifts exist right now and need hand-repair anyway; writing the claims <em>is</em> the repair inventory.</li>
+  </ul>
+  <div class="grid md:grid-cols-2 gap-4 mt-5">
+    <div>
+      <p class="text-xs uppercase tracking-widest text-slate-500 mb-2">Before — contract lives in prose + memory</p>
+      <pre class="mermaid">
+flowchart LR
+  L["26 lesson HTMLs<br/>(snippets, node names, assets)"] -. "hope" .-> C["code<br/>(scenes · scripts · assets)"]
+  C -- "refactor" --> D["silent drift<br/>found by a learner"]
+      </pre>
+    </div>
+    <div>
+      <p class="text-xs uppercase tracking-widest text-slate-500 mb-2">After — claims checked at the seam</p>
+      <pre class="mermaid">
+flowchart LR
+  L["lesson + claims.json<br/>(actions · paths · assets · constants)"] --> K["check_lessons.py"]
+  C["code"] --> K
+  K --> R["pass / FAIL: L03 claims action 'ui_left'<br/>— project.godot defines 'move_left'"]
+      </pre>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ TOP RECOMMENDATION ============================ -->
+<section class="rounded-xl p-6 mb-8 border border-amber-400/40 bg-amber-400/5">
+  <h2 class="text-2xl font-bold text-amber-300">Top recommendation</h2>
+  <p class="text-slate-200 mt-3">
+    <b>Start with №1, the CombatTable</b> — with №5 as the urgent chore beside it.
+  </p>
+  <p class="text-slate-300 mt-3">
+    №1 is the purest depth win available: it passes the deletion test decisively, it gives this repo its
+    <em>first headless test seam</em> (there are currently zero tests anywhere), it puts the cited WoW
+    numbers (law 4) in one file, and — decisive under this telos — <b>Lesson 27 (XP &amp; leveling) will
+    extend exactly this code</b>. Doing the extraction as the opening move of the combat arc means every
+    formula added in L27–33 lands behind a tested interface, and the extraction itself is lesson-sized
+    (“one lesson, one win”).
+  </p>
+  <p class="text-slate-300 mt-3">
+    №5 is not a depth refactor but it protects the exhibit’s public promise, and its trigger isn’t just
+    fired — it’s burning: four lessons are contradicted by the code <em>today</em>. The claims inventory
+    doubles as the repair list. №2 follows naturally as the lesson after (it’s L11 doctrine applied to the
+    HUD, and the XP bar will want those signals).
+  </p>
+</section>
+
+<footer class="text-xs text-slate-600 mono pb-10">
+  Generated by /improve-codebase-architecture · vocabulary per LANGUAGE.md (module · interface · seam · depth · locality · leverage) ·
+  domain terms per TELOS.md (no CONTEXT.md exists yet — candidate names like “CombatTable”, “ForestPlan”, “claims manifest” are proposals, not established vocabulary)
+</footer>
+
+</body>
+</html>
