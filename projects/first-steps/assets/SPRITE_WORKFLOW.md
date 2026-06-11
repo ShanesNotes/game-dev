@@ -1,9 +1,19 @@
 # Sprite Workflow — AI art → Godot-ready sheets
 
-How every sprite in `assets/` is made. The pattern: generate big, downscale
-small, keep both.
+How every sprite in `assets/` is made. Two routes, one script. The full
+research behind these choices (tools, prices, what's still unsolved) lives in
+[`reference/ai-asset-pipeline.md`](../../../reference/ai-asset-pipeline.md).
 
-## The pipeline
+- **Route A — generate big, downscale** (how everything here so far was made):
+  any AI image tool → high-res on white → the script below. Good for single
+  sprites, props, and tiles.
+- **Route B — generate at native pixel resolution** (better for animation
+  sheets): a dedicated pixel-art tool (PixelLab, Retro Diffusion) outputs real
+  32px art → run the script with `--nearest` (no resharpening, no Lanczos
+  smear). Frame-to-frame consistency is the unsolved problem of AI sprites;
+  whole-sheet generation in one pass beats stitching frames.
+
+## The pipeline (Route A)
 
 1. **Generate high-res** with an AI image tool (Grok Imagine has worked well).
    Prompt for: a single subject (or a clean grid for sheets), **flat white
@@ -23,6 +33,11 @@ small, keep both.
    - restores punch lost in the resize: `--contrast` (1.25), `--sat` (1.2),
      unsharp mask (`--unsharp` 130)
    - prints an alpha report so you can confirm the background actually keyed
+
+   Optional flags: `--palette 32` quantizes stray AI colors into a unified
+   palette; `--grid 32x32` fails loudly if an animation sheet doesn't slice
+   into whole frames; `--nearest` switches to Route B behaviour (nearest-
+   neighbor resize, no resharpening — for sources that are already pixel art).
 3. **Drop the output PNG in `assets/`** — Godot picks it up and writes the
    `.import` file automatically. Lossless compression (the default) is correct
    for these; no import settings need changing.
@@ -37,6 +52,10 @@ small, keep both.
   Never edit the game asset by hand — re-run the script from source.
 - If edges look haloed, the white key missed anti-aliased fringe: lower
   `--key-thresh` a notch (240, 238, …) and re-run.
+- For crisp pixel art at game scale, set Godot's
+  **Project Settings → Rendering → Textures → Canvas Textures → Default
+  Texture Filter → Nearest** (per-texture override: CanvasItem → Texture →
+  Filter). Linear filtering is why pixel art looks blurry.
 
 ## Current assets
 

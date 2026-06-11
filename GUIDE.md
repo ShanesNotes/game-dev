@@ -38,7 +38,7 @@ to guess at:
 | `NOTES.md` | *How* should lessons be taught? What's true of the environment? | One win per lesson; split-screen loop; Godot 4.6.2; the lesson design system |
 | `learning-records/` | What has actually been learned? What decisions are locked? | Records 0001–0002: every lesson summarized, every decision logged |
 | `RESOURCES.md` | Where does knowledge come from (instead of AI guesswork)? | Official Godot docs + community wisdom, each with a "use for" |
-| `reference/` | What facts must stay pinned across many lessons? | WoW 1.12 combat values, researched once, cited by every combat lesson |
+| `reference/` | What facts must stay pinned across many lessons? | WoW 1.12 combat values + the AI asset-pipeline research, each done once and cited ever after |
 | `lessons/` | The actual teaching: one self-contained HTML page per win | 26 lessons + [`index.html`](lessons/index.html) to browse them |
 | `projects/` | The real work, made by the learner's hands | A Godot project with click-targeting, a one-roll attack table, rage |
 | `TELOS.md` | What is all of it *for*? (See "The telos discipline" below) | [`TELOS.md`](TELOS.md) |

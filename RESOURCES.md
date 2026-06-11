@@ -30,6 +30,10 @@ sharpens. Knowledge for lessons is drawn from here — not from parametric guess
   Our own research spike: Vanilla 1.12 combat/XP/rage values with sources.
   Use for: every combat-depth lesson (20–33). The genre resource the old
   "Gaps" note was waiting for.
+- [`reference/ai-asset-pipeline.md`](reference/ai-asset-pipeline.md)
+  Research spike (2026-06): AI sprite/sheet/tileset generation — hosted tools,
+  open-source routes, frame-consistency reality check, post-processing.
+  Use for: any new art; pairs with `projects/first-steps/assets/SPRITE_WORKFLOW.md`.
 
 ## Gaps
 - No game-feel/"juice" source yet (screen shake, hit-stop, tweens) — pick one
