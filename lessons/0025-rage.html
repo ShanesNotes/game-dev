@@ -9,7 +9,7 @@
 <body>
 <main>
 <header class="hero">
-  <div class="kicker">Godot · Lesson 25 · Combat 6</div>
+  <div class="kicker">Godot · Lesson 25 · Combat Depth 6 of 6</div>
   <h1>Rage</h1>
   <p class="sub">A warrior's fuel. Dealing and taking blows builds it, and it drains away when you leave the fight — the meter your first ability will spend.</p>
 </header>
@@ -37,7 +37,7 @@
   <div class="phase"><div class="rail"><div class="num">3</div></div><div class="body"><p>It'll get its range and value from code next.</p></div></div>
 </div>
 <div class="code">
-  <div class="bar"><span class="t">GDScript · sprite_2d.gd</span><button class="copy">copy</button></div>
+  <div class="bar"><span class="t">GDScript · player.gd</span><button class="copy">copy</button></div>
 <pre><span class="com"># vars near the top:</span>
 <span class="kw">@export</span> <span class="kw">var</span> <span class="var">max_rage</span> = <span class="num">100</span>
 <span class="kw">@export</span> <span class="kw">var</span> <span class="var">rage_decay</span> = <span class="num">1.0</span>      <span class="com"># rage per second out of combat</span>
@@ -53,7 +53,7 @@
 <h2>Part B — earn rage from the fight</h2>
 <p>Add the conversion value and three small helpers. <code class="inline">add_rage</code> is the one place that changes rage and updates the bar:</p>
 <div class="code">
-  <div class="bar"><span class="t">GDScript · sprite_2d.gd</span><button class="copy">copy</button></div>
+  <div class="bar"><span class="t">GDScript · player.gd</span><button class="copy">copy</button></div>
 <pre><span class="kw">func</span> <span class="fn">conversion_value</span>():
     <span class="kw">return</span> <span class="num">0.0091107836</span> * <span class="var">level</span> * <span class="var">level</span> + <span class="num">3.225598133</span> * <span class="var">level</span> + <span class="num">4.2652911</span>
 
@@ -70,7 +70,7 @@
 </div>
 <p>Now call them. A <em>landed</em> blow gives rage (misses/dodges/parries don't), so capture the damage in <code class="inline">attack()</code>:</p>
 <div class="code">
-  <div class="bar"><span class="t">GDScript · sprite_2d.gd — attack() landing branches</span><button class="copy">copy</button></div>
+  <div class="bar"><span class="t">GDScript · player.gd — attack() landing branches</span><button class="copy">copy</button></div>
 <pre>    <span class="kw">elif</span> <span class="var">roll</span> &lt; <span class="var">miss</span> + <span class="var">dodge</span> + <span class="var">parry</span> + <span class="var">glancing</span>:
         <span class="fn">spawn_text_over</span>(<span class="var">t</span>, <span class="str">"Glancing"</span>, <span class="type">Color</span>.GRAY)
         <span class="kw">var</span> <span class="var">dmg</span> = <span class="fn">roundi</span>(<span class="fn">glancing_damage</span>(<span class="var">t</span>))
@@ -86,7 +86,7 @@
 </div>
 <p>And earn rage when bitten — one line in <code class="inline">take_damage</code>:</p>
 <div class="code">
-  <div class="bar"><span class="t">GDScript · sprite_2d.gd — take_damage</span><button class="copy">copy</button></div>
+  <div class="bar"><span class="t">GDScript · player.gd — take_damage</span><button class="copy">copy</button></div>
 <pre>    <span class="var">health_bar</span>.value = <span class="var">health</span>
     <span class="fn">spawn_number</span>(<span class="var">amount</span>, <span class="type">Color</span>.RED)
     <span class="fn">gain_rage_taking</span>(<span class="var">amount</span>)      <span class="com"># getting hit builds rage too</span></pre>
@@ -99,7 +99,7 @@
 <h2>Part C — rage drains out of combat</h2>
 <p>When you're not swinging, rage bleeds away. Add this to the end of <code class="inline">_physics_process</code>:</p>
 <div class="code">
-  <div class="bar"><span class="t">GDScript · sprite_2d.gd — in _physics_process</span><button class="copy">copy</button></div>
+  <div class="bar"><span class="t">GDScript · player.gd — in _physics_process</span><button class="copy">copy</button></div>
 <pre>    <span class="kw">if</span> <span class="var">swing_timer</span>.<span class="fn">is_stopped</span>() <span class="kw">and</span> <span class="var">rage</span> &gt; <span class="num">0</span>:
         <span class="fn">add_rage</span>(-<span class="var">rage_decay</span> * <span class="var">delta</span>)   <span class="com"># out of combat -> drain</span></pre>
 </div>
@@ -135,15 +135,31 @@
   <div class="feedback"></div>
 </div>
 
+<h3>Codebase checkpoint</h3>
+<p>The project after this lesson:</p>
+<div class="tree">
+<span class="dim">projects/first-steps/</span>
+├─ project.godot
+├─ icon.svg
+├─ main.tscn          <span class="dim"><span class="leaf">← changed: HUD gains RageBar node</span></span>
+├─ player.gd          <span class="dim"><span class="leaf">← changed: rage vars, conversion_value, add_rage, gain_rage_dealing/taking, decay in _physics_process</span></span>
+├─ wolf.gd
+├─ wolf.tscn
+├─ sword.gd
+├─ damage_number.gd
+├─ damage_number.tscn
+└─ assets/            <span class="dim">· tileset, character, sword, wolf PNGs</span>
+</div>
+
 <div class="teacher">
   <b>I'M YOUR TEACHER — ASK ME ANYTHING</b>
   <p>You built a resource economy — the spine of every class fantasy. Snags: bar doesn't move → check <code class="inline">../HUD/RageBar</code> path and that landing branches call <code class="inline">gain_rage_dealing</code>. Rage never drains → confirm the decay line is inside <code class="inline">_physics_process</code> and uses <code class="inline">delta</code>. Bar overflows → <code class="inline">add_rage</code> must <code class="inline">clampf</code> to <code class="inline">max_rage</code>.<br><br>
   <b>Want more (ask me):</b> a number on the bar, a colour shift as it fills, or a tiny rage "pip" flash when you hit 100 (enough for Heroic Strike).<br><br>
-  Say <em>"done"</em> — next: <strong>Lesson 26, XP &amp; Leveling</strong> — kills grant XP on the real Classic curve, and dinging a level makes that combat math (and your rage) tangibly shift. 📈</p>
+  Say <em>"done"</em> — next: <strong>Lesson 26, The Forest (procedural generation)</strong> — procedurally spawn wolves in a tilemap; next after that is <strong>Lesson 27, XP &amp; Leveling</strong> — kills grant XP on the real Classic curve. 📈</p>
 </div>
 
 <footer>
-  LESSON 25 · Combat 6 · grounded in <a href="../MISSION.md">your mission</a> · numbers from <a href="../reference/wow-combat-values.md">wow-combat-values.md</a> §8<br>
+  GODOT · LESSON 25 · COMBAT DEPTH 6/6 · grounded in <a href="../MISSION.md">your mission</a> · numbers from <a href="../reference/wow-combat-values.md">wow-combat-values.md</a> §8<br>
   Primary reference: <a href="https://warcraft.wiki.gg/wiki/Rage">WoW — Rage</a> · <a href="https://docs.godotengine.org/en/stable/classes/class_progressbar.html">Godot ProgressBar</a>
 </footer>
 </main>

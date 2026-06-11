@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lesson 19 — Click Targeting</title>
+<link rel="stylesheet" href="_lesson.css">
+</head>
+<body>
+<main>
+<header class="hero">
+  <div class="kicker">Godot · Lesson 19 · The Pack 2 of 2</div>
+  <h1>Click <span>Targeting</span></h1>
+  <p class="sub">Click a wolf, it glows gold, your swings land on it. Click another mid-fight and the damage switches. Just like WoW.</p>
+</header>
+
+<div class="win">
+  <b>TODAY</b>
+  <p>Wolves become clickable. Click one and it glows gold — your auto-attack locks onto it. Click a different wolf mid-fight and your swings redirect immediately without resetting the timer. Pick the pack apart one at a time.</p>
+</div>
+
+<h2>The problem we're solving</h2>
+<p>
+  Last lesson's <code class="inline">get_node_or_null("../Wolf")</code> is a hardcoded contract: "there is exactly one
+  node with this exact name." With a pack, that contract is broken — Wolf2 and Wolf3 can never be targeted.
+</p>
+<p>
+  The fix: instead of the player <em>hunting</em> for a target by node name, <em>wolves volunteer themselves</em>
+  when clicked. The player just stores "whoever told me to target them." No hardcoded paths needed.
+</p>
+<div class="defs">
+  <div class="def"><b>input_pickable</b><p>A property on <code class="inline">CollisionObject2D</code> nodes (which includes <code class="inline">CharacterBody2D</code>). When ON, mouse clicks that land on the node's collision shape fire the <code class="inline">input_event</code> signal.</p></div>
+  <div class="def"><b>input_event signal</b><p>Fires whenever the player interacts with a pickable node — including hovers and releases. We filter to a left mouse <em>press</em> in the handler.</p></div>
+  <div class="def"><b>get_first_node_in_group("player")</b><p>Finds any node tagged <code class="inline">"player"</code> in the scene tree. The wolf uses this to call <code class="inline">set_target(self)</code> on the player — no hardcoded path to the player node needed either.</p></div>
+</div>
+
+<h2>Part A — make every wolf clickable in the scene file</h2>
+<p>We set <code class="inline">input_pickable</code> <em>on the wolf scene's root</em>. This is the key decision — and it comes with a real war story.</p>
+<div class="callout warn">
+  <span class="ct">▲ set it in the scene, not on an instance</span>
+  <p>This project hit this exact bug: <code class="inline">input_pickable</code> was turned on for the <code class="inline">Wolf</code> instance in Main's Inspector (a per-instance override) instead of in <code class="inline">wolf.tscn</code>. Result: only that one wolf answered clicks. Wolf2 and Wolf3 — which inherited the scene's default of <code class="inline">false</code> — ignored every click entirely.<br><br>
+  Setting it <strong>in the scene file</strong> means <em>every</em> instance — including wolves spawned by code later — gets it automatically. The scene is the right place for properties that belong to all wolves.</p>
+</div>
+<p>In the FileSystem dock, <strong>double-click <code class="inline">wolf.tscn</code></strong> to open it. You are now editing the scene; changes here apply to all instances.</p>
+<div class="flow">
+  <div class="phase"><div class="rail"><div class="num">1</div><div class="line"></div></div><div class="body"><p>Select the <code class="inline">Wolf</code> root node. In the Inspector find <strong>Collision Object 2D → Input → Pickable</strong> and turn it <strong>ON</strong>.</p></div></div>
+  <div class="phase"><div class="rail"><div class="num">2</div><div class="line"></div></div><div class="body"><p>Select the <code class="inline">AggroArea</code> child (an Area2D). Find its <strong>Pickable</strong> and turn it <strong>OFF</strong>. The aggro aura is a large invisible circle — if it's pickable it swallows clicks before they reach the wolf's body.</p></div></div>
+  <div class="phase"><div class="rail"><div class="num">3</div><div class="line"></div></div><div class="body"><p>Re-select the <code class="inline">Wolf</code> root → <strong>Node dock → Signals</strong> → find <code class="inline">input_event</code> → double-click → connect to the wolf script as <code class="inline">_on_input_event</code>.</p></div></div>
+  <div class="phase"><div class="rail"><div class="num">4</div></div><div class="body"><p><kbd>Ctrl+S</kbd> to save <code class="inline">wolf.tscn</code>. All three wolves in Main now have Pickable ON and the signal connected — without touching Main at all.</p></div></div>
+</div>
+
+<h2>Part B — wolf click handler and highlight</h2>
+<p>Add two functions to <code class="inline">wolf.gd</code>:</p>
+<div class="code">
+  <div class="bar"><span class="t">GDScript · wolf.gd — additions</span><button class="copy">copy</button></div>
+<pre><span class="kw">func</span> <span class="fn">_on_input_event</span>(<span class="var">_viewport</span>, <span class="var">event</span>, <span class="var">_shape_idx</span>):
+    <span class="kw">if</span> <span class="var">event</span> <span class="kw">is</span> <span class="type">InputEventMouseButton</span> <span class="kw">and</span> <span class="var">event</span>.pressed <span class="kw">and</span> <span class="var">event</span>.button_index == <span class="var">MOUSE_BUTTON_LEFT</span>:
+        <span class="fn">get_tree</span>().<span class="fn">get_first_node_in_group</span>(<span class="str">"player"</span>).<span class="fn">set_target</span>(<span class="kw">self</span>)
+
+<span class="kw">func</span> <span class="fn">set_targeted</span>(<span class="var">on</span>):
+    <span class="var">sprite</span>.modulate = <span class="type">Color</span>(<span class="num">1</span>, <span class="num">0.85</span>, <span class="num">0.4</span>) <span class="kw">if</span> <span class="var">on</span> <span class="kw">else</span> <span class="type">Color</span>.WHITE</pre>
+</div>
+<div class="annot">
+  <div class="line-note"><code>event is InputEventMouseButton and event.pressed and ... LEFT</code> — <b>filter carefully.</b> <code>input_event</code> fires for mouse hovers and button releases too. We want exactly a left-button <em>down</em> event.</div>
+  <div class="line-note"><code>get_first_node_in_group("player").set_target(self)</code> — <b>the wolf tells the player "target me."</b> The player has been in the <code class="inline">"player"</code> group since Lesson 8 — groups paying off again. <code>self</code> is this specific wolf instance.</div>
+  <div class="line-note"><code>set_targeted(on)</code> — <b>gold tint when targeted, white otherwise.</b> Pure visual feedback — the player calls this to set and clear the glow as targets change.</div>
+</div>
+
+<h2>Part C — the Player tracks one target</h2>
+<p>Replace <code class="inline">start_auto_attack</code> and add <code class="inline">set_target</code> to player.gd. The key insight: <code class="inline">swing()</code> already reads <code class="inline">target</code> every tick — we just need a way to set it.</p>
+<div class="code">
+  <div class="bar"><span class="t">GDScript · player.gd — set_target and updated start_auto_attack</span><button class="copy">copy</button></div>
+<pre><span class="kw">var</span> <span class="var">target</span> = <span class="kw">null</span>    <span class="com"># already at the top from L16</span>
+
+<span class="kw">func</span> <span class="fn">set_target</span>(<span class="var">new_target</span>):
+    <span class="kw">if</span> <span class="fn">is_instance_valid</span>(<span class="var">target</span>):
+        <span class="var">target</span>.<span class="fn">set_targeted</span>(<span class="kw">false</span>)   <span class="com"># un-highlight the old one</span>
+    <span class="var">target</span> = <span class="var">new_target</span>
+    <span class="var">target</span>.<span class="fn">set_targeted</span>(<span class="kw">true</span>)        <span class="com"># highlight the new one</span>
+
+<span class="kw">func</span> <span class="fn">start_auto_attack</span>():
+    <span class="kw">if</span> <span class="fn">is_instance_valid</span>(<span class="var">target</span>) <span class="kw">and</span> <span class="var">swing_timer</span>.<span class="fn">is_stopped</span>():
+        <span class="fn">swing</span>()                 <span class="com"># immediate first hit</span>
+        <span class="var">swing_timer</span>.<span class="fn">start</span>()     <span class="com"># then keep swinging on the tick</span></pre>
+</div>
+<div class="annot">
+  <div class="line-note"><code>set_target(new_target)</code> — <b>the whole swap in five lines.</b> Clear the old glow, point <code>target</code> at the new wolf, light it up. This is all "target switching" is.</div>
+  <div class="line-note"><code>start_auto_attack()</code> no longer calls <code>get_node_or_null("../Wolf")</code> — <b>that line is deleted.</b> If there's no target (you haven't clicked anything), pressing attack does nothing. Click a wolf first.</div>
+</div>
+
+<p>Update <code class="inline">take_damage</code> so getting bitten also handles targeting correctly:</p>
+<div class="code">
+  <div class="bar"><span class="t">GDScript · player.gd — take_damage updated</span><button class="copy">copy</button></div>
+<pre><span class="kw">func</span> <span class="fn">take_damage</span>(<span class="var">amount</span>, <span class="var">from</span> = <span class="kw">null</span>):
+    <span class="var">health</span> -= <span class="var">amount</span>
+    <span class="kw">if</span> <span class="var">health</span> &lt; <span class="num">0</span>: <span class="var">health</span> = <span class="num">0</span>
+    <span class="var">health_bar</span>.value = <span class="var">health</span>
+    <span class="fn">spawn_number</span>(<span class="var">amount</span>, <span class="type">Color</span>.RED)
+    <span class="kw">if</span> <span class="fn">is_instance_valid</span>(<span class="var">from</span>):
+        <span class="kw">if</span> <span class="kw">not</span> <span class="fn">is_instance_valid</span>(<span class="var">target</span>):
+            <span class="fn">set_target</span>(<span class="var">from</span>)       <span class="com"># no target yet -> retaliate at attacker</span>
+        <span class="kw">if</span> <span class="var">swing_timer</span>.<span class="fn">is_stopped</span>():
+            <span class="var">swing_timer</span>.<span class="fn">start</span>()      <span class="com"># start swinging at your target</span>
+    <span class="kw">if</span> <span class="var">health</span> == <span class="num">0</span>:
+        <span class="fn">die</span>()</pre>
+</div>
+<div class="annot">
+  <div class="line-note"><b>Key difference from L16:</b> getting bitten only auto-targets the attacker <em>if you have no target</em>. If you've already clicked Wolf2, a bite from Wolf3 won't steal your focus. WoW-accurate — your deliberate choice takes priority.</div>
+  <div class="line-note"><code>set_target(from)</code> instead of <code>target = from</code> — <b>routes through the highlight system.</b> The new wolf glows gold; the old one (if any) goes white. Consistency matters.</div>
+</div>
+
+<h2>Part D — swing() stays unchanged</h2>
+<p>This is the elegant part: <code class="inline">swing()</code> hasn't changed at all since Lesson 16. It just reads <code class="inline">target</code> every tick. The moment <code class="inline">set_target</code> updates that variable, the <em>next swing lands on the new wolf</em> — without any timer reset.</p>
+<div class="callout idea">
+  <span class="ct">◇ WoW-accurate weapon rhythm</span>
+  <p>In WoW, switching targets does <em>not</em> reset your swing timer — your weapon keeps its beat and the next swing just goes to the new enemy. Here, exactly the same thing happens for free: <code class="inline">swing_timer</code> keeps running, <code class="inline">target</code> changes, done.</p>
+</div>
+<div class="callout note">
+  <span class="ct">◈ auto-attack stays single-target</span>
+  <p>Hitting <em>all</em> wolves in range at once needs a different approach — an <code class="inline">Area2D</code> hitbox that overlaps the "enemies" group. That's <strong>Whirlwind</strong>, coming later in the combat arc. Auto-attack is always single-target; that's what makes Whirlwind feel special.</p>
+</div>
+
+<div class="flow">
+  <div class="phase"><div class="rail"><div class="num">▶</div></div><div class="body"><p>Press <kbd>F5</kbd>. Click Wolf — it glows gold. Press attack and white numbers pop off it. Click Wolf2 mid-fight — the glow jumps instantly, and your next swing lands on Wolf2. Drop the pack one at a time. 🎯🐺🐺🐺</p></div></div>
+</div>
+
+<h2>Check yourself</h2>
+<div class="quiz">
+  <p class="q">1. Why set <code class="inline">input_pickable</code> on the wolf <em>scene root</em>, not on a Main instance?</p>
+  <button onclick="pick(this)" data-correct>Every instance — including future code-spawned wolves — inherits it from the scene automatically</button>
+  <button onclick="pick(this)">You can't change instance properties in Main</button>
+  <button onclick="pick(this)">The scene root is the only node that has the Pickable property</button>
+  <div class="feedback"></div>
+</div>
+<div class="quiz">
+  <p class="q">2. How does the wolf find the player without a hardcoded node path?</p>
+  <button onclick="pick(this)" data-correct>get_tree().get_first_node_in_group("player") — the player has been in that group since Lesson 8</button>
+  <button onclick="pick(this)">It uses get_parent() to walk up to Main then down to Player</button>
+  <button onclick="pick(this)">The player is always at the same position so the wolf can calculate the path</button>
+  <div class="feedback"></div>
+</div>
+<div class="quiz">
+  <p class="q">3. When you click a new wolf mid-fight, why don't your swings reset?</p>
+  <button onclick="pick(this)" data-correct>set_target only changes the target variable — the swing timer keeps running at its own pace</button>
+  <button onclick="pick(this)">The timer always resets when set_target is called</button>
+  <button onclick="pick(this)">Both wolves take damage now</button>
+  <div class="feedback"></div>
+</div>
+
+<h3>Codebase checkpoint</h3>
+<p>The project after this lesson:</p>
+<div class="tree">
+<span class="dim">projects/first-steps/</span>
+├─ project.godot
+├─ icon.svg
+├─ main.tscn                    <span class="dim">· Wolf, Wolf2, Wolf3 instances (positions spread out)</span>
+├─ <span class="leaf">player.gd</span>                   <span class="dim">← changed: set_target(), start_auto_attack() no longer hunts by name, take_damage updated</span>
+├─ sword.gd
+├─ <span class="leaf">wolf.gd</span>                     <span class="dim">← changed: _on_input_event(), set_targeted() added</span>
+├─ <span class="leaf">wolf.tscn</span>                   <span class="dim">← changed: Wolf root Pickable ON, AggroArea Pickable OFF, input_event connected</span>
+├─ damage_number.tscn
+├─ damage_number.gd
+└─ assets/
+    ├─ tileset.png
+    ├─ character.png
+    ├─ sword.png
+    └─ wolf.png
+</div>
+
+<div class="teacher">
+  <b>I'M YOUR TEACHER — ASK ME ANYTHING</b>
+  <p>You built click-to-target — the backbone of WoW combat. Snags: nothing happens on click → check the wolf root's <strong>Pickable</strong> is ON <em>in wolf.tscn</em> (not a Main override) and <code class="inline">input_event</code> is connected. "Attempt to call set_target on null" → the Player isn't in the <code class="inline">"player"</code> group — check <code class="inline">add_to_group("player")</code> is in <code class="inline">_ready()</code>. AggroArea swallowing clicks → its Pickable must be OFF. Glow stays on a dead wolf → that's fine, the node is freed; the highlight only lingers on living ones.<br><br>
+  <b>Want more (ask me):</b> <strong>Tab to cycle targets</strong>, <strong>Esc / right-click to deselect</strong>, or a <strong>target ring sprite</strong> instead of a tint. And the big one — <strong>Whirlwind</strong>, an ability that hits every wolf in range (an Area2D sweep + the "enemies" group) — that's a real Warrior ability coming in the combat-depth arc.<br><br>
+  Say <em>"done"</em> — Lesson 20 gives the combat math real numbers straight from <code class="inline">wow-combat-values.md</code>: weapon speed, attack table, glancing blows.</p>
+</div>
+
+<footer>
+  LESSON 19 · The Pack 2/2 · grounded in <a href="../MISSION.md">your mission</a> · sources in <a href="../RESOURCES.md">RESOURCES.md</a><br>
+  Primary reference: <a href="https://docs.godotengine.org/en/stable/classes/class_collisionobject2d.html#class-collisionobject2d-signal-input-event">Godot — CollisionObject2D.input_event</a> · <a href="https://docs.godotengine.org/en/stable/tutorials/scripting/groups.html">Groups</a>
+</footer>
+</main>
+<script src="_lesson.js"></script>
+</body>
+</html>

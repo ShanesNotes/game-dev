@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lesson 18 — Building the Pack</title>
+<link rel="stylesheet" href="_lesson.css">
+</head>
+<body>
+<main>
+<header class="hero">
+  <div class="kicker">Godot · Lesson 18 · The Pack 1 of 2</div>
+  <h1>Building <span>the Pack</span></h1>
+  <p class="sub">Turn your one wolf into a reusable scene, drag in three copies, and watch each one chase you with its own brain — for free.</p>
+</header>
+
+<div class="win">
+  <b>TODAY</b>
+  <p>Three wolves converge instead of one. Each has its own aura, swing timer, and health bar — all inherited from the scene. You'll also see the exact problem "one wolf" creates: two of the three are unkillable. Next lesson fixes it with click targeting.</p>
+</div>
+
+<h2>The move: Save Branch as Scene</h2>
+<p>
+  Right now the Wolf is a node built by hand inside <code class="inline">main.tscn</code>. It has children
+  (Sprite2D, CollisionShape2D, SwingTimer, AggroArea, HealthBar) and a script. To get <em>three</em>
+  wolves, you could duplicate the node — but then a bug fix requires touching all three by hand.
+</p>
+<p>
+  Instead, we apply the Lesson 14 instancing move to the wolf itself: <strong>Save Branch as Scene</strong>
+  extracts it into <code class="inline">wolf.tscn</code>. From that point on you drag the file into the world as
+  many times as you want — every copy gets all the children and the full script automatically.
+  Fix the scene once; every instance benefits.
+</p>
+<div class="defs">
+  <div class="def"><b>Save Branch as Scene</b><p>Right-click any node in the Scene dock → <kbd>Save Branch as Scene</kbd>. The node and all its children become a standalone <code class="inline">.tscn</code> file. In Main it now shows as an <em>instance</em> (the film-strip icon).</p></div>
+  <div class="def"><b>Instance</b><p>A live copy of a scene placed in another scene. Change the source file and every instance updates. Give each instance a different position in the Inspector without touching the source file.</p></div>
+  <div class="def"><b>Self-contained</b><p>The wolf was already safe to extract because nothing in its script points <em>outside itself</em>. It reaches its own children with <code class="inline">$SwingTimer</code> / <code class="inline">$HealthBar</code> — relative paths that survive being moved into a new file.</p></div>
+</div>
+
+<h2>Part A — extract the wolf into its own scene</h2>
+<div class="flow">
+  <div class="phase"><div class="rail"><div class="num">1</div><div class="line"></div></div><div class="body"><p>Open <code class="inline">main.tscn</code>. In the Scene dock, <strong>right-click the <code class="inline">Wolf</code> node</strong> → <kbd>Save Branch as Scene</kbd>.</p></div></div>
+  <div class="phase"><div class="rail"><div class="num">2</div><div class="line"></div></div><div class="body"><p>Save it as <code class="inline">res://wolf.tscn</code>. The Wolf in Main's Scene dock gains a <strong>film-strip icon</strong> — it's now an instance of the file.</p></div></div>
+  <div class="phase"><div class="rail"><div class="num">3</div></div><div class="body"><p><kbd>Ctrl+S</kbd> to save <code class="inline">main.tscn</code>. Press <kbd>F5</kbd> — the game should play exactly as before. One wolf, same behaviour. The extraction was invisible to the player.</p></div></div>
+</div>
+<div class="callout note">
+  <span class="ct">◈ why the extraction is safe</span>
+  <p>The wolf's script accesses <code class="inline">$SwingTimer</code>, <code class="inline">$HealthBar</code>, <code class="inline">$Sprite2D</code> — all relative paths within its own branch. It detects the player via <code class="inline">is_in_group("player")</code>, not a hardcoded node path. Nothing pointed <em>out</em> at the parent scene — that's the property that makes a branch safe to extract.</p>
+</div>
+
+<h2>Part B — drag in the pack</h2>
+<div class="flow">
+  <div class="phase"><div class="rail"><div class="num">1</div><div class="line"></div></div><div class="body"><p>In the <strong>FileSystem dock</strong>, find <code class="inline">wolf.tscn</code>. <strong>Drag it into the Main viewport twice.</strong> Godot names the new instances <code class="inline">Wolf2</code> and <code class="inline">Wolf3</code>.</p></div></div>
+  <div class="phase"><div class="rail"><div class="num">2</div><div class="line"></div></div><div class="body"><p>In the Inspector (with each selected), adjust <strong>Position</strong> so the three wolves are spread out — they shouldn't all spawn on top of each other.</p></div></div>
+  <div class="phase"><div class="rail"><div class="num">3</div></div><div class="body"><p>You can also set a different <code class="inline">level</code> on each wolf in its Inspector, since <code class="inline">level</code> is an <code class="inline">@export</code> — per-instance overrides work on any exported variable.</p></div></div>
+</div>
+<div class="callout warn">
+  <span class="ct">▲ try it now — see the gap</span>
+  <p>Press <kbd>F5</kbd> and walk in. All three wolves chase and bite you — each has its own independent brain, for free. But press attack: you can only ever damage the one named <code class="inline">Wolf</code>, because <code class="inline">start_auto_attack()</code> still uses <code class="inline">get_node_or_null("../Wolf")</code> — a hardcoded path that can only ever find the first one. <code class="inline">Wolf2</code> and <code class="inline">Wolf3</code> are effectively unkillable.</p>
+</div>
+
+<h2>The recurring lesson of this codebase</h2>
+<p>
+  "Stop pointing at one named node" is a theme you'll see again and again. A hardcoded path is a
+  contract: "there will always be exactly one node with this exact name in this exact place." The
+  moment that contract breaks — a second wolf, a renamed node, a scene reorganisation — the code
+  silently fails.
+</p>
+<p>
+  The fix is a <strong>targeting system</strong>: instead of the player hunting for a node by name,
+  <em>the player waits to be told</em> who the target is — via a mouse click. That's Lesson 19.
+</p>
+<div class="callout idea">
+  <span class="ct">◇ the WoW model</span>
+  <p>In WoW your auto-attack is <strong>single-target</strong>: it hits whoever you've <strong>targeted</strong>.
+  You pick a target by clicking. Switch targets and your swings follow without resetting the rhythm.
+  Hitting everything at once is a separate ability — <strong>Whirlwind</strong> — which you'll build later in the combat arc.</p>
+</div>
+
+<div class="flow">
+  <div class="phase"><div class="rail"><div class="num">▶</div></div><div class="body"><p>Leave this playtest running. Note that all three wolves are dangerous — and that only one can die. That's the exact problem we'll solve next lesson. Having a concrete bug to fix makes targeting feel earned.</p></div></div>
+</div>
+
+<h2>Check yourself</h2>
+<div class="quiz">
+  <p class="q">1. Why does "Save Branch as Scene" work cleanly for the wolf?</p>
+  <button onclick="pick(this)" data-correct>The wolf script only references its own children with relative paths — nothing points outside the branch</button>
+  <button onclick="pick(this)">Godot automatically rewrites paths during the extraction</button>
+  <button onclick="pick(this)">The wolf had no children to worry about</button>
+  <div class="feedback"></div>
+</div>
+<div class="quiz">
+  <p class="q">2. All three wolves chase and bite you — where does that behaviour come from?</p>
+  <button onclick="pick(this)" data-correct>The script lives in wolf.tscn — every instance runs the same brain automatically</button>
+  <button onclick="pick(this)">Godot copies the script three times</button>
+  <button onclick="pick(this)">You have to attach the script to each wolf separately</button>
+  <div class="feedback"></div>
+</div>
+<div class="quiz">
+  <p class="q">3. Why is <code class="inline">get_node_or_null("../Wolf")</code> the problem?</p>
+  <button onclick="pick(this)" data-correct>It only ever finds the node named "Wolf" — Wolf2 and Wolf3 will never be returned</button>
+  <button onclick="pick(this)">It returns null every time with multiple wolves</button>
+  <button onclick="pick(this)">It crashes when there is more than one wolf</button>
+  <div class="feedback"></div>
+</div>
+
+<h3>Codebase checkpoint</h3>
+<p>The project after this lesson:</p>
+<div class="tree">
+<span class="dim">projects/first-steps/</span>
+├─ project.godot
+├─ icon.svg
+├─ main.tscn                    <span class="dim">← changed: Wolf is now an instance; Wolf2 and Wolf3 instances added</span>
+├─ player.gd
+├─ sword.gd
+├─ wolf.gd
+├─ <span class="leaf">wolf.tscn</span>                   <span class="dim">← new: standalone wolf scene (Sprite2D, CollisionShape2D, SwingTimer, AggroArea, HealthBar)</span>
+├─ damage_number.tscn
+├─ damage_number.gd
+└─ assets/
+    ├─ tileset.png
+    ├─ character.png
+    ├─ sword.png
+    └─ wolf.png
+</div>
+
+<div class="teacher">
+  <b>I'M YOUR TEACHER — ASK ME ANYTHING</b>
+  <p>The pack is alive — and you have a concrete bug to point at. Snags: wolves stack in the same position → give each one a different Position in the Inspector (the transform gizmo in the viewport works too). Wolf2/Wolf3 don't aggro → double-check their AggroArea's collision layers match Wolf's — all three should be identical because they all instance the same scene file.<br><br>
+  Say <em>"done"</em> — Lesson 19 adds click-to-target: wolves become clickable, the player tracks one target, and your swings redirect to whoever you click.</p>
+</div>
+
+<footer>
+  LESSON 18 · The Pack 1/2 · grounded in <a href="../MISSION.md">your mission</a> · sources in <a href="../RESOURCES.md">RESOURCES.md</a><br>
+  Primary reference: <a href="https://docs.godotengine.org/en/stable/tutorials/scripting/instancing_with_signals.html">Godot — Instancing</a> · <a href="https://docs.godotengine.org/en/stable/tutorials/scripting/groups.html">Groups</a>
+</footer>
+</main>
+<script src="_lesson.js"></script>
+</body>
+</html>

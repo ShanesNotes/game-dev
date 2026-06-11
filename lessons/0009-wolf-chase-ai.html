@@ -9,7 +9,7 @@
 <body>
 <main>
 <header class="hero">
-  <div class="kicker">Godot · Lesson 09</div>
+  <div class="kicker">Godot · Lesson 09 · The Encounter 2 of 6</div>
   <h1>The Wolf: <span>Simple Chase AI</span></h1>
   <p class="sub">An enemy that hunts you. "AI" sounds scary — it's really just a tiny bit of vector maths, run every frame.</p>
 </header>
@@ -46,14 +46,14 @@
 </div>
 <div class="flow">
   <div class="phase"><div class="rail"><div class="num">1</div><div class="line"></div></div><div class="body"><p>Right-click <code class="inline">Main</code> → <kbd>Add Child Node</kbd> → <code class="inline">CharacterBody2D</code> → rename <code class="inline">Wolf</code>.</p></div></div>
-  <div class="phase"><div class="rail"><div class="num">2</div><div class="line"></div></div><div class="body"><p>Add child <code class="inline">Sprite2D</code> → Texture → Quick Load → <code class="inline">assets/wolf.png</code>. Leave its name as <code class="inline">Sprite2D</code> (code relies on it).</p></div></div>
+  <div class="phase"><div class="rail"><div class="num">2</div><div class="line"></div></div><div class="body"><p>Add child <code class="inline">Sprite2D</code> → Texture → Quick Load → <code class="inline">assets/wolf.png</code>. Leave its name as <code class="inline">Sprite2D</code> (code refers to it).</p></div></div>
   <div class="phase"><div class="rail"><div class="num">3</div><div class="line"></div></div><div class="body"><p>Add child <code class="inline">CollisionShape2D</code> → New RectangleShape2D → size over the wolf.</p></div></div>
   <div class="phase"><div class="rail"><div class="num">4</div></div><div class="body"><p>Drag the <code class="inline">Wolf</code> in the viewport to a far corner of the grass, away from the player.</p></div></div>
 </div>
 
 <h2>Part B — the chase script</h2>
 <div class="flow">
-  <div class="phase"><div class="rail"><div class="num">1</div></div><div class="body"><p>Select <code class="inline">Wolf</code> → <kbd>Attach Script</kbd> → <kbd>Create</kbd> (e.g. <code class="inline">wolf.gd</code>), and use:</p></div></div>
+  <div class="phase"><div class="rail"><div class="num">1</div></div><div class="body"><p>Select <code class="inline">Wolf</code> → <kbd>Attach Script</kbd> → <kbd>Create</kbd> (name it <code class="inline">wolf.gd</code>), and use:</p></div></div>
 </div>
 <div class="code">
   <div class="bar"><span class="t">GDScript · wolf.gd</span><button class="copy">copy</button></div>
@@ -64,16 +64,16 @@
 <span class="kw">@onready</span> <span class="kw">var</span> <span class="var">sprite</span> = <span class="var">$Sprite2D</span>
 
 <span class="kw">func</span> <span class="fn">_physics_process</span>(delta):
-    <span class="kw">var</span> <span class="var">direction</span> = (<span class="var">player</span>.global_position - global_position).normalized()
+    <span class="kw">var</span> <span class="var">direction</span> = (<span class="var">player</span>.global_position - global_position).<span class="fn">normalized</span>()
     <span class="var">velocity</span> = <span class="var">direction</span> * <span class="var">speed</span>
     <span class="fn">move_and_slide</span>()
-    <span class="var">sprite</span>.flip_h = <span class="var">velocity</span>.x < <span class="num">0</span></pre>
+    <span class="var">sprite</span>.flip_h = <span class="var">velocity</span>.x &lt; <span class="num">0</span></pre>
 </div>
 <div class="annot">
   <div class="line-note"><code>get_node("../Player")</code> — <b>reach a node by its path.</b> <code>..</code> means "go up to my parent" (Main), then down into <code>Player</code>. Now <code>player</code> refers to your character. (Same idea as <code>$</code>, but reaching a <em>sibling</em>.)</div>
   <div class="line-note"><code>(player.global_position - global_position).normalized()</code> — <b>the whole brain of the chase.</b> Subtract to get the arrow from wolf→player; normalize to keep it pure direction.</div>
   <div class="line-note"><code>velocity = direction * speed</code> + <code>move_and_slide()</code> — <b>same movement you already know</b> — the wolf just aims at the player instead of reading keys.</div>
-  <div class="line-note"><code>sprite.flip_h = velocity.x < 0</code> — <b>mirror the sprite when moving left.</b> The wolf art faces right; <code>flip_h</code> flips it horizontally. <code>velocity.x < 0</code> is true when heading left, so flip_h becomes true exactly then.</div>
+  <div class="line-note"><code>sprite.flip_h = velocity.x &lt; 0</code> — <b>mirror the sprite when moving left.</b> The wolf art faces right; <code>flip_h</code> flips it horizontally. <code>velocity.x &lt; 0</code> is true when heading left, so flip_h becomes true exactly then.</div>
 </div>
 <div class="callout note">
   <span class="ct">◈ why speed 120?</span>
@@ -81,39 +81,42 @@
 </div>
 
 <div class="flow">
-  <div class="phase"><div class="rail"><div class="num">▶</div></div><div class="body"><p>Press <kbd>F5</kbd>. The wolf turns toward you and gives chase wherever you run. 🎉 The hunt is on.</p></div></div>
+  <div class="phase"><div class="rail"><div class="num">▶</div></div><div class="body"><p>Press <kbd>F5</kbd>. The wolf turns toward you and gives chase wherever you run. The hunt is on.</p></div></div>
 </div>
 
 <h2>Check yourself</h2>
 <div class="quiz">
-  <p class="q">1. <code class="inline">player.global_position - global_position</code> gives you…</p>
+  <p class="q"><code class="inline">player.global_position - global_position</code> gives you…</p>
   <button onclick="pick(this)" data-correct>A vector pointing from the wolf toward the player</button>
   <button onclick="pick(this)">The distance in pixels as a single number</button>
   <button onclick="pick(this)">The player's speed</button>
   <div class="feedback"></div>
 </div>
-<div class="quiz">
-  <p class="q">2. Why call <code class="inline">.normalized()</code>?</p>
-  <button onclick="pick(this)" data-correct>To keep just the direction (length 1) so speed is even regardless of distance</button>
-  <button onclick="pick(this)">To make the wolf bigger</button>
-  <button onclick="pick(this)">To delete the wolf</button>
-  <div class="feedback"></div>
-</div>
-<div class="quiz">
-  <p class="q">3. What is <code class="inline">flip_h = velocity.x &lt; 0</code> doing?</p>
-  <button onclick="pick(this)" data-correct>Mirroring the sprite to face left when it's moving left</button>
-  <button onclick="pick(this)">Making the wolf jump</button>
-  <button onclick="pick(this)">Stopping the wolf at the screen edge</button>
-  <div class="feedback"></div>
+
+<h3>Codebase checkpoint</h3>
+<p>The project after this lesson:</p>
+<div class="tree">
+<span class="dim">projects/first-steps/</span>
+├─ project.godot
+├─ icon.svg
+├─ main.tscn            <span class="dim">← changed: Wolf (CharacterBody2D + Sprite2D + CollisionShape2D) added</span>
+├─ sword.gd
+├─ <span class="leaf">wolf.gd</span>              <span class="dim">← new: always-chase brain (get_node, normalized, flip_h)</span>
+├─ player.gd
+└─ assets/
+   ├─ tileset.png
+   ├─ character.png
+   ├─ sword.png
+   └─ <span class="leaf">wolf.png</span>           <span class="dim">← new: wolf art asset</span>
 </div>
 
 <div class="teacher">
   <b>I'M YOUR TEACHER — ASK ME ANYTHING</b>
-  <p>Snags: <code class="inline">"../Player"</code> must match your tree exactly (Wolf and Player both children of Main) or you'll get a "null instance" error — tell me and we'll fix the path. Wolf not flipping? Check the Sprite2D is named <code class="inline">Sprite2D</code>. Want the wolf to only chase when you're <em>close</em> (a detection radius), or to "get" you on contact? Both are great next steps — ask. Say <em>"done"</em> when the wolf chases you. Next: give the wolf a real brain — it aggros, chases, and leashes, the WoW way. 🐺</p>
+  <p>Snags: <code class="inline">"../Player"</code> must match your tree exactly (Wolf and Player both children of Main) or you'll get a "null instance" error — tell me and we'll fix the path. Wolf not flipping? Check the Sprite2D is named <code class="inline">Sprite2D</code>. Want the wolf to only chase when you're <em>close</em> (a detection radius), or to "get" you on contact? Both are great next steps — ask. Say <em>"done"</em> when the wolf chases you. Next: give the wolf a real brain — it aggros, chases, and leashes, the WoW way.</p>
 </div>
 
 <footer>
-  LESSON 09 · grounded in <a href="../MISSION.md">your mission</a> · sources in <a href="../RESOURCES.md">RESOURCES.md</a><br>
+  LESSON 09 · The Encounter 2/6 · grounded in <a href="../MISSION.md">your mission</a> · sources in <a href="../RESOURCES.md">RESOURCES.md</a><br>
   Primary reference: <a href="https://docs.godotengine.org/en/stable/tutorials/math/vector_math.html">Godot — Vector math</a>
 </footer>
 </main>

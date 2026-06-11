@@ -10,6 +10,7 @@ size = Vector2(23, 14)
 radius = 122.80065
 
 [node name="Wolf" type="CharacterBody2D" unique_id=125961179]
+input_pickable = true
 script = ExtResource("1_6trwa")
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=395876319]

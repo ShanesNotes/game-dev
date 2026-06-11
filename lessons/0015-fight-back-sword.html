@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lesson 15 — Fight Back: Swing the Sword</title>
+<link rel="stylesheet" href="_lesson.css">
+</head>
+<body>
+<main>
+<header class="hero">
+  <div class="kicker">Godot · Lesson 15 · Fighting Back 2 of 4 · ⚔ payoff</div>
+  <h1>Fight Back: <span>Swing the Sword</span></h1>
+  <p class="sub">Press a button, deal damage, drop the wolf. White numbers fly. The full combat loop closes today.</p>
+</header>
+
+<div class="win">
+  <b>TODAY</b>
+  <p>Hit the attack button near the wolf — its health bar drops and white numbers pop off it. At zero it dies and vanishes. Meanwhile it's biting you back (red numbers). A real, <em>winnable</em> fight.</p>
+</div>
+
+<h2>Three new ideas</h2>
+<div class="defs">
+  <div class="def"><b>An input action</b><p>A named binding in Godot's Input Map. Instead of checking a specific key, code checks the action — so one action can be bound to a key, a mouse button, <em>and</em> a gamepad button at once.</p></div>
+  <div class="def"><b>"just pressed" vs "pressed"</b><p>Movement uses <code class="inline">is_action_pressed</code> (true the whole time held). An attack should fire once per tap — that's <code class="inline">is_action_just_pressed</code>.</p></div>
+  <div class="def"><b>A cooldown (stepping stone)</b><p>A one-shot Timer + a <code class="inline">can_attack</code> flag limits swing rate. <em>Lesson 16 replaces this</em> with a repeating swing timer — but it's worth seeing the simpler form first so the upgrade makes sense.</p></div>
+</div>
+
+<h2>Part A — define the "attack" action</h2>
+<p>Create a custom action in the Input Map and bind <em>two</em> events to it: a keyboard/mouse event and a gamepad button. Any device bound to the same action name triggers the same code — no code changes needed per device.</p>
+<div class="flow">
+  <div class="phase"><div class="rail"><div class="num">1</div><div class="line"></div></div><div class="body"><p><kbd>Project</kbd> → <kbd>Project Settings…</kbd> → <strong>Input Map</strong> tab. Type <code class="inline">attack</code> in the "Add New Action" box and click <kbd>Add</kbd>.</p></div></div>
+  <div class="phase"><div class="rail"><div class="num">2</div><div class="line"></div></div><div class="body"><p>Find <code class="inline">attack</code> in the list. Click its <strong>＋</strong>. Press <kbd>Space</kbd> (or left mouse button) → <kbd>OK</kbd>. One event bound.</p></div></div>
+  <div class="phase"><div class="rail"><div class="num">3</div><div class="line"></div></div><div class="body"><p>Click <strong>＋</strong> again on the same action. With a controller plugged in, <strong>press the face button</strong> (A/Cross) — Godot records it as a Joypad Button. No controller? Pick <strong>Joypad Buttons → Bottom Action (Sony Cross, Xbox A)</strong> from the dropdown.</p></div></div>
+  <div class="phase"><div class="rail"><div class="num">4</div></div><div class="body"><p>Close Settings. The action now has two bindings — keyboard/mouse <em>and</em> gamepad — without a line of code.</p></div></div>
+</div>
+<div class="callout note">
+  <span class="ct">◈ one action, many devices</span>
+  <p>This is Godot's input philosophy: your code says <code class="inline">is_action_just_pressed("attack")</code> — it doesn't care <em>how</em> the player pressed it. Adding gamepad support is entirely an Input Map decision, not a scripting one.</p>
+</div>
+
+<h2>Part B — add a cooldown Timer to the Player</h2>
+<div class="flow">
+  <div class="phase"><div class="rail"><div class="num">1</div><div class="line"></div></div><div class="body"><p>Select <code class="inline">Player</code> → <kbd>+ Add Child Node</kbd> → <code class="inline">Timer</code> → rename it <code class="inline">AttackCooldown</code>.</p></div></div>
+  <div class="phase"><div class="rail"><div class="num">2</div><div class="line"></div></div><div class="body"><p>In the Inspector: <strong>Wait Time</strong> = <code class="inline">0.6</code>, tick <strong>One Shot</strong> ON.</p></div></div>
+  <div class="phase"><div class="rail"><div class="num">3</div></div><div class="body"><p>Select <code class="inline">AttackCooldown</code> → <strong>Node → Signals</strong> → double-click <code class="inline">timeout</code> → connect to <strong>Player</strong> (creates <code class="inline">_on_attack_cooldown_timeout</code>).</p></div></div>
+</div>
+
+<h2>Part C — the player script</h2>
+<p>Movement is already using <code class="inline">Input.get_vector</code> since Lesson 3. The new lines are the attack block.</p>
+<div class="code">
+  <div class="bar"><span class="t">GDScript · player.gd (full file)</span><button class="copy">copy</button></div>
+<pre><span class="kw">extends</span> <span class="type">CharacterBody2D</span>
+
+<span class="kw">@export</span> <span class="kw">var</span> <span class="var">speed</span> = <span class="num">200</span>
+<span class="kw">@export</span> <span class="kw">var</span> <span class="var">max_health</span> = <span class="num">30</span>
+<span class="kw">@export</span> <span class="kw">var</span> <span class="var">attack_damage</span> = <span class="num">4</span>
+<span class="kw">@export</span> <span class="kw">var</span> <span class="var">attack_range</span> = <span class="num">60.0</span>
+<span class="kw">var</span> <span class="var">health</span> = <span class="var">max_health</span>
+<span class="kw">var</span> <span class="var">can_attack</span> = <span class="kw">true</span>
+
+<span class="kw">@onready</span> <span class="kw">var</span> <span class="var">anim</span> = <span class="var">$AnimatedSprite2D</span>
+<span class="kw">@onready</span> <span class="kw">var</span> <span class="var">health_bar</span> = <span class="fn">get_node</span>(<span class="str">"../HUD/HealthBar"</span>)
+<span class="kw">@onready</span> <span class="kw">var</span> <span class="var">attack_cooldown</span> = <span class="var">$AttackCooldown</span>
+
+<span class="kw">const</span> <span class="var">DAMAGE_NUMBER</span> = <span class="fn">preload</span>(<span class="str">"res://damage_number.tscn"</span>)
+
+<span class="kw">func</span> <span class="fn">_ready</span>():
+    <span class="fn">add_to_group</span>(<span class="str">"player"</span>)
+    <span class="var">health_bar</span>.max_value = <span class="var">max_health</span>
+    <span class="var">health_bar</span>.value = <span class="var">health</span>
+
+<span class="kw">func</span> <span class="fn">_physics_process</span>(_delta):
+    <span class="kw">var</span> <span class="var">direction</span> = <span class="fn">Input</span>.<span class="fn">get_vector</span>(<span class="str">"ui_left"</span>, <span class="str">"ui_right"</span>, <span class="str">"ui_up"</span>, <span class="str">"ui_down"</span>)
+    <span class="var">velocity</span> = <span class="var">direction</span> * <span class="var">speed</span>
+    <span class="fn">move_and_slide</span>()
+    <span class="fn">update_animation</span>(<span class="var">direction</span>)
+
+    <span class="kw">if</span> <span class="fn">Input</span>.<span class="fn">is_action_just_pressed</span>(<span class="str">"attack"</span>) <span class="kw">and</span> <span class="var">can_attack</span>:
+        <span class="fn">attack</span>()
+
+<span class="kw">func</span> <span class="fn">attack</span>():
+    <span class="var">can_attack</span> = <span class="kw">false</span>
+    <span class="var">attack_cooldown</span>.<span class="fn">start</span>()
+    <span class="kw">var</span> <span class="var">wolf</span> = <span class="fn">get_node_or_null</span>(<span class="str">"../Wolf"</span>)
+    <span class="kw">if</span> <span class="var">wolf</span> != <span class="kw">null</span> <span class="kw">and</span> global_position.<span class="fn">distance_to</span>(<span class="var">wolf</span>.global_position) &lt;= <span class="var">attack_range</span>:
+        <span class="var">wolf</span>.<span class="fn">take_damage</span>(<span class="var">attack_damage</span>)
+
+<span class="kw">func</span> <span class="fn">_on_attack_cooldown_timeout</span>():
+    <span class="var">can_attack</span> = <span class="kw">true</span>
+
+<span class="kw">func</span> <span class="fn">take_damage</span>(<span class="var">amount</span>):
+    <span class="var">health</span> -= <span class="var">amount</span>
+    <span class="kw">if</span> <span class="var">health</span> &lt; <span class="num">0</span>: <span class="var">health</span> = <span class="num">0</span>
+    <span class="var">health_bar</span>.value = <span class="var">health</span>
+    <span class="fn">spawn_number</span>(<span class="var">amount</span>, <span class="type">Color</span>.RED)
+    <span class="kw">if</span> <span class="var">health</span> == <span class="num">0</span>:
+        <span class="fn">die</span>()
+
+<span class="kw">func</span> <span class="fn">spawn_number</span>(<span class="var">amount</span>, <span class="var">color</span>):
+    <span class="kw">var</span> <span class="var">n</span> = <span class="var">DAMAGE_NUMBER</span>.<span class="fn">instantiate</span>()
+    <span class="fn">get_parent</span>().<span class="fn">add_child</span>(<span class="var">n</span>)
+    <span class="var">n</span>.global_position = global_position + <span class="type">Vector2</span>(-<span class="num">8</span>, -<span class="num">30</span>)
+    <span class="var">n</span>.<span class="fn">setup</span>(<span class="var">amount</span>, <span class="var">color</span>)
+
+<span class="kw">func</span> <span class="fn">die</span>():
+    <span class="fn">get_tree</span>().<span class="fn">reload_current_scene</span>()
+
+<span class="kw">func</span> <span class="fn">update_animation</span>(<span class="var">direction</span>):
+    <span class="kw">if</span> <span class="var">direction</span> == <span class="type">Vector2</span>.ZERO:
+        <span class="var">anim</span>.<span class="fn">stop</span>()
+        <span class="kw">return</span>
+    <span class="kw">if</span> <span class="fn">abs</span>(<span class="var">direction</span>.x) &gt; <span class="fn">abs</span>(<span class="var">direction</span>.y):
+        <span class="kw">if</span> <span class="var">direction</span>.x &gt; <span class="num">0</span>: <span class="var">anim</span>.<span class="fn">play</span>(<span class="str">"walk_right"</span>)
+        <span class="kw">else</span>: <span class="var">anim</span>.<span class="fn">play</span>(<span class="str">"walk_left"</span>)
+    <span class="kw">else</span>:
+        <span class="kw">if</span> <span class="var">direction</span>.y &gt; <span class="num">0</span>: <span class="var">anim</span>.<span class="fn">play</span>(<span class="str">"walk_down"</span>)
+        <span class="kw">else</span>: <span class="var">anim</span>.<span class="fn">play</span>(<span class="str">"walk_up"</span>)</pre>
+</div>
+<div class="annot">
+  <div class="line-note"><code>Input.get_vector("ui_left", "ui_right", "ui_up", "ui_down")</code> — <b>movement hasn't changed</b> since Lesson 3: one call, analog stick or keyboard, diagonal-speed bug already fixed.</div>
+  <div class="line-note"><code>is_action_just_pressed("attack") and can_attack</code> — <b>one tap, one swing.</b> <code>just_pressed</code> fires exactly once per button event; <code>can_attack</code> blocks re-entry until the 0.6s cooldown expires.</div>
+  <div class="line-note"><code>get_node_or_null("../Wolf")</code> — <b>a stepping stone.</b> This finds the single wolf by its node name. It works for one wolf; Lesson 18 replaces it when the pack arrives.</div>
+  <div class="line-note"><code>wolf.take_damage(attack_damage)</code> — <b>the mirror of last lesson.</b> The wolf calls your <code>take_damage</code>; you call its. Combat is two things calling each other's method.</div>
+  <div class="line-note"><code>add_to_group("player")</code> in <code>_ready</code> — <b>established since Lesson 8.</b> The wolf already uses this to find you via <code>is_in_group</code>. Keeping it here for clarity.</div>
+</div>
+
+<h2>Part D — give the wolf health &amp; numbers</h2>
+<p>The wolf already has a <code class="inline">HealthBar</code> child (a <code class="inline">ProgressBar</code>) from a previous lesson. Confirm the wolf script's <code class="inline">take_damage</code> includes the spawn call from Lesson 14:</p>
+<div class="code">
+  <div class="bar"><span class="t">GDScript · wolf.gd — take_damage (confirm this exists)</span><button class="copy">copy</button></div>
+<pre><span class="kw">func</span> <span class="fn">take_damage</span>(<span class="var">amount</span>, <span class="var">is_crit</span> = <span class="kw">false</span>):
+    <span class="var">health</span> -= <span class="var">amount</span>
+    <span class="kw">if</span> <span class="var">health</span> &lt; <span class="num">0</span>: <span class="var">health</span> = <span class="num">0</span>
+    <span class="var">health_bar</span>.value = <span class="var">health</span>
+    <span class="fn">spawn_number</span>(<span class="var">amount</span>, <span class="type">Color</span>.WHITE)
+    <span class="kw">if</span> <span class="var">health</span> == <span class="num">0</span>:
+        <span class="fn">queue_free</span>()        <span class="com"># the wolf dies</span></pre>
+</div>
+<div class="annot">
+  <div class="line-note"><code>queue_free()</code> — <b>the wolf removes itself from the scene.</b> The node is gone; anything pointing at it gets a dead reference — which is why <code>is_instance_valid</code> matters in Lesson 16.</div>
+</div>
+
+<div class="flow">
+  <div class="phase"><div class="rail"><div class="num">▶</div></div><div class="body"><p>Press <kbd>F5</kbd>. Pull the wolf, stand close, and press your attack binding. White numbers pop off the wolf, red ones pop off you. Three good hits and the wolf <strong>dies and vanishes</strong>. You won. ⚔</p></div></div>
+</div>
+
+<h2>Check yourself</h2>
+<div class="quiz">
+  <p class="q">1. Why <code class="inline">is_action_just_pressed</code> for attack, not <code class="inline">is_action_pressed</code>?</p>
+  <button onclick="pick(this)" data-correct>So one key tap = one swing, instead of a swing every single frame the key is held</button>
+  <button onclick="pick(this)">It's faster than is_action_pressed</button>
+  <button onclick="pick(this)">pressed doesn't work for Space</button>
+  <div class="feedback"></div>
+</div>
+<div class="quiz">
+  <p class="q">2. You bound both a keyboard key and a gamepad button to the "attack" action. What does the code need to change?</p>
+  <button onclick="pick(this)" data-correct>Nothing — the code checks the action name, so any bound input triggers it</button>
+  <button onclick="pick(this)">Add an if/else for each device</button>
+  <button onclick="pick(this)">Use a different function for the gamepad</button>
+  <div class="feedback"></div>
+</div>
+<div class="quiz">
+  <p class="q">3. What makes the wolf disappear at 0 health?</p>
+  <button onclick="pick(this)" data-correct>queue_free() inside its take_damage when health hits 0</button>
+  <button onclick="pick(this)">reload_current_scene()</button>
+  <button onclick="pick(this)">The HealthBar auto-hides it</button>
+  <div class="feedback"></div>
+</div>
+
+<h3>Codebase checkpoint</h3>
+<p>The project after this lesson:</p>
+<div class="tree">
+<span class="dim">projects/first-steps/</span>
+├─ project.godot                <span class="dim">← changed: "attack" action added to Input Map</span>
+├─ icon.svg
+├─ main.tscn                    <span class="dim">← changed: AttackCooldown Timer child under Player</span>
+├─ <span class="leaf">player.gd</span>                   <span class="dim">← changed: attack(), can_attack cooldown, _on_attack_cooldown_timeout</span>
+├─ sword.gd
+├─ wolf.gd                      <span class="dim">← changed: take_damage now spawns white numbers</span>
+├─ damage_number.tscn
+├─ damage_number.gd
+└─ assets/
+    ├─ tileset.png
+    ├─ character.png
+    ├─ sword.png
+    └─ wolf.png
+</div>
+
+<div class="teacher">
+  <b>I'M YOUR TEACHER — ASK ME ANYTHING</b>
+  <p>You built a complete combat loop from scratch — pull, trade blows, win or die. Snags: nothing happens on button press → check the <code class="inline">attack</code> action exists in the Input Map and <code class="inline">AttackCooldown</code>'s timeout is connected. Wolf bar not dropping → confirm <code class="inline">wolf.gd</code> has <code class="inline">health_bar = $HealthBar</code> and the node is named <code class="inline">HealthBar</code>. White numbers not appearing → the wolf needs the <code class="inline">DAMAGE_NUMBER</code> preload and <code class="inline">spawn_number</code> helper from Lesson 14.<br><br>
+  Say <em>"done"</em> — Lesson 16 upgrades the cooldown into a <strong>repeating swing timer</strong>: tap once and keep auto-attacking like WoW, leaving your fingers free for ability keys later.</p>
+</div>
+
+<footer>
+  LESSON 15 · Fighting Back 2/4 · grounded in <a href="../MISSION.md">your mission</a> · sources in <a href="../RESOURCES.md">RESOURCES.md</a><br>
+  Primary reference: <a href="https://docs.godotengine.org/en/stable/tutorials/inputs/inputevent.html#actions">Godot — Input actions</a> · <a href="https://docs.godotengine.org/en/stable/tutorials/inputs/controllers_gamepads_joysticks.html">Controllers &amp; gamepads</a>
+</footer>
+</main>
+<script src="_lesson.js"></script>
+</body>
+</html>

@@ -9,14 +9,14 @@
 <body>
 <main>
 <header class="hero">
-  <div class="kicker">Godot · Lesson 05</div>
+  <div class="kicker">Godot · Lesson 05 · Foundations 5 of 7</div>
   <h1>Paint the World: <span>Tiles &amp; Floors</span></h1>
   <p class="sub">No code today. You'll learn the single most important tool for top-down worlds — the <em>tilemap</em>.</p>
 </header>
 
 <div class="win">
   <b>TODAY</b>
-  <p>A real floor under the robot — grass and a dirt path you <em>painted</em> tile by tile. The void is gone.</p>
+  <p>A real floor under the robot — grass, dirt, and stone you <em>painted</em> tile by tile. The void is gone.</p>
 </div>
 
 <h2>Why tiles run your favourite games</h2>
@@ -29,12 +29,12 @@
 <h2>Three words for today</h2>
 <div class="defs">
   <div class="def"><b>Tile</b><p>One small square image — e.g. a patch of grass. Your building block.</p></div>
-  <div class="def"><b>TileSet</b><p>The <em>palette</em>: a collection of tiles, sliced from one image (an "atlas"). You made one already — <code class="inline">assets/tileset.png</code> holds two tiles: grass and dirt.</p></div>
+  <div class="def"><b>TileSet</b><p>The <em>palette</em>: a collection of tiles, sliced from one image (an "atlas"). You'll load <code class="inline">assets/tileset.png</code> — a 128×32 sheet with four 32-pixel tiles: grass, dirt, stone, and a grass variant.</p></div>
   <div class="def"><b>TileMapLayer</b><p>The <em>canvas</em>: a node you paint tiles onto with the mouse. It stores your whole map cheaply, no matter how big.</p></div>
 </div>
 <div class="callout note">
   <span class="ct">◈ I made you a tileset</span>
-  <p>Look in the <strong>FileSystem</strong> dock (bottom-left) for <code class="inline">assets/tileset.png</code> — a tiny two-tile image (grass | dirt) I generated into your project. We'll slice it into tiles in a moment.</p>
+  <p>Look in the <strong>FileSystem</strong> dock (bottom-left) for <code class="inline">assets/tileset.png</code> — a 128×32 strip of four 32-pixel tiles (grass | dirt | stone | grass variant) I generated into your project. We'll slice it into tiles in a moment.</p>
 </div>
 
 <h2>Part A — add the canvas</h2>
@@ -48,14 +48,14 @@
   <div class="phase"><div class="rail"><div class="num">1</div><div class="line"></div></div><div class="body"><p>Select <code class="inline">Ground</code>. In the <em>Inspector</em>, find <strong>Tile Set</strong> → click <kbd>&lt;empty&gt;</kbd> → <kbd>New TileSet</kbd>.</p></div></div>
   <div class="phase"><div class="rail"><div class="num">2</div><div class="line"></div></div><div class="body"><p>Click the new TileSet to expand it and set <strong>Tile Size</strong> to <code class="inline">32 × 32</code> (the default is 16 — our tiles are 32).</p></div></div>
   <div class="phase"><div class="rail"><div class="num">3</div><div class="line"></div></div><div class="body"><p>A <strong>TileSet</strong> panel opens at the bottom of the screen. In its lower-left "Sources" box, click <kbd>+</kbd> → <kbd>Atlas</kbd> (or just drag <code class="inline">assets/tileset.png</code> from FileSystem into that box).</p></div></div>
-  <div class="phase"><div class="rail"><div class="num">4</div></div><div class="body"><p>Godot asks <em>"Automatically create tiles in the atlas?"</em> → <kbd>Yes</kbd>. It slices the image into your two tiles. (If it doesn't ask, click the atlas, then the three-dots/⋮ menu → <strong>Create Tiles Automatically</strong>.)</p></div></div>
+  <div class="phase"><div class="rail"><div class="num">4</div></div><div class="body"><p>Godot asks <em>"Automatically create tiles in the atlas?"</em> → <kbd>Yes</kbd>. It slices the image into your four tiles. (If it doesn't ask, click the atlas, then the three-dots/⋮ menu → <strong>Create Tiles Automatically</strong>.)</p></div></div>
 </div>
 
 <h2>Part C — paint!</h2>
 <div class="flow">
-  <div class="phase"><div class="rail"><div class="num">1</div><div class="line"></div></div><div class="body"><p>At the bottom, switch from the <strong>TileSet</strong> tab to the <strong>TileMap</strong> tab. You'll see your two tiles in the palette.</p></div></div>
+  <div class="phase"><div class="rail"><div class="num">1</div><div class="line"></div></div><div class="body"><p>At the bottom, switch from the <strong>TileSet</strong> tab to the <strong>TileMap</strong> tab. You'll see your four tiles in the palette.</p></div></div>
   <div class="phase"><div class="rail"><div class="num">2</div><div class="line"></div></div><div class="body"><p>Click the <strong>grass</strong> tile to select it, then <strong>left-click and drag</strong> across the viewport to paint a big grass field under (and around) the robot.</p></div></div>
-  <div class="phase"><div class="rail"><div class="num">3</div><div class="line"></div></div><div class="body"><p>Select the <strong>dirt</strong> tile and paint a path winding through the grass. Right-click erases a tile.</p></div></div>
+  <div class="phase"><div class="rail"><div class="num">3</div><div class="line"></div></div><div class="body"><p>Select the <strong>dirt</strong> tile and paint a path winding through the grass. Try <strong>stone</strong> for a rocky patch. Right-click erases a tile.</p></div></div>
   <div class="phase"><div class="rail"><div class="num">4</div></div><div class="body"><p>Press <kbd>F5</kbd> and walk the robot around on your floor. 🎉 It's starting to look like a game.</p></div></div>
 </div>
 
@@ -87,13 +87,26 @@
   <div class="feedback"></div>
 </div>
 
+<h3>Codebase checkpoint</h3>
+<p>The project after this lesson:</p>
+<div class="tree">
+<span class="dim">projects/first-steps/</span>
+├─ project.godot            <span class="dim">· project settings</span>
+├─ icon.svg                 <span class="dim">· the robot picture</span>
+├─ <span class="leaf">assets/</span>
+│   └─ <span class="leaf">tileset.png</span>         <span class="dim">← new: 4-tile strip (grass, dirt, stone, grass variant) at 32px</span>
+├─ <span class="leaf">main.tscn</span>               <span class="dim">← changed: Ground TileMapLayer added as first child of Main</span>
+└─ player.gd                <span class="dim">· unchanged</span>
+</div>
+<p class="cite">No script changes this lesson — it's purely editor work. The scene file grew to include the tilemap and your painted terrain data.</p>
+
 <div class="teacher">
   <b>I'M YOUR TEACHER — ASK ME ANYTHING</b>
   <p>The TileSet/TileMap panels are the fiddliest UI in Godot — if a tile won't paint, the palette's empty, or tiles look the wrong size, describe what you see and we'll sort it. Want more tiles (water, flowers, trees)? I can generate them. When you're walking on your floor, say <em>"done"</em>. Lesson 6: make the <strong>camera follow</strong> the robot so the world can be bigger than the screen.</p>
 </div>
 
 <footer>
-  LESSON 05 · grounded in <a href="../MISSION.md">your mission</a> · sources in <a href="../RESOURCES.md">RESOURCES.md</a><br>
+  LESSON 05 · Foundations 5/7 · grounded in <a href="../MISSION.md">your mission</a> · sources in <a href="../RESOURCES.md">RESOURCES.md</a><br>
   Primary reference: <a href="https://docs.godotengine.org/en/stable/tutorials/2d/using_tilemaps.html">Godot — Using TileMaps</a>
 </footer>
 </main>

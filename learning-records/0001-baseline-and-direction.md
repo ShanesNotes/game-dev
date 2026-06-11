@@ -148,3 +148,15 @@
 - Teased but not taken: idle facing-frame poses; wolf sprints home / untargetable while
   evading; de-aggro timer + heal-on-reset; XP/loot on kill (now formalised in roadmap 0002).
 - **Offered, not yet taken:** a reference card on transforms + collision layers.
+
+## Curriculum v2 (2026-06-10 packaging pass — history above still true)
+The lessons were re-sequenced and re-deepened so the course doubles as the
+codebase's build order (every lesson now ends in a Codebase checkpoint):
+- Player script renamed `sprite_2d.gd` → **`player.gd`** (scripts named for role).
+- `Input.get_vector` taught at L3 (was L17); groups taught at L8 (was name-checks).
+- Damage numbers moved to L14 (before fight-back at L15, so combat has feedback
+  from day one); auto-attack 16; wielding 17; old controller-support lesson
+  absorbed into 3 + 15; old pack lesson split into 18 (pack) + 19 (click
+  targeting); **26 = the procedural forest** (covers `forest_generator.gd`).
+The lessons-delivered list above uses the ORIGINAL numbering it was lived in;
+`lessons/index.html` is the canonical v2 map.

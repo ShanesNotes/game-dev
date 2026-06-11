@@ -9,9 +9,9 @@
 <body>
 <main>
 <header class="hero">
-  <div class="kicker">Godot · Lesson 08</div>
+  <div class="kicker">Godot · Lesson 08 · The Encounter 1 of 6</div>
   <h1>Find the Sword: <span>Areas &amp; Signals</span></h1>
-  <p class="sub">Walk over a sword and pick it up. Behind that simple act is the most important idea in Godot: <em>signals</em>.</p>
+  <p class="sub">Walk over a sword and pick it up. Behind that simple act is the most important idea in Godot: <em>signals</em>. And a safer way to answer "is this the player?" — <em>groups</em>.</p>
 </header>
 
 <div class="win">
@@ -38,6 +38,16 @@
   emit a signal called <code class="inline">body_entered</code>. Perfect for a pickup.
 </p>
 
+<h2>The other new idea: groups</h2>
+<div class="defs">
+  <div class="def"><b>group</b><p>A tag any node can carry. Instead of asking "is your name exactly Player?", you ask "are you a member of the <em>player</em> group?" — and any node that joined that group raises its hand. You add a node to a group in code: <code class="inline">add_to_group("player")</code>.</p></div>
+</div>
+
+<div class="callout warn">
+  <span class="ct">⚠ why not just check body.name == "Player"?</span>
+  <p>Name-matching is brittle: rename the node once in the Scene dock and every <code class="inline">body.name == "Player"</code> check in your codebase silently breaks — no error, just bugged behaviour. Groups are a contract: you <em>opt in</em> via code, and the check survives any rename.</p>
+</div>
+
 <h2>Part A — build the sword pickup</h2>
 <p>I made you <code class="inline">assets/sword.png</code>. We'll build this little tree as a child of <code class="inline">Main</code>:</p>
 <div class="tree">
@@ -52,27 +62,35 @@
   <div class="phase"><div class="rail"><div class="num">4</div></div><div class="body"><p>In the viewport, drag the whole <code class="inline">Sword</code> somewhere out in the grass, away from the player's start.</p></div></div>
 </div>
 
-<h2>Part B — script the pickup</h2>
+<h2>Part B — join the group in player.gd</h2>
+<p>Open <code class="inline">player.gd</code>. In <code class="inline">_ready()</code>, add one line so the player announces itself to the group system:</p>
+<div class="code">
+  <div class="bar"><span class="t">GDScript · player.gd — _ready()</span><button class="copy">copy</button></div>
+<pre><span class="kw">func</span> <span class="fn">_ready</span>():
+    <span class="fn">add_to_group</span>(<span class="str">"player"</span>)   <span class="com"># so anything can find us</span></pre>
+</div>
+
+<h2>Part C — script the pickup</h2>
 <div class="flow">
-  <div class="phase"><div class="rail"><div class="num">1</div><div class="line"></div></div><div class="body"><p>Select <code class="inline">Sword</code> → <kbd>Attach Script</kbd> → <kbd>Create</kbd> (default path is fine, e.g. <code class="inline">sword.gd</code>). Replace its contents with:</p></div></div>
+  <div class="phase"><div class="rail"><div class="num">1</div></div><div class="body"><p>Select <code class="inline">Sword</code> → <kbd>Attach Script</kbd> → <kbd>Create</kbd> (path <code class="inline">sword.gd</code>). Replace its contents with:</p></div></div>
 </div>
 <div class="code">
   <div class="bar"><span class="t">GDScript · sword.gd</span><button class="copy">copy</button></div>
 <pre><span class="kw">extends</span> <span class="type">Area2D</span>
 
 <span class="kw">func</span> <span class="fn">_on_body_entered</span>(body):
-    <span class="kw">if</span> <span class="var">body</span>.name == <span class="str">"Player"</span>:
-        <span class="fn">print</span>(<span class="str">"You found the sword!"</span>)
+    <span class="kw">if</span> <span class="var">body</span>.<span class="fn">is_in_group</span>(<span class="str">"player"</span>):
+        <span class="fn">print</span>(<span class="str">"- The blade is thin -"</span>)
         <span class="fn">queue_free</span>()</pre>
 </div>
 <div class="annot">
-  <div class="line-note"><code>func _on_body_entered(body):</code> — <b>the function the signal will call.</b> Godot hands it <code>body</code> = whatever walked in. (The name is just a convention; the connection in Part C is what matters.)</div>
-  <div class="line-note"><code>if body.name == "Player":</code> — <b>make sure it was the player</b>, not the wolf or a wall. <code>==</code> means "is equal to" (two equals; one equals is <em>assignment</em>).</div>
-  <div class="line-note"><code>print(...)</code> — <b>writes a message to the Output panel</b> at the bottom of the editor. Your first debugging tool.</div>
-  <div class="line-note"><code>queue_free()</code> — <b>deletes this node</b> (the whole Sword) safely. That's the sword "being picked up" — it disappears.</div>
+  <div class="line-note"><code>func _on_body_entered(body):</code> — <b>the function the signal will call.</b> Godot hands it <code>body</code> = whatever walked in.</div>
+  <div class="line-note"><code>if body.is_in_group("player"):</code> — <b>ask the group, not the name.</b> Any node that called <code>add_to_group("player")</code> passes this check — safe even if you rename the node.</div>
+  <div class="line-note"><code>print(...)</code> — <b>writes a message to the Output panel.</b> Your first debugging tool — and a little flavour.</div>
+  <div class="line-note"><code>queue_free()</code> — <b>deletes this node</b> (the whole Sword) safely. That's the sword "being picked up" — it disappears. (In Lesson 17 this pickup gets an upgrade: it will also tell the player to <em>draw</em> the blade.)</div>
 </div>
 
-<h2>Part C — connect the signal (the crucial bit)</h2>
+<h2>Part D — connect the signal (the crucial bit)</h2>
 <p>The function exists, but nothing calls it yet. We wire the Area2D's <code class="inline">body_entered</code> signal to it.</p>
 <div class="flow">
   <div class="phase"><div class="rail"><div class="num">1</div><div class="line"></div></div><div class="body"><p>Select the <code class="inline">Sword</code> node. On the right, next to the <em>Inspector</em> tab, click the <strong>Node</strong> tab, then <strong>Signals</strong>.</p></div></div>
@@ -82,40 +100,41 @@
 </div>
 
 <div class="flow">
-  <div class="phase"><div class="rail"><div class="num">▶</div></div><div class="body"><p>Press <kbd>F5</kbd>, walk onto the sword. It vanishes and <strong>"You found the sword!"</strong> prints in the Output panel. 🎉 The sword is yours.</p></div></div>
+  <div class="phase"><div class="rail"><div class="num">▶</div></div><div class="body"><p>Press <kbd>F5</kbd>, walk onto the sword. It vanishes and a message prints in the Output panel. The sword is yours.</p></div></div>
 </div>
 
 <h2>Check yourself</h2>
 <div class="quiz">
-  <p class="q">1. What's a <em>signal</em>?</p>
+  <p class="q">What's a <em>signal</em>?</p>
   <button onclick="pick(this)" data-correct>An announcement a node emits when something happens, which you connect to a function</button>
   <button onclick="pick(this)">A type of sprite</button>
   <button onclick="pick(this)">A variable that holds true/false</button>
   <div class="feedback"></div>
 </div>
-<div class="quiz">
-  <p class="q">2. Why an <code class="inline">Area2D</code> for the sword, not a StaticBody2D?</p>
-  <button onclick="pick(this)" data-correct>Area2D detects overlaps without being solid, so you can walk onto it</button>
-  <button onclick="pick(this)">Area2D is faster</button>
-  <button onclick="pick(this)">StaticBody2D can't have a sprite</button>
-  <div class="feedback"></div>
-</div>
-<div class="quiz">
-  <p class="q">3. What does <code class="inline">queue_free()</code> do?</p>
-  <button onclick="pick(this)">Frees up memory in the menu</button>
-  <button onclick="pick(this)" data-correct>Deletes the node it's called on — here, the sword disappears</button>
-  <button onclick="pick(this)">Pauses the game</button>
-  <div class="feedback"></div>
+
+<h3>Codebase checkpoint</h3>
+<p>The project after this lesson:</p>
+<div class="tree">
+<span class="dim">projects/first-steps/</span>
+├─ project.godot
+├─ icon.svg
+├─ main.tscn            <span class="dim">← changed: Sword (Area2D + Sprite2D + CollisionShape2D) added</span>
+├─ <span class="leaf">sword.gd</span>             <span class="dim">← new: Area2D pickup script using is_in_group("player")</span>
+├─ player.gd            <span class="dim">← changed: add_to_group("player") in _ready()</span>
+└─ assets/
+   ├─ tileset.png
+   ├─ character.png
+   └─ <span class="leaf">sword.png</span>          <span class="dim">← new: sword art asset</span>
 </div>
 
 <div class="teacher">
   <b>I'M YOUR TEACHER — ASK ME ANYTHING</b>
-  <p>Most common snag: the sword vanishes but nothing prints (or vice-versa) — usually the signal isn't connected (redo Part C), or the player node isn't named exactly <code class="inline">Player</code>. If walking over it does nothing at all, check the CollisionShape2D actually has a shape. Want the sword to make the character <em>hold</em> a sword, or play a sound? Great follow-ups — ask. Say <em>"done"</em> when you've picked it up. Next: <strong>the wolf appears.</strong> 🐺</p>
+  <p>Most common snag: the sword vanishes but nothing prints — usually the signal isn't connected (redo Part D), or <code class="inline">add_to_group("player")</code> is missing from player.gd. If walking over it does nothing at all, check the CollisionShape2D actually has a shape. Want the sword to play a sound, or to visually appear in the player's hand? Great follow-ups — ask. Say <em>"done"</em> when you've picked it up. Next: <strong>the wolf appears.</strong></p>
 </div>
 
 <footer>
-  LESSON 08 · grounded in <a href="../MISSION.md">your mission</a> · sources in <a href="../RESOURCES.md">RESOURCES.md</a><br>
-  Primary reference: <a href="https://docs.godotengine.org/en/stable/tutorials/scripting/signals.html">Godot — Using signals</a>
+  LESSON 08 · The Encounter 1/6 · grounded in <a href="../MISSION.md">your mission</a> · sources in <a href="../RESOURCES.md">RESOURCES.md</a><br>
+  Primary reference: <a href="https://docs.godotengine.org/en/stable/tutorials/scripting/signals.html">Godot — Using signals</a> · <a href="https://docs.godotengine.org/en/stable/tutorials/scripting/groups.html">Godot — Groups</a>
 </footer>
 </main>
 <script src="_lesson.js"></script>

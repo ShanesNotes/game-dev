@@ -9,7 +9,7 @@
 <body>
 <main>
 <header class="hero">
-  <div class="kicker">Godot · Lesson 04</div>
+  <div class="kicker">Godot · Lesson 04 · Foundations 4 of 7</div>
   <h1>A Real Body: <span>Collisions &amp; Walls</span></h1>
   <p class="sub">Your sprite floats through everything. Today it gets a <em>physical body</em> that bumps into walls.</p>
 </header>
@@ -41,48 +41,41 @@
 <p class="cite">We'll also switch from <code class="inline">_process</code> to <code class="inline">_physics_process</code> — same idea (runs every frame) but on Godot's steady physics clock, which is where movement-with-collision belongs. (<a href="https://docs.godotengine.org/en/stable/tutorials/physics/physics_introduction.html">docs: physics intro</a>)</p>
 
 <h2>Part A — rebuild the player as a body</h2>
-<p>Right now your tree is <code class="inline">Main → Sprite2D</code> (with the script). We'll restructure it to:</p>
+<p>Right now your tree is <code class="inline">Main → Sprite2D</code> (with player.gd). We'll restructure it to:</p>
 <div class="tree">
 <span class="node">▸ Main</span>
-  <span class="node">└─ Player</span> <span class="dim">(CharacterBody2D — the script lives here now)</span>
+  <span class="node">└─ Player</span> <span class="dim">(CharacterBody2D — player.gd lives here now)</span>
       <span class="leaf">├─ Sprite2D</span> <span class="dim">(the robot picture)</span>
-      <span class="leaf">└─ CollisionShape2D</span> <span class="dim">(the hitbox)</span>
+      <span class="leaf">├─ CollisionShape2D</span> <span class="dim">(the hitbox)</span>
+<span class="node">└─ Wall</span> <span class="dim">(StaticBody2D)</span>
+      <span class="leaf">└─ CollisionShape2D</span> <span class="dim">(the wall's hitbox)</span>
 </div>
 <div class="flow">
-  <div class="phase"><div class="rail"><div class="num">1</div><div class="line"></div></div><div class="body"><p><strong>Detach the old script.</strong> Right-click your <code class="inline">Sprite2D</code> → <kbd>Detach Script</kbd>. (We'll re-attach it to the new body. The file <code class="inline">sprite_2d.gd</code> stays on disk.)</p></div></div>
+  <div class="phase"><div class="rail"><div class="num">1</div><div class="line"></div></div><div class="body"><p><strong>Detach the old script.</strong> Right-click your <code class="inline">Sprite2D</code> → <kbd>Detach Script</kbd>. (We'll re-attach <code class="inline">player.gd</code> to the new body in a moment.)</p></div></div>
   <div class="phase"><div class="rail"><div class="num">2</div><div class="line"></div></div><div class="body"><p><strong>Add the body.</strong> Right-click <code class="inline">Main</code> → <kbd>Add Child Node</kbd> → <code class="inline">CharacterBody2D</code> → <kbd>Create</kbd>. Rename it <code class="inline">Player</code>.</p></div></div>
   <div class="phase"><div class="rail"><div class="num">3</div><div class="line"></div></div><div class="body"><p><strong>Make the Sprite a child of Player.</strong> In the Scene dock, drag <code class="inline">Sprite2D</code> <em>onto</em> <code class="inline">Player</code>. It should now sit indented under Player.</p></div></div>
   <div class="phase"><div class="rail"><div class="num">4</div><div class="line"></div></div><div class="body"><p><strong>Add the hitbox.</strong> Right-click <code class="inline">Player</code> → <kbd>Add Child Node</kbd> → <code class="inline">CollisionShape2D</code> → <kbd>Create</kbd>.</p></div></div>
   <div class="phase"><div class="rail"><div class="num">5</div><div class="line"></div></div><div class="body"><p><strong>Give it a shape.</strong> Select <code class="inline">CollisionShape2D</code>. In the Inspector, <strong>Shape</strong> → <kbd>&lt;empty&gt;</kbd> → <kbd>New RectangleShape2D</kbd>. Drag its orange handles in the viewport until the box roughly covers the robot.</p></div></div>
-  <div class="phase"><div class="rail"><div class="num">6</div></div><div class="body"><p><strong>Re-attach the script to Player.</strong> Select <code class="inline">Player</code> → <kbd>Attach Script</kbd> → in the dialog set <strong>Path</strong> to your existing <code class="inline">res://sprite_2d.gd</code> (click the folder icon, pick it) → <kbd>Load</kbd>. Now the body runs your code.</p></div></div>
+  <div class="phase"><div class="rail"><div class="num">6</div></div><div class="body"><p><strong>Re-attach the script to Player.</strong> Select <code class="inline">Player</code> → <kbd>Attach Script</kbd> → in the dialog set <strong>Path</strong> to your existing <code class="inline">res://player.gd</code> (click the folder icon, pick it) → <kbd>Load</kbd>. Now the body runs your code.</p></div></div>
 </div>
 
 <h2>Part B — update the script</h2>
-<p>Open <code class="inline">sprite_2d.gd</code> (double-click it on the Player). Replace it with this:</p>
+<p>Open <code class="inline">player.gd</code> (double-click it in the FileSystem dock). Replace it with this:</p>
 <div class="code">
-  <div class="bar"><span class="t">GDScript · sprite_2d.gd</span><button class="copy">copy</button></div>
+  <div class="bar"><span class="t">GDScript · player.gd</span><button class="copy">copy</button></div>
 <pre><span class="kw">extends</span> <span class="type">CharacterBody2D</span>
 
 <span class="kw">var</span> <span class="var">speed</span> = <span class="num">200</span>
 
 <span class="kw">func</span> <span class="fn">_physics_process</span>(delta):
-    <span class="kw">var</span> <span class="var">direction</span> = <span class="type">Vector2</span>.ZERO
-
-    <span class="kw">if</span> <span class="fn">Input</span>.is_action_pressed(<span class="str">"ui_right"</span>):
-        <span class="var">direction</span>.x += <span class="num">1</span>
-    <span class="kw">if</span> <span class="fn">Input</span>.is_action_pressed(<span class="str">"ui_left"</span>):
-        <span class="var">direction</span>.x -= <span class="num">1</span>
-    <span class="kw">if</span> <span class="fn">Input</span>.is_action_pressed(<span class="str">"ui_down"</span>):
-        <span class="var">direction</span>.y += <span class="num">1</span>
-    <span class="kw">if</span> <span class="fn">Input</span>.is_action_pressed(<span class="str">"ui_up"</span>):
-        <span class="var">direction</span>.y -= <span class="num">1</span>
-
+    <span class="kw">var</span> <span class="var">direction</span> = <span class="fn">Input</span>.get_vector(<span class="str">"ui_left"</span>, <span class="str">"ui_right"</span>, <span class="str">"ui_up"</span>, <span class="str">"ui_down"</span>)
     <span class="var">velocity</span> = <span class="var">direction</span> * <span class="var">speed</span>
     <span class="fn">move_and_slide</span>()</pre>
 </div>
 <div class="annot">
   <div class="line-note"><code>extends CharacterBody2D</code> — <b>the script now controls the body</b>, not the sprite. That's why <code>velocity</code> and <code>move_and_slide()</code> are available.</div>
-  <div class="line-note"><code>velocity = direction * speed</code> — <b>set the body's speed &amp; direction.</b> No <code>* delta</code> here — move_and_slide handles timing.</div>
+  <div class="line-note"><code>Input.get_vector(...)</code> — <b>same one-liner from Lesson 3.</b> Already normalized, already handles gamepads, now feeding into <code>velocity</code> instead of <code>position</code>.</div>
+  <div class="line-note"><code>velocity = direction * speed</code> — <b>set the body's speed &amp; direction.</b> No <code>* delta</code> here — <code>move_and_slide</code> handles timing.</div>
   <div class="line-note"><code>move_and_slide()</code> — <b>moves the body and resolves collisions.</b> Hit a wall and it stops or slides — automatically.</div>
 </div>
 
@@ -113,12 +106,23 @@
   <div class="feedback"></div>
 </div>
 <div class="quiz">
-  <p class="q">3. Why no <code class="inline">* delta</code> on the velocity line anymore?</p>
+  <p class="q">3. Why no <code class="inline">* delta</code> on the velocity line?</p>
   <button onclick="pick(this)">delta stopped working</button>
   <button onclick="pick(this)" data-correct>move_and_slide() applies the timing itself</button>
   <button onclick="pick(this)">CharacterBody2D is always the same speed</button>
   <div class="feedback"></div>
 </div>
+
+<h3>Codebase checkpoint</h3>
+<p>The project after this lesson:</p>
+<div class="tree">
+<span class="dim">projects/first-steps/</span>
+├─ project.godot            <span class="dim">· project settings</span>
+├─ icon.svg                 <span class="dim">· the robot picture</span>
+├─ <span class="leaf">main.tscn</span>               <span class="dim">← changed: Player is now CharacterBody2D + CollisionShape2D + Sprite2D; Wall added</span>
+└─ <span class="leaf">player.gd</span>               <span class="dim">← changed: extends CharacterBody2D, uses velocity + move_and_slide()</span>
+</div>
+<p class="cite">The biggest structural change so far — two files updated, and the scene tree reorganised around a real physics body.</p>
 
 <div class="teacher">
   <b>I'M YOUR TEACHER — ASK ME ANYTHING</b>
@@ -126,7 +130,7 @@
 </div>
 
 <footer>
-  LESSON 04 · grounded in <a href="../MISSION.md">your mission</a> · sources in <a href="../RESOURCES.md">RESOURCES.md</a><br>
+  LESSON 04 · Foundations 4/7 · grounded in <a href="../MISSION.md">your mission</a> · sources in <a href="../RESOURCES.md">RESOURCES.md</a><br>
   Primary reference: <a href="https://docs.godotengine.org/en/stable/tutorials/physics/physics_introduction.html">Godot — Physics introduction</a>
 </footer>
 </main>

@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Godot Lessons — Course Index</title>
+<link rel="stylesheet" href="_lesson.css">
+<style>
+/* index-only: the lesson list */
+.arc{margin:30px 0 0}
+.arc .arc-note{font-size:15px;color:var(--ink-dim);max-width:70ch;margin:6px 0 14px}
+.toc{display:grid;gap:8px;margin:0}
+.toc a.row{display:grid;grid-template-columns:52px 1fr;gap:14px;align-items:baseline;
+  background:var(--bg-2);border:1px solid var(--line);border-left:3px solid var(--line-3);
+  padding:12px 16px;text-decoration:none;border-bottom-width:1px;transition:border-color .12s,background .12s}
+.toc a.row:hover{border-left-color:var(--amber);background:var(--bg-3)}
+.toc .n{font-family:var(--mono);font-size:13px;color:var(--amber);letter-spacing:.04em}
+.toc .t{font-family:var(--mono);font-size:14.5px;color:var(--ink-bright);display:block;line-height:1.35}
+.toc .d{font-family:var(--serif);font-size:14.5px;color:var(--ink-dim);display:block;margin-top:3px;line-height:1.5}
+.toc .tag{font-family:var(--mono);font-size:10px;letter-spacing:.16em;color:var(--green);margin-left:8px}
+</style>
+</head>
+<body>
+<main>
+<header class="hero">
+  <div class="kicker">Godot · Course Index · 26 lessons</div>
+  <h1>From <span>"what is a node"</span> to a real combat system</h1>
+  <p class="sub">Every lesson is one small win, built by hand, inside one story: find a sword, a wolf appears,
+  a WoW-style fight breaks out in Elwynn Forest. Each lesson ends with a <em>codebase checkpoint</em> —
+  follow them in order and the project on disk is built, file by file, as you go.</p>
+</header>
+
+<div class="win">
+  <b>THE STATE OF THE QUEST</b>
+  <p>Playable now: click-targeted wolf-pack combat on swing timers, a Classic-accurate one-roll attack
+  table (miss · dodge · parry · glancing · crit), levels, a rage bar, and a procedurally generated forest.
+  Next: XP &amp; leveling, then inventory, quests, and the first real ability.</p>
+</div>
+
+<section class="arc">
+  <h2>I · Foundations</h2>
+  <p class="arc-note">The mental model — nodes, scenes, scripts, physics — ending in a character that feels alive.</p>
+  <div class="toc">
+    <a class="row" href="0001-nodes-scenes-first-sprite.html"><span class="n">01</span><span><span class="t">Nodes, Scenes &amp; Your First Sprite</span><span class="d">The one mental model everything in Godot is built on — no code yet.</span></span></a>
+    <a class="row" href="0002-first-gdscript-make-it-move.html"><span class="n">02</span><span><span class="t">Your First GDScript: Make It Move</span><span class="d">First lines of code ever — and your first habit: name scripts after their role.</span></span></a>
+    <a class="row" href="0003-player-input-arrow-keys.html"><span class="n">03</span><span><span class="t">Take the Controls: One Vector, Any Device</span><span class="d">Input.get_vector from day one — normalized diagonals, and a gamepad stick works for free.</span></span></a>
+    <a class="row" href="0004-collision-walls-characterbody.html"><span class="n">04</span><span><span class="t">A Real Body: Collisions &amp; Walls</span><span class="d">A physical body that bumps into things — CharacterBody2D and friends.</span></span></a>
+    <a class="row" href="0005-tilemap-floor.html"><span class="n">05</span><span><span class="t">Paint the World: Tiles &amp; Floors</span><span class="d">The single most important tool for top-down worlds: the tilemap.</span></span></a>
+    <a class="row" href="0006-camera-follow.html"><span class="n">06</span><span><span class="t">A World Bigger Than the Screen</span><span class="d">One Camera2D in the right place and the world scrolls.</span></span></a>
+    <a class="row" href="0007-animated-character-facing.html"><span class="n">07</span><span><span class="t">An Animated Character That Faces Where It Walks<span class="tag">★ MILESTONE</span></span><span class="d">The leap from "a sprite that slides" to "a character that's alive."</span></span></a>
+  </div>
+</section>
+
+<section class="arc">
+  <h2>II · The Encounter</h2>
+  <p class="arc-note">The story begins: a sword to find, a wolf that hunts, a brain for the enemy — and the first bite.</p>
+  <div class="toc">
+    <a class="row" href="0008-pickup-sword-signals.html"><span class="n">08</span><span><span class="t">Find the Sword: Areas, Signals &amp; Groups</span><span class="d">Walk over a sword, pick it up — signals, plus the "player" group that pays off for the rest of the course.</span></span></a>
+    <a class="row" href="0009-wolf-chase-ai.html"><span class="n">09</span><span><span class="t">The Wolf: Simple Chase AI</span><span class="d">An enemy that hunts you — really just a tiny bit of vector maths.</span></span></a>
+    <a class="row" href="0010-aggro-leash-state-machine.html"><span class="n">10</span><span><span class="t">Aggro &amp; Leash: The Enemy State Machine</span><span class="d">IDLE / CHASE / RETURN — the wolf gets a real brain, the WoW way.</span></span></a>
+    <a class="row" href="0011-combat-aura-and-swing-timer.html"><span class="n">11</span><span><span class="t">Into Combat: The Aggro Aura &amp; Swing Timer</span><span class="d">The Elwynn pull — step into the wolf's space and the fight begins. Events over polling.</span></span></a>
+    <a class="row" href="0012-return-to-spawn.html"><span class="n">12</span><span><span class="t">Reset: Return to Spawn</span><span class="d">Drop aggro and the wolf trots home — the WoW "evade."</span></span></a>
+    <a class="row" href="0013-health-and-health-bars.html"><span class="n">13</span><span><span class="t">Health: Taking Damage &amp; a Health Bar</span><span class="d">The bites finally bite; at zero, you die.</span></span></a>
+  </div>
+</section>
+
+<section class="arc">
+  <h2>III · Fighting Back</h2>
+  <p class="arc-note">Feedback first, then the blade: see the damage, deal it back, automate the swing, hold the sword.</p>
+  <div class="toc">
+    <a class="row" href="0014-damage-numbers-reusable-scenes.html"><span class="n">14</span><span><span class="t">Damage Numbers &amp; Reusable Scenes</span><span class="d">Floating combat text — and the most reused skill in game dev: instancing.</span></span></a>
+    <a class="row" href="0015-fight-back-sword.html"><span class="n">15</span><span><span class="t">Fight Back: Swing the Sword<span class="tag">⚔ PAYOFF</span></span><span class="d">One attack action for keyboard and gamepad alike — press it, deal damage, drop the wolf.</span></span></a>
+    <a class="row" href="0016-player-auto-attack.html"><span class="n">16</span><span><span class="t">Auto-Attack: The Player's Swing Timer</span><span class="d">Press attack once → keep swinging on a tick. Combat becomes symmetric.</span></span></a>
+    <a class="row" href="0017-wielding-the-sword.html"><span class="n">17</span><span><span class="t">Wielding the Sword</span><span class="d">The character finally holds the blade — and slashes it in an arc.</span></span></a>
+  </div>
+</section>
+
+<section class="arc">
+  <h2>IV · The Pack</h2>
+  <p class="arc-note">One wolf becomes many — and the player learns to choose a victim.</p>
+  <div class="toc">
+    <a class="row" href="0018-building-the-pack.html"><span class="n">18</span><span><span class="t">Building the Pack</span><span class="d">Save Branch as Scene: the wolf becomes wolf.tscn, and three of them hunt you. Two are unkillable — for now.</span></span></a>
+    <a class="row" href="0019-click-targeting.html"><span class="n">19</span><span><span class="t">Click Targeting: Choose Your Victim</span><span class="d">input_pickable on the scene root, a gold highlight, and your auto-attack follows the wolf you clicked.</span></span></a>
+  </div>
+</section>
+
+<section class="arc">
+  <h2>V · Combat Depth</h2>
+  <p class="arc-note">The Classic 1.12 attack table, built band by band on one d100 roll — every value from
+  <code class="inline">reference/wow-combat-values.md</code>.</p>
+  <div class="toc">
+    <a class="row" href="0020-swing-timing-and-levels.html"><span class="n">20</span><span><span class="t">Swing Timing &amp; Levels</span><span class="d">Real weapon speed, the GCD idea, and a level on every fighter.</span></span></a>
+    <a class="row" href="0021-attack-table-hit-or-miss.html"><span class="n">21</span><span><span class="t">The Attack Table: Hit or Miss</span><span class="d">One roll of a d100 decides every swing — first band: Miss.</span></span></a>
+    <a class="row" href="0022-critical-strikes.html"><span class="n">22</span><span><span class="t">Critical Strikes</span><span class="d">Double damage, big yellow numbers, crit suppression vs tougher wolves.</span></span></a>
+    <a class="row" href="0023-dodge-and-parry.html"><span class="n">23</span><span><span class="t">Dodge &amp; Parry</span><span class="d">The wolves fight back by avoiding you — two bands slot into the same roll.</span></span></a>
+    <a class="row" href="0024-glancing-blows.html"><span class="n">24</span><span><span class="t">Glancing Blows</span><span class="d">Punch above your weight and your sword skids off — the table is complete.</span></span></a>
+    <a class="row" href="0025-rage.html"><span class="n">25</span><span><span class="t">Rage</span><span class="d">A warrior's fuel: built by trading blows, drained by peace — the meter abilities will spend.</span></span></a>
+  </div>
+</section>
+
+<section class="arc">
+  <h2>VI · The World</h2>
+  <p class="arc-note">The hand-placed clearing becomes a generated forest.</p>
+  <div class="toc">
+    <a class="row" href="0026-procedural-forest.html"><span class="n">26</span><span><span class="t">The Forest: Procedural Generation</span><span class="d">Seeded randomness, noise, and one oracle function — a reproducible Elwynn, trees and wolves included.</span></span></a>
+  </div>
+</section>
+
+<div class="callout idea">
+  <span class="ct">NEXT UP</span>
+  <p><strong>Lesson 27 — XP &amp; Leveling:</strong> kills grant XP on the mob-XP formula, the level
+  actually grows, and a ding bumps your stats. Then: inventory, wolf pelts, a wizard with a quest,
+  Heroic Strike, Whirlwind. The full arc lives in
+  <code class="inline">learning-records/0002-roadmap-combat-quests-progression.md</code>.</p>
+</div>
+
+<footer>
+  GODOT LEARNING WORKSPACE · 26 LESSONS · ONE WIN AT A TIME · EVERY LESSON ENDS IN A CODEBASE CHECKPOINT<br>
+  The method behind this course is documented in <code class="inline">GUIDE.md</code> at the repo root ·
+  purpose audited by <code class="inline">/goal</code> → <code class="inline">TELOS.md</code>
+</footer>
+</main>
+</body>
+</html>

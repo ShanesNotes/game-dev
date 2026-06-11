@@ -9,7 +9,7 @@
 <body>
 <main>
 <header class="hero">
-  <div class="kicker">Godot · Lesson 10</div>
+  <div class="kicker">Godot · Lesson 10 · The Encounter 3 of 6</div>
   <h1>Aggro &amp; Leash: <span>The Enemy State Machine</span></h1>
   <p class="sub">Right now the wolf does just one thing: chase. Let's give it a real brain — the WoW way.</p>
 </header>
@@ -64,19 +64,19 @@
     <span class="kw">match</span> <span class="var">state</span>:
         <span class="type">State</span>.IDLE:
             <span class="var">velocity</span> = <span class="type">Vector2</span>.ZERO
-            <span class="kw">if</span> global_position.distance_to(<span class="var">player</span>.global_position) &lt;= <span class="var">aggro_radius</span>:
+            <span class="kw">if</span> global_position.<span class="fn">distance_to</span>(<span class="var">player</span>.global_position) &lt;= <span class="var">aggro_radius</span>:
                 <span class="var">state</span> = <span class="type">State</span>.CHASE
 
         <span class="type">State</span>.CHASE:
-            <span class="kw">var</span> <span class="var">dir</span> = (<span class="var">player</span>.global_position - global_position).normalized()
+            <span class="kw">var</span> <span class="var">dir</span> = (<span class="var">player</span>.global_position - global_position).<span class="fn">normalized</span>()
             <span class="var">velocity</span> = <span class="var">dir</span> * <span class="var">speed</span>
-            <span class="kw">if</span> global_position.distance_to(<span class="var">home</span>) &gt;= <span class="var">leash_range</span>:
+            <span class="kw">if</span> global_position.<span class="fn">distance_to</span>(<span class="var">home</span>) &gt;= <span class="var">leash_range</span>:
                 <span class="var">state</span> = <span class="type">State</span>.RETURN
 
         <span class="type">State</span>.RETURN:
-            <span class="kw">var</span> <span class="var">dir</span> = (<span class="var">home</span> - global_position).normalized()
+            <span class="kw">var</span> <span class="var">dir</span> = (<span class="var">home</span> - global_position).<span class="fn">normalized</span>()
             <span class="var">velocity</span> = <span class="var">dir</span> * <span class="var">speed</span>
-            <span class="kw">if</span> global_position.distance_to(<span class="var">home</span>) &lt;= <span class="num">4.0</span>:
+            <span class="kw">if</span> global_position.<span class="fn">distance_to</span>(<span class="var">home</span>) &lt;= <span class="num">4.0</span>:
                 <span class="var">state</span> = <span class="type">State</span>.IDLE
 
     <span class="fn">move_and_slide</span>()
@@ -96,40 +96,48 @@
   <p>Walk near the wolf → it <strong>aggros</strong>. Lead it on a long chase → it hits <code class="inline">leash_range</code> from its spawn and <strong>resets</strong>, trotting home while ignoring you (try to "kite" it — it won't bite). Back at home it's <strong>IDLE</strong> and can be pulled again. Classic mob leashing.</p>
 </div>
 
+<div class="callout note">
+  <span class="ct">◈ this is a stepping stone</span>
+  <p>The enum + match + polling approach here is a great way to <em>see</em> the three states written out in full. Next lesson collapses this entire brain into a single variable and a pair of signal handlers — event-driven beats polling. But understanding <em>why</em> signals are better is easier once you've lived with polling first.</p>
+</div>
+
 <div class="flow">
-  <div class="phase"><div class="rail"><div class="num">▶</div></div><div class="body"><p>Press <kbd>F5</kbd>. Approach to pull it, then sprint away past its leash and watch it give up and reset. Select the Wolf in the editor and tweak <strong>Aggro Radius</strong> / <strong>Leash Range</strong> in the Inspector to feel the design space. 🎉</p></div></div>
+  <div class="phase"><div class="rail"><div class="num">▶</div></div><div class="body"><p>Press <kbd>F5</kbd>. Approach to pull it, then sprint away past its leash and watch it give up and reset. Select the Wolf in the editor and tweak <strong>Aggro Radius</strong> / <strong>Leash Range</strong> in the Inspector to feel the design space.</p></div></div>
 </div>
 
 <h2>Check yourself</h2>
 <div class="quiz">
-  <p class="q">1. What's a state machine?</p>
+  <p class="q">What's a state machine?</p>
   <button onclick="pick(this)" data-correct>Being in exactly one state at a time and switching between them on events</button>
   <button onclick="pick(this)">A machine that saves your game</button>
   <button onclick="pick(this)">A faster kind of loop</button>
   <div class="feedback"></div>
 </div>
-<div class="quiz">
-  <p class="q">2. What triggers the leash (RETURN state)?</p>
-  <button onclick="pick(this)" data-correct>The wolf's distance from its home exceeds leash_range</button>
-  <button onclick="pick(this)">The player picks up the sword</button>
-  <button onclick="pick(this)">The wolf runs out of speed</button>
-  <div class="feedback"></div>
-</div>
-<div class="quiz">
-  <p class="q">3. Why mark <code class="inline">aggro_radius</code> with <code class="inline">@export</code>?</p>
-  <button onclick="pick(this)" data-correct>So you can tune it in the Inspector without editing code</button>
-  <button onclick="pick(this)">It makes the wolf invisible</button>
-  <button onclick="pick(this)">It's required for every variable</button>
-  <div class="feedback"></div>
+
+<h3>Codebase checkpoint</h3>
+<p>The project after this lesson:</p>
+<div class="tree">
+<span class="dim">projects/first-steps/</span>
+├─ project.godot
+├─ icon.svg
+├─ main.tscn
+├─ sword.gd
+├─ <span class="leaf">wolf.gd</span>              <span class="dim">← changed: enum State {IDLE, CHASE, RETURN}, match, distance_to</span>
+├─ player.gd
+└─ assets/
+   ├─ tileset.png
+   ├─ character.png
+   ├─ sword.png
+   └─ wolf.png
 </div>
 
 <div class="teacher">
   <b>I'M YOUR TEACHER — ASK ME ANYTHING</b>
-  <p>This is the most "computer-science-y" lesson so far — if <code class="inline">match</code>/<code class="inline">enum</code> feel weird, ask and I'll break them down further. Natural extensions, all very WoW: a <strong>de-aggro timer</strong> (reset if the player stays out of sight for N seconds), <strong>heal-to-full on reset</strong>, a <strong>chase-break distance</strong> separate from the home leash, or showing the aggro radius as a circle while debugging. Say which excites you. Otherwise say <em>"done"</em> — next we turn the chase into real combat: the wolf closes to melee and starts swinging. ⚔️</p>
+  <p>This is the most "computer-science-y" lesson so far — if <code class="inline">match</code>/<code class="inline">enum</code> feel weird, ask and I'll break them down further. Natural extensions, all very WoW: a <strong>de-aggro timer</strong> (reset if the player stays out of sight for N seconds), <strong>heal-to-full on reset</strong>, a <strong>chase-break distance</strong> separate from the home leash. Say which excites you. Otherwise say <em>"done"</em> — next we turn the chase into real combat: the wolf closes to melee and starts swinging.</p>
 </div>
 
 <footer>
-  LESSON 10 · grounded in <a href="../MISSION.md">your mission</a> · sources in <a href="../RESOURCES.md">RESOURCES.md</a><br>
+  LESSON 10 · The Encounter 3/6 · grounded in <a href="../MISSION.md">your mission</a> · sources in <a href="../RESOURCES.md">RESOURCES.md</a><br>
   Primary reference: <a href="https://docs.godotengine.org/en/stable/tutorials/scripting/gdscript/gdscript_basics.html#match">Godot — GDScript: match &amp; enums</a>
 </footer>
 </main>

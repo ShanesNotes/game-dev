@@ -9,7 +9,7 @@
 <body>
 <main>
 <header class="hero">
-  <div class="kicker">Godot · Lesson 11 · Combat 1 of 4</div>
+  <div class="kicker">Godot · Lesson 11 · The Encounter 4 of 6</div>
   <h1>Into Combat: <span>The Aggro Aura &amp; Swing Timer</span></h1>
   <p class="sub">The Elwynn-Forest pull. Step into the wolf's space and the fight begins — it closes to melee, holds, and bites on a steady swing timer.</p>
 </header>
@@ -33,7 +33,7 @@
 <p>With the aura doing the detecting, the whole brain collapses to one question: <strong>"do I have a target or not?"</strong></p>
 <div class="tree">
 <span class="dim">player enters aura</span> ──▶ <span class="node">target = player</span> ──▶ move to melee &amp; swing
-<span class="dim">player leaves aura</span> ──▶ <span class="node">target = null</span> ──▶ stop, stop swinging
+<span class="dim">player leaves aura</span> ──▶ <span class="node">target = null</span>   ──▶ stop, stop swinging
 </div>
 
 <h2>The new tool: the <code class="inline">Timer</code> node</h2>
@@ -56,7 +56,7 @@
   <div class="phase"><div class="rail"><div class="num">2</div><div class="line"></div></div><div class="body"><p>Add a child <code class="inline">CollisionShape2D</code> to <code class="inline">AggroArea</code> → <strong>New CircleShape2D</strong> → drag its radius handle out to a generous "aggro" size (≈ 150px — a few wolf-widths).</p></div></div>
   <div class="phase"><div class="rail"><div class="num">3</div></div><div class="body"><p><strong>Connect two signals.</strong> With <code class="inline">AggroArea</code> selected → <strong>Node → Signals</strong>: double-click <code class="inline">body_entered</code> → connect to <strong>Wolf</strong>; then double-click <code class="inline">body_exited</code> → connect to <strong>Wolf</strong>. You'll get two new functions in wolf.gd.</p></div></div>
 </div>
-<div class="callout note"><span class="ct">◈ no layer setup needed</span><p>Everything in this scene lives on the default collision <strong>layer 1</strong>, so the aura detects the player out of the box — leave its <strong>Mask</strong> alone. The <code class="inline">body.name == "Player"</code> check in the script ignores anything else that drifts into the zone.</p></div>
+<div class="callout note"><span class="ct">◈ no layer setup needed</span><p>Everything in this scene lives on the default collision <strong>layer 1</strong>, so the aura detects the player out of the box — leave its <strong>Mask</strong> alone. The <code class="inline">body.is_in_group("player")</code> check in the script ignores anything else that drifts into the zone.</p></div>
 
 <h2>Part C — the wolf's new brain</h2>
 <p>Replace <em>everything</em> in <code class="inline">wolf.gd</code> with this. It swaps out last lesson's state machine — notice how much shorter it is.</p>
@@ -74,25 +74,25 @@
 <span class="kw">var</span> <span class="var">target</span> = <span class="kw">null</span>   <span class="com"># the player, while they're in our aura</span>
 
 <span class="kw">func</span> <span class="fn">_physics_process</span>(delta):
-    <span class="kw">if</span> <span class="var">target</span> != <span class="kw">null</span> <span class="kw">and</span> global_position.distance_to(<span class="var">target</span>.global_position) &gt; <span class="var">melee_range</span>:
-        <span class="var">velocity</span> = (<span class="var">target</span>.global_position - global_position).normalized() * <span class="var">speed</span>
+    <span class="kw">if</span> <span class="var">target</span> != <span class="kw">null</span> <span class="kw">and</span> global_position.<span class="fn">distance_to</span>(<span class="var">target</span>.global_position) &gt; <span class="var">melee_range</span>:
+        <span class="var">velocity</span> = (<span class="var">target</span>.global_position - global_position).<span class="fn">normalized</span>() * <span class="var">speed</span>
     <span class="kw">else</span>:
         <span class="var">velocity</span> = <span class="type">Vector2</span>.ZERO
     <span class="fn">move_and_slide</span>()
     <span class="fn">face_target</span>()
 
 <span class="kw">func</span> <span class="fn">_on_aggro_area_body_entered</span>(body):
-    <span class="kw">if</span> <span class="var">body</span>.name == <span class="str">"Player"</span>:
+    <span class="kw">if</span> <span class="var">body</span>.<span class="fn">is_in_group</span>(<span class="str">"player"</span>):
         <span class="var">target</span> = <span class="var">body</span>
-        <span class="var">swing_timer</span>.start()        <span class="com"># enter combat</span>
+        <span class="var">swing_timer</span>.<span class="fn">start</span>()        <span class="com"># enter combat</span>
 
 <span class="kw">func</span> <span class="fn">_on_aggro_area_body_exited</span>(body):
-    <span class="kw">if</span> <span class="var">body</span>.name == <span class="str">"Player"</span>:
+    <span class="kw">if</span> <span class="var">body</span>.<span class="fn">is_in_group</span>(<span class="str">"player"</span>):
         <span class="var">target</span> = <span class="kw">null</span>
-        <span class="var">swing_timer</span>.stop()         <span class="com"># leave combat</span>
+        <span class="var">swing_timer</span>.<span class="fn">stop</span>()         <span class="com"># leave combat</span>
 
 <span class="kw">func</span> <span class="fn">_on_swing_timer_timeout</span>():
-    <span class="kw">if</span> <span class="var">target</span> != <span class="kw">null</span> <span class="kw">and</span> global_position.distance_to(<span class="var">target</span>.global_position) &lt;= <span class="var">melee_range</span> + <span class="num">16</span>:
+    <span class="kw">if</span> <span class="var">target</span> != <span class="kw">null</span> <span class="kw">and</span> global_position.<span class="fn">distance_to</span>(<span class="var">target</span>.global_position) &lt;= <span class="var">melee_range</span> + <span class="num">16</span>:
         <span class="fn">print</span>(<span class="str">"The wolf bites you for "</span>, <span class="var">swing_damage</span>, <span class="str">"!"</span>)
 
 <span class="kw">func</span> <span class="fn">face_target</span>():
@@ -104,36 +104,40 @@
 </div>
 <div class="annot">
   <div class="line-note"><code>var target = null</code> — <b>the entire combat state, in one variable.</b> <code>null</code> means "nobody" (not in combat). When the aura sees the player, target becomes the player; when they leave, back to null. No enum needed.</div>
+  <div class="line-note"><code>is_in_group("player")</code> — <b>same group check we taught in Lesson 8.</b> The wolf's aura sees everything in the scene; this line filters to just the player.</div>
   <div class="line-note"><code>_on_aggro_area_body_entered / _exited</code> — <b>the two events.</b> Enter → grab target + start the swing timer. Exit → drop target + stop the timer. Combat on/off, done.</div>
-  <div class="line-note"><code>if target != null and ... &gt; melee_range:</code> — <b>only walk if we have a target and aren't already adjacent.</b> Otherwise stand still and let the swing timer do the work. That "stop at melee" is what keeps the wolf from sliding through you.</div>
+  <div class="line-note"><code>if target != null and ... &gt; melee_range:</code> — <b>only walk if we have a target and aren't already adjacent.</b> Otherwise stand still and let the swing timer do the work. That "stop at melee" keeps the wolf from sliding through you.</div>
   <div class="line-note">Gone from last lesson's brain: the <code>enum</code>, the <code>match</code>, <code>aggro_radius</code>, <code>leash_range</code>, <code>home</code>, <code>_ready()</code>. The aura replaces all of it — event-driven beats polling.</div>
 </div>
 
 <div class="flow">
-  <div class="phase"><div class="rail"><div class="num">▶</div></div><div class="body"><p>Press <kbd>F5</kbd>. Step into the aura — combat starts instantly and the bites tick, <em>regardless of how you move</em>. Walk out of the aura and it stops and goes quiet. Try circling the wolf: it follows while you're in range (that's combat) and disengages the moment you leave. 🎉 Reliable combat, a third of the code.</p></div></div>
+  <div class="phase"><div class="rail"><div class="num">▶</div></div><div class="body"><p>Press <kbd>F5</kbd>. Step into the aura — combat starts instantly and the bites tick, <em>regardless of how you move</em>. Walk out of the aura and it stops and goes quiet. Try circling the wolf: it follows while you're in range (that's combat) and disengages the moment you leave. Reliable combat, a third of the code.</p></div></div>
 </div>
 
 <h2>Check yourself</h2>
 <div class="quiz">
-  <p class="q">1. What does a <code class="inline">Timer</code> node give you?</p>
-  <button onclick="pick(this)" data-correct>A timeout signal it emits on a clock — here, each auto-attack swing</button>
-  <button onclick="pick(this)">A way to slow the game down</button>
-  <button onclick="pick(this)">A health bar</button>
-  <div class="feedback"></div>
-</div>
-<div class="quiz">
-  <p class="q">2. What's the difference between polling and event-driven here?</p>
-  <button onclick="pick(this)" data-correct>Polling asks 'is the player close?' every frame; the aura's signals tell us on enter/exit</button>
-  <button onclick="pick(this)">Events are slower than polling</button>
-  <button onclick="pick(this)">They're the same thing</button>
-  <div class="feedback"></div>
-</div>
-<div class="quiz">
-  <p class="q">3. What replaced the whole state machine from last lesson?</p>
+  <p class="q">What replaced the whole state machine from last lesson?</p>
   <button onclick="pick(this)" data-correct>A single variable, target, that's either the player or null</button>
   <button onclick="pick(this)">A bigger Timer</button>
   <button onclick="pick(this)">The camera</button>
   <div class="feedback"></div>
+</div>
+
+<h3>Codebase checkpoint</h3>
+<p>The project after this lesson:</p>
+<div class="tree">
+<span class="dim">projects/first-steps/</span>
+├─ project.godot
+├─ icon.svg
+├─ main.tscn            <span class="dim">← changed: Wolf gains AggroArea (Area2D + CircleShape2D) + SwingTimer children</span>
+├─ sword.gd
+├─ <span class="leaf">wolf.gd</span>              <span class="dim">← changed: event-driven brain; target var; is_in_group("player")</span>
+├─ player.gd
+└─ assets/
+   ├─ tileset.png
+   ├─ character.png
+   ├─ sword.png
+   └─ wolf.png
 </div>
 
 <div class="teacher">
@@ -142,7 +146,7 @@
 </div>
 
 <footer>
-  LESSON 11 · Combat 1/4 · grounded in <a href="../MISSION.md">your mission</a> · sources in <a href="../RESOURCES.md">RESOURCES.md</a><br>
+  LESSON 11 · The Encounter 4/6 · grounded in <a href="../MISSION.md">your mission</a> · sources in <a href="../RESOURCES.md">RESOURCES.md</a><br>
   Primary references: <a href="https://docs.godotengine.org/en/stable/classes/class_area2d.html">Godot — Area2D</a> · <a href="https://docs.godotengine.org/en/stable/classes/class_timer.html">Timer</a>
 </footer>
 </main>
