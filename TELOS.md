@@ -7,6 +7,9 @@ the work starts to feel busy instead of purposeful.*
 > learning-records 0001–0002, NOTES.md, and 7 commits of history.
 > 2026-06-10 (later) — curriculum v2: lessons re-sequenced/deepened so the course
 > is the codebase's build order (serves the packaging telos; the laws unchanged).
+> 2026-06-11 — housekeeping sync: 26 lessons (0026 = procedural forest per
+> lessons/index.html + learning-records/0002); next aligned is 27 XP & leveling.
+> Current state updated to match shipped reality (no law changes).
 
 ## Prime mover
 
@@ -67,6 +70,9 @@ Things that would look like progress and betray the purpose:
 
 ## Current state (at distillation)
 
-25 lessons done; playable WoW-style combat (attack table through rage). Next
-aligned step per roadmap 0002: **Lesson 26 — XP & leveling.** The smallest move
-that advances the telos is always the next single lesson, done by hand.
+26 lessons done (Foundations through VI · The World / procedural Elwynn forest).
+Playable WoW-style combat (attack table through rage) + generated forest, per
+lessons/index.html, 0026-procedural-forest.html, and learning-records/0002
+(reseq note). Next aligned step per roadmap 0002 + index: **Lesson 27 — XP &
+leveling.** The smallest move that advances the telos is always the next single
+lesson, done by hand.
