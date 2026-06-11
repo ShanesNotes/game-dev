@@ -81,15 +81,13 @@
 <span class="kw">func</span> <span class="fn">_on_body_entered</span>(body):
     <span class="kw">if</span> <span class="var">body</span>.<span class="fn">is_in_group</span>(<span class="str">"player"</span>):
         <span class="fn">print</span>(<span class="str">"- The blade is thin -"</span>)
-        <span class="var">body</span>.<span class="fn">equip_sword</span>()      <span class="com"># reveal the sword in hand</span>
         <span class="fn">queue_free</span>()</pre>
 </div>
 <div class="annot">
   <div class="line-note"><code>func _on_body_entered(body):</code> — <b>the function the signal will call.</b> Godot hands it <code>body</code> = whatever walked in.</div>
   <div class="line-note"><code>if body.is_in_group("player"):</code> — <b>ask the group, not the name.</b> Any node that called <code>add_to_group("player")</code> passes this check — safe even if you rename the node.</div>
   <div class="line-note"><code>print(...)</code> — <b>writes a message to the Output panel.</b> Your first debugging tool — and a little flavour.</div>
-  <div class="line-note"><code>body.equip_sword()</code> — <b>tell the player to show the sword in hand.</b> We'll add this method to player.gd in a later lesson; for now you can leave it as just <code>queue_free()</code>.</div>
-  <div class="line-note"><code>queue_free()</code> — <b>deletes this node</b> (the whole Sword) safely. That's the sword "being picked up" — it disappears.</div>
+  <div class="line-note"><code>queue_free()</code> — <b>deletes this node</b> (the whole Sword) safely. That's the sword "being picked up" — it disappears. (In Lesson 17 this pickup gets an upgrade: it will also tell the player to <em>draw</em> the blade.)</div>
 </div>
 
 <h2>Part D — connect the signal (the crucial bit)</h2>
