@@ -60,10 +60,25 @@ def make_portrait():
     # skip the crown of hair; frame the face and shoulders. 20x20 output so
     # the 40px HUD rect is an exact 2x integer scale (no wobbly pixels).
     cx = (bbox[0] + bbox[2]) // 2
-    head = frame.crop((cx - 5, bbox[1] + 4, cx + 5, bbox[1] + 14))
-    head = Image.eval(head, lambda v: min(int(v * 1.18), 255))
+    # 8x8 face window (the crown is rows 2-10; the face lives at rows 11-15),
+    # doubled to 16x16 and inset 2px so the backdrop reads as a frame
+    head = frame.crop((cx - 4, bbox[1] + 8, cx + 4, bbox[1] + 16))
+    head = Image.eval(head, lambda v: min(int(v * 1.22), 255))
+    head = head.resize((16, 16), Image.NEAREST)
+    # warm bronze backdrop (vertical gradient) so the dark hair mass separates
+    # from the near-black panel instead of reading as a blob
     out = Image.new('RGBA', (20, 20), (0, 0, 0, 0))
-    out.paste(head.resize((20, 20), Image.NEAREST), (0, 0), head.resize((20, 20), Image.NEAREST))
+    px = out.load()
+    for y in range(20):
+        t = y / 19.0
+        c = tuple(int(a + (b - a) * t) for a, b in zip((122, 96, 66), (84, 64, 44)))
+        for x in range(20):
+            px[x, y] = c + (255,)
+    out.paste(head, (2, 2), head)
+    # 1px universal-outline frame, baked
+    for i in range(20):
+        for (x, y) in ((i, 0), (i, 19), (0, i), (19, i)):
+            px[x, y] = (26, 20, 15, 255)
     out.save('portrait_hero.png')
 
 # ---------------------------------------------------------------- wolf relight
@@ -93,13 +108,15 @@ def relight_wolf():
 
 # ---------------------------------------------------------------- hard shadow
 def make_shadow():
-    w, h = 24, 10
+    # Canvas is 4px wider than the ellipse so the blob can sit 2px east of
+    # center: light reads as warm afternoon from the upper-left.
+    w, h = 28, 10
     im = Image.new('RGBA', (w, h), (0, 0, 0, 0))
     px = im.load()
-    cx, cy = (w - 1) / 2, (h - 1) / 2
+    cx, cy = (w - 1) / 2 + 2.0, (h - 1) / 2
     for y in range(h):
         for x in range(w):
-            d = ((x - cx) / (w / 2)) ** 2 + ((y - cy) / (h / 2)) ** 2
+            d = ((x - cx) / 12.0) ** 2 + ((y - cy) / (h / 2)) ** 2
             if d <= 0.55:
                 px[x, y] = (12, 16, 9, 88)            # solid core
             elif d <= 1.0 and (x + y) % 2 == 0:
@@ -126,11 +143,11 @@ def make_vignette():
 
 # ---------------------------------------------------------------- bar trough
 def make_bar_bg():
-    im = Image.new('RGBA', (64, 12), (0, 0, 0, 0))
+    im = Image.new('RGBA', (136, 12), (0, 0, 0, 0))
     px = im.load()
     for y in range(12):
-        for x in range(64):
-            if x == 0 or x == 63 or y == 0 or y == 11:
+        for x in range(136):
+            if x == 0 or x == 135 or y == 0 or y == 11:
                 px[x, y] = (107, 90, 58, 255)     # visible bronze border
             elif y == 1:
                 px[x, y] = (14, 11, 8, 255)       # inner top shadow
@@ -155,9 +172,16 @@ def make_target_ring():
 # Bake the 25-degree rest pose into the texture so the standing hero's blade
 # sits on the art grid (runtime rotation only during the brief swing).
 def make_sword_held():
+    # Rest pose + three swing frames, each rotated ONCE from the clean source
+    # (never re-rotating an already-rotated frame) so texels stay chunky.
+    # Node-rotation equivalents: 0 / +22 / +44 / +65 degrees past the rest pose
+    # (PIL's angle sign is the opposite of Godot's: PIL positive = counter-
+    # clockwise, Godot positive = clockwise).
     im = Image.open('sword_clean.png').convert('RGBA')
-    rot = im.rotate(-25, resample=Image.NEAREST, expand=False)
-    rot.save('sword_held.png')
+    for angle, name in ((-25, 'sword_held.png'), (-47, 'sword_swing_1.png'),
+                        (-69, 'sword_swing_2.png'), (-90, 'sword_swing_3.png')):
+        rot = im.rotate(angle, resample=Image.NEAREST, expand=False)
+        rot.save(name)
 
 # ---------------------------------------------------------------- camp props
 WOOD_D, WOOD, WOOD_L = (58, 40, 23), (107, 74, 43), (138, 101, 60)
@@ -208,6 +232,14 @@ def make_signpost():
     # outline-ish grounding
     for y in range(24, 26):
         px[7, y] = WOOD_D
+    # universal dark outline so the sign sits in the world like every other prop
+    OUT = (26, 20, 15, 255)
+    filled = {(x, y) for y in range(h) for x in range(w) if px[x, y][3] > 0}
+    for (x, y) in filled.copy():
+        for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+            nx, ny = x + dx, y + dy
+            if 0 <= nx < w and 0 <= ny < h and (nx, ny) not in filled and px[nx, ny][3] == 0:
+                px[nx, ny] = OUT
     im.save('signpost.png')
 
 conform_hero()

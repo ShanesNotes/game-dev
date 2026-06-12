@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lesson 32 — The HUD Teaches the Game</title>
+<link rel="stylesheet" href="_lesson.css">
+</head>
+<body>
+<main>
+<header class="hero">
+  <div class="kicker">Godot · Lesson 32 · Game Feel 6 — arc finale</div>
+  <h1>The HUD <span>Teaches the Game</span></h1>
+  <p class="sub">Three hint chips sit at the bottom of the screen: move, target, attack. Nobody reads manuals,
+  and nobody should have to — so each chip <em>watches</em> for its own action, dims the moment Will performs
+  it, and when all three are proven learned, the whole strip excuses itself.</p>
+</header>
+
+<div class="win">
+  <b>TODAY</b>
+  <p>Start the game: a quiet bar lists the three verbs. Walk — the Move chip dims. Pick a wolf — Target dims.
+  Throw your first swing — Attack dims, and two seconds later the strip fades out for good. A brand-new player
+  was taught the whole game without a single popup, pause, or "OK" button.</p>
+</div>
+
+<h2>The big idea: the reactive tutorial</h2>
+<p>
+  Most tutorials <em>interrupt</em>: freeze the game, show a box, demand a click. Ours <em>observes</em>: show
+  the available verbs, keep the game fully playable, and treat the player's own actions as proof of learning —
+  retiring each hint the moment its job is done. The player never finishes a tutorial; it simply stops being
+  there. The best tutorial is one nobody notices completing. The machinery is one dictionary, two functions,
+  and the polling loop the HUD already runs.
+</p>
+
+<div class="defs">
+  <div class="def"><b>dictionary as a set</b><p><code class="inline">_hints_done</code> stores <code class="inline">{"move": true}</code> — but nothing ever reads the <code class="inline">true</code>. What matters is whether the <em>key exists</em> (<code class="inline">.has()</code>). A dictionary used this way is a checklist: present = done.</p></div>
+  <div class="def"><b>@onready dictionary</b><p><code class="inline">@onready</code> works on any expression — including a dictionary <em>of nodes</em>. One lookup table from hint name to Label replaces three separate variables and lets <code class="inline">_complete_hint()</code> take a string instead of a node.</p></div>
+  <div class="def"><b>evidence probe</b><p>A per-frame question whose "yes" proves the player did something: an input vector, a target's validity, a running timer. Each hint owns one probe — and they're three different <em>kinds</em> of evidence.</p></div>
+</div>
+
+<h2>Part A — the strip</h2>
+<p>The scene side is one dark bar pinned to the bottom of the <code class="inline">HUD</code> with three
+labels on it (per the draw-order rule from Lesson 31, it sits <em>below</em> the wince layer but
+<em>above</em> <code class="inline">DeathScreen</code> in the tree — so it draws over the flash and under
+the death fade):</p>
+<div class="tree">
+<span class="node">▸ HUD</span> <span class="dim">(CanvasLayer)</span>
+  <span class="leaf">└─ HintStrip</span> <span class="dim">(ColorRect — bottom-anchored, 34px tall, near-black (0.078, 0.063, 0.047) at 0.62 alpha)</span>
+      <span class="leaf">├─ HintMove</span> <span class="dim">(Label — "Move: WASD / Left Stick")</span>
+      <span class="leaf">├─ HintTarget</span> <span class="dim">(Label — "Target: Tab / RB (or click a wolf)")</span>
+      <span class="leaf">└─ HintAttack</span> <span class="dim">(Label — "Attack: Space / A button")</span>
+</div>
+<p>All three labels share the HUD recipe from earlier lessons: VT323 at 16px, warm cream
+<code class="inline">(0.95, 0.9, 0.75)</code>, the universal dark outline. Note the chips name both
+keyboard and pad — because Lesson 3 wired both into the same actions; the strip is the first
+place that investment pays off in words.</p>
+
+<h2>Part B — the checklist and the probes</h2>
+<p>In <code class="inline">hud.gd</code>, the handles and the checklist:</p>
+<div class="code">
+  <div class="bar"><span class="t">GDScript · hud.gd — with the other @onready vars</span><button class="copy">copy</button></div>
+<pre><span class="kw">@onready</span> <span class="kw">var</span> <span class="var">hint_strip</span> = <span class="var">$HintStrip</span>
+<span class="kw">@onready</span> <span class="kw">var</span> <span class="var">hints</span> = {
+    <span class="str">"move"</span>: <span class="var">$HintStrip/HintMove</span>,
+    <span class="str">"target"</span>: <span class="var">$HintStrip/HintTarget</span>,
+    <span class="str">"attack"</span>: <span class="var">$HintStrip/HintAttack</span>,
+}
+
+<span class="kw">var</span> <span class="var">_hints_done</span> = {}</pre>
+</div>
+<p>The probes run from the same <code class="inline">_process()</code> you saw in Lesson 31 — the call marked
+"next lesson's star" is today's star:</p>
+<div class="code">
+  <div class="bar"><span class="t">GDScript · hud.gd</span><button class="copy">copy</button></div>
+<pre><span class="kw">func</span> <span class="fn">_update_hints</span>(<span class="var">player</span>):
+    <span class="kw">if</span> <span class="kw">not</span> <span class="var">_hints_done</span>.<span class="fn">has</span>(<span class="str">"move"</span>) <span class="kw">and</span> <span class="type">Input</span>.<span class="fn">get_vector</span>(<span class="str">"move_left"</span>, <span class="str">"move_right"</span>, <span class="str">"move_up"</span>, <span class="str">"move_down"</span>) != <span class="type">Vector2</span>.ZERO:
+        <span class="fn">_complete_hint</span>(<span class="str">"move"</span>)
+    <span class="kw">if</span> <span class="kw">not</span> <span class="var">_hints_done</span>.<span class="fn">has</span>(<span class="str">"target"</span>) <span class="kw">and</span> <span class="fn">is_instance_valid</span>(<span class="var">player</span>.<span class="var">target</span>):
+        <span class="fn">_complete_hint</span>(<span class="str">"target"</span>)
+    <span class="kw">if</span> <span class="kw">not</span> <span class="var">_hints_done</span>.<span class="fn">has</span>(<span class="str">"attack"</span>) <span class="kw">and</span> <span class="var">player</span>.<span class="var">has_sword</span> <span class="kw">and</span> <span class="kw">not</span> <span class="var">player</span>.<span class="var">swing_timer</span>.<span class="fn">is_stopped</span>():
+        <span class="fn">_complete_hint</span>(<span class="str">"attack"</span>)</pre>
+</div>
+<div class="annot">
+  <div class="line-note"><b>Three kinds of evidence.</b> Move asks the <em>input</em> directly (the same <code>Input.get_vector</code> from Lesson 3). Target asks <em>game state</em> — a valid target exists, no matter whether Tab, RB, or a click set it. Attack asks for <em>compound proof</em>: a sword in hand AND the swing timer actually running — mashing the attack key empty-handed proves nothing, so it completes nothing.</div>
+  <div class="line-note"><b>Honest fine print:</b> game-state evidence proves an action <em>happened</em> — not that the player chose it. Lesson 31's <code>take_damage</code> retaliates (it targets the attacker and starts the swing timer), so a wolf that bites Will can dim Target — and, once the sword is in hand, Attack — before he ever presses Tab or Space. We accept the false positive: by that point Will <em>is</em> targeting and swinging on screen, which is the thing the chip existed to show.</div>
+  <div class="line-note"><b>The <code>has()</code> guard makes each probe one-shot:</b> once a key is in the checklist, that probe is never evaluated again. Cheap, and it means <code>_complete_hint()</code> can never fire twice for one chip — the same exactly-once thinking as Lesson 31's latch, in dictionary form.</div>
+</div>
+
+<h2>Part C — dim, don't delete</h2>
+<div class="code">
+  <div class="bar"><span class="t">GDScript · hud.gd</span><button class="copy">copy</button></div>
+<pre><span class="kw">func</span> <span class="fn">_complete_hint</span>(<span class="var">key</span>):
+    <span class="var">_hints_done</span>[<span class="var">key</span>] = <span class="kw">true</span>
+    <span class="kw">var</span> <span class="var">t</span> = <span class="fn">create_tween</span>()
+    <span class="var">t</span>.<span class="fn">tween_property</span>(<span class="var">hints</span>[<span class="var">key</span>], <span class="str">"modulate:a"</span>, <span class="num">0.3</span>, <span class="num">0.5</span>)
+    <span class="kw">if</span> <span class="var">_hints_done</span>.<span class="fn">size</span>() == <span class="var">hints</span>.<span class="fn">size</span>():
+        <span class="kw">var</span> <span class="var">f</span> = <span class="fn">create_tween</span>()
+        <span class="var">f</span>.<span class="fn">tween_interval</span>(<span class="num">2.0</span>)
+        <span class="var">f</span>.<span class="fn">tween_property</span>(<span class="var">hint_strip</span>, <span class="str">"modulate:a"</span>, <span class="num">0.0</span>, <span class="num">1.2</span>)</pre>
+</div>
+<div class="annot">
+  <div class="line-note"><b>0.3, not 0.</b> A dimmed chip is a receipt: "learned, but still here if you blank on the key." Deleting a hint the instant it's used punishes exactly the player who needs it back. The dim <em>is</em> the reward signal; removal waits for the full set.</div>
+  <div class="line-note"><b>The graduation:</b> when the checklist matches the chip table (<code>size() == size()</code>), a second tween waits two beats and fades the whole strip — interval-then-fade, the toast rhythm from Lesson 28. Fading <code>hint_strip</code> takes the three labels with it: children inherit their parent's <code>modulate</code>.</div>
+  <div class="line-note"><b>Same ledger entry:</b> these probes ride the HUD's polling <code>_process()</code>, the debt Lesson 31 put on the books (events-over-polling, The Forge). One refactor will pay for all three tenants.</div>
+</div>
+
+<div class="callout idea">
+  <span class="ct">FEEL IT YOURSELF — BREAK THE KINDNESS</span>
+  <p>Set the dim to <code class="inline">0.0</code> and play fresh: chips vanish the instant you use them —
+  efficient, and weirdly punishing when you forget the targeting key ten seconds later. Put it back, then set
+  the graduation interval to <code class="inline">0.0</code>: the strip starts dying the moment the last chip
+  dims, and the "you've learned everything" beat never lands. Tutorials have feel, too. Revert both.</p>
+</div>
+
+<h2>Check yourself</h2>
+<div class="quiz">
+  <p class="q">Why a <code>_hints_done</code> dictionary instead of three booleans (<code>move_done</code>, <code>target_done</code>, …)?</p>
+  <button onclick="pick(this)">Dictionaries are faster than booleans</button>
+  <button onclick="pick(this)" data-correct>One container scales: probes stay uniform, completion is one size() comparison, and a fourth hint is a new entry — not a fourth variable plus edits everywhere</button>
+  <button onclick="pick(this)">Booleans can't be checked from _process()</button>
+  <div class="feedback"></div>
+</div>
+
+<h3>Codebase checkpoint</h3>
+<p>The project after this lesson — the Game Feel arc complete:</p>
+<div class="tree">
+<span class="dim">projects/first-steps/</span>
+├─ project.godot              <span class="dim">· [autoload] Sfx (L27)</span>
+├─ <span class="leaf">main.tscn</span>                 <span class="dim">← changed: HUD gains HintStrip + three hint chips</span>
+├─ <span class="leaf">hud.gd</span>                    <span class="dim">← changed: hints table, evidence probes, _complete_hint()</span>
+├─ player.gd                  <span class="dim">· pose, swing feel, dying latch (L29–31)</span>
+├─ sword.gd                   <span class="dim">· the pickup moment (L28)</span>
+├─ sfx.gd                     <span class="dim">· the sound bus (L27)</span>
+├─ wolf.gd / wolf.tscn        <span class="dim">· chase, aggro, pack, clickable (L9–19)</span>
+├─ damage_number.gd / .tscn   <span class="dim">· floating combat text (L14)</span>
+├─ forest_generator.gd        <span class="dim">· the world (L26)</span>
+└─ assets/                    <span class="dim">· every sprite and sound, generated (gen_*.py)</span>
+</div>
+
+<div class="teacher">
+  <b>TEACHER'S NOTE — ARC COMPLETE</b>
+  <p>Game Feel, lessons 27–32: sound, the pickup moment, the held blade, swing weight, a staged death, and a
+  HUD that teaches. Every system the polish overhaul dropped into the repo is now taught code — the Lesson 26
+  promise, kept at scale. Two roads are on the books from here: the <strong>progression arc</strong> (XP &amp;
+  Leveling and onward, <code class="inline">learning-records/0002</code>) and <strong>The Forge</strong>
+  (turning the combat core into tested, signal-driven modules,
+  <code class="inline">learning-records/0003</code> — it would also pay the polling debt Lessons 31–32 keep
+  pointing at). Which goes first is the next planning session's call.</p>
+</div>
+
+<footer>
+  GODOT · LESSON 32 · GAME FEEL 6 · ONE WIN AT A TIME<br>
+  Primary reference: <a href="https://docs.godotengine.org/en/stable/tutorials/scripting/gdscript/gdscript_basics.html#dictionaries">GDScript — Dictionaries</a> · <a href="https://docs.godotengine.org/en/stable/classes/class_input.html#class-input-method-get-vector">Input.get_vector</a> · <a href="https://docs.godotengine.org/en/stable/classes/class_canvasitem.html#class-canvasitem-property-modulate">CanvasItem.modulate</a>
+</footer>
+</main>
+<script src="_lesson.js"></script>
+</body>
+</html>

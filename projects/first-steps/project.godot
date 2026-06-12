@@ -10,10 +10,14 @@ config_version=5
 
 [application]
 
-config/name="first-steps"
+config/name="Will's First Steps"
 run/main_scene="uid://x584hiir57lw"
 config/features=PackedStringArray("4.6", "Forward Plus")
-config/icon="res://icon.svg"
+config/icon="res://assets/icon.png"
+
+[autoload]
+
+Sfx="*res://sfx.gd"
 
 [dotnet]
 

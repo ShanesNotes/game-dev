@@ -28,7 +28,7 @@ Scratchpad for your teaching preferences and working notes.
 - **Curriculum v2 conventions (2026-06-10):** the player script is `player.gd`
   (renamed from `sprite_2d.gd`); kickers carry the arc — Foundations 1–7,
   The Encounter 8–13, Fighting Back 14–17, The Pack 18–19, Combat Depth 20–25,
-  The World 26+; every lesson ends with a **Codebase checkpoint** (`h3` + `.tree`
+  The World 26, Game Feel 27–32; every lesson ends with a **Codebase checkpoint** (`h3` + `.tree`
   of the project files, changed files in `.leaf` green with a `← changed:` note)
   so the lesson sequence doubles as the build order of the codebase.
 

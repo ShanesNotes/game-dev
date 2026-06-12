@@ -52,7 +52,8 @@ func take_damage(amount, is_crit = false):
 		return
 	health -= amount
 	if health < 0: health = 0
-	health_bar.value = health
+	var bt = create_tween()
+	bt.tween_property(health_bar, "value", health, 0.2).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 	if is_crit:
 		spawn_number(amount, Color.YELLOW, 28)   # loud
 	else:
@@ -88,6 +89,7 @@ func spawn_blood():
 
 func die():
 	dying = true
+	Sfx.play_at("yelp", global_position, -2.0)
 	$CollisionShape2D.set_deferred("disabled", true)
 	health_bar.visible = false
 	aggro_mark.visible = false
@@ -108,6 +110,7 @@ func _on_aggro_area_body_entered(body):
 	if body.is_in_group("player") and not dying:
 		target = body
 		swing_timer.start()
+		Sfx.play_at("growl", global_position, -3.0)
 		aggro_mark.visible = true
 		aggro_mark.scale = Vector2(0.3, 0.3)
 		var t = create_tween()
@@ -128,6 +131,7 @@ func _on_aggro_area_body_exited(body):
 func _on_swing_timer_timeout():
 	if target != null and global_position.distance_to(target.global_position) <= melee_range + 16:
 		sprite.play("attack")
+		Sfx.play_at("bite", global_position, -4.0)
 		target.take_damage(swing_damage, self)   # pass self as the attacker
 
 func face_target():

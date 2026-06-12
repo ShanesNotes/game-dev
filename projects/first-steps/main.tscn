@@ -1,4 +1,4 @@
-[gd_scene load_steps=43 format=4 uid="uid://x584hiir57lw"]
+[gd_scene load_steps=45 format=4 uid="uid://x584hiir57lw"]
 
 [ext_resource type="Texture2D" path="res://assets/terrain.png" id="1_terrain"]
 [ext_resource type="Script" uid="uid://c3ncgr4ahy5b8" path="res://player.gd" id="2_player"]
@@ -20,6 +20,8 @@
 [ext_resource type="FontFile" path="res://assets/fonts/PressStart2P-Regular.ttf" id="17_ps2p"]
 [ext_resource type="FontFile" path="res://assets/fonts/VT323-Regular.ttf" id="18_vt"]
 [ext_resource type="Script" path="res://hud.gd" id="19_hud"]
+[ext_resource type="Texture2D" path="res://assets/glint_star.png" id="20_glint"]
+[ext_resource type="AudioStream" path="res://assets/sounds/forest_ambience.wav" id="21_amb"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_terrain"]
 texture = ExtResource("1_terrain")
@@ -89,7 +91,7 @@ sources/0 = SubResource("TileSetAtlasSource_terrain")
 size = Vector2(15, 30)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_pickup"]
-size = Vector2(7, 22)
+size = Vector2(26, 26)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_d0"]
 atlas = ExtResource("3_char")
@@ -325,11 +327,28 @@ color = Color(0.93, 0.88, 0.55, 0.32)
 script = ExtResource("4_swordgd")
 
 [node name="Sprite2D" type="Sprite2D" parent="World/Sword"]
-position = Vector2(0, -12)
+position = Vector2(0, -14)
 texture = ExtResource("5_sword")
 
+[node name="Glint" type="CPUParticles2D" parent="World/Sword"]
+position = Vector2(0, -16)
+amount = 5
+texture = ExtResource("20_glint")
+lifetime = 1.4
+local_coords = false
+emission_shape = 3
+emission_rect_extents = Vector2(8, 14)
+direction = Vector2(0, -1)
+spread = 30.0
+gravity = Vector2(0, -4)
+initial_velocity_min = 2.0
+initial_velocity_max = 6.0
+scale_amount_min = 0.5
+scale_amount_max = 1.0
+color = Color(1, 0.9, 0.55, 0.85)
+
 [node name="CollisionShape2D" type="CollisionShape2D" parent="World/Sword"]
-position = Vector2(0, -11)
+position = Vector2(0, -8)
 shape = SubResource("RectangleShape2D_pickup")
 
 [node name="Wolf" parent="World" instance=ExtResource("6_wolf")]
@@ -346,6 +365,12 @@ level = 3
 [node name="HUD" type="CanvasLayer" parent="."]
 layer = 2
 script = ExtResource("19_hud")
+
+[node name="HurtFlash" type="ColorRect" parent="HUD"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+color = Color(0.78, 0.08, 0.06, 0)
 
 [node name="UnitFrame" type="NinePatchRect" parent="HUD"]
 offset_left = 12.0
@@ -408,11 +433,9 @@ value = 0.0
 
 [node name="TargetFrame" type="NinePatchRect" parent="HUD"]
 visible = false
-anchor_left = 0.5
-anchor_right = 0.5
-offset_left = -90.0
+offset_left = 224.0
 offset_top = 10.0
-offset_right = 90.0
+offset_right = 384.0
 offset_bottom = 58.0
 texture = ExtResource("9_panel")
 patch_margin_left = 10
@@ -423,7 +446,7 @@ patch_margin_bottom = 10
 [node name="TargetName" type="Label" parent="HUD/TargetFrame"]
 offset_left = 12.0
 offset_top = 9.0
-offset_right = 168.0
+offset_right = 148.0
 offset_bottom = 21.0
 theme_override_colors/font_color = Color(0.878, 0.902, 0.937, 1)
 theme_override_colors/font_outline_color = Color(0.102, 0.0784, 0.0588, 1)
@@ -435,7 +458,7 @@ text = "Wolf"
 [node name="TargetHealthBar" type="TextureProgressBar" parent="HUD/TargetFrame"]
 offset_left = 12.0
 offset_top = 26.0
-offset_right = 168.0
+offset_right = 148.0
 offset_bottom = 38.0
 texture_under = ExtResource("10_barbg")
 texture_progress = ExtResource("12_ragefill")
@@ -450,20 +473,86 @@ offset_top = -34.0
 grow_vertical = 0
 color = Color(0.078, 0.063, 0.047, 0.62)
 
-[node name="ControlsHint" type="Label" parent="HUD"]
-anchor_top = 1.0
-anchor_bottom = 1.0
+[node name="HintMove" type="Label" parent="HUD/HintStrip"]
 offset_left = 14.0
-offset_top = -32.0
-offset_right = 900.0
-offset_bottom = -4.0
-grow_vertical = 0
+offset_top = 4.0
+offset_right = 320.0
+offset_bottom = 30.0
 theme_override_colors/font_color = Color(0.95, 0.9, 0.75, 1)
 theme_override_colors/font_outline_color = Color(0.102, 0.0784, 0.0588, 1)
 theme_override_constants/outline_size = 3
 theme_override_fonts/font = ExtResource("18_vt")
 theme_override_font_sizes/font_size = 16
-text = "Move: WASD / Left Stick    Target: Tab / RB (or click a wolf)    Attack: Space / A button"
+text = "Move: WASD / Left Stick"
+
+[node name="HintTarget" type="Label" parent="HUD/HintStrip"]
+offset_left = 330.0
+offset_top = 4.0
+offset_right = 700.0
+offset_bottom = 30.0
+theme_override_colors/font_color = Color(0.95, 0.9, 0.75, 1)
+theme_override_colors/font_outline_color = Color(0.102, 0.0784, 0.0588, 1)
+theme_override_constants/outline_size = 3
+theme_override_fonts/font = ExtResource("18_vt")
+theme_override_font_sizes/font_size = 16
+text = "Target: Tab / RB (or click a wolf)"
+
+[node name="HintAttack" type="Label" parent="HUD/HintStrip"]
+offset_left = 710.0
+offset_top = 4.0
+offset_right = 1000.0
+offset_bottom = 30.0
+theme_override_colors/font_color = Color(0.95, 0.9, 0.75, 1)
+theme_override_colors/font_outline_color = Color(0.102, 0.0784, 0.0588, 1)
+theme_override_constants/outline_size = 3
+theme_override_fonts/font = ExtResource("18_vt")
+theme_override_font_sizes/font_size = 16
+text = "Attack: Space / A button"
+
+[node name="Banner" type="Label" parent="HUD"]
+visible = false
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -340.0
+offset_top = 84.0
+offset_right = 340.0
+offset_bottom = 116.0
+theme_override_colors/font_color = Color(0.941, 0.824, 0.478, 1)
+theme_override_colors/font_outline_color = Color(0.102, 0.0784, 0.0588, 1)
+theme_override_constants/outline_size = 4
+theme_override_fonts/font = ExtResource("18_vt")
+theme_override_font_sizes/font_size = 24
+horizontal_alignment = 1
+
+[node name="DeathScreen" type="ColorRect" parent="HUD"]
+visible = false
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+color = Color(0.02, 0.015, 0.01, 0)
+
+[node name="DeathLabel" type="Label" parent="HUD/DeathScreen"]
+modulate = Color(1, 1, 1, 0)
+anchor_left = 0.5
+anchor_top = 0.42
+anchor_right = 0.5
+anchor_bottom = 0.42
+offset_left = -300.0
+offset_top = -20.0
+offset_right = 300.0
+offset_bottom = 24.0
+theme_override_colors/font_color = Color(0.941, 0.824, 0.478, 1)
+theme_override_colors/font_outline_color = Color(0.102, 0.0784, 0.0588, 1)
+theme_override_constants/outline_size = 4
+theme_override_fonts/font = ExtResource("18_vt")
+theme_override_font_sizes/font_size = 32
+horizontal_alignment = 1
+text = "— Memory Eternal —"
+
+[node name="ForestAmbience" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("21_amb")
+volume_db = -8.0
+autoplay = true
 
 [node name="Vignette" type="CanvasLayer" parent="."]
 layer = 1
