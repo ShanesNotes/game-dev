@@ -1,0 +1,882 @@
+{
+  "version": 1,
+  "description": "Seeded lesson/code claims for the Godot learning repo. Error claims must pass now; known_debt warnings are burn-down items for the Ultragoal lesson audit.",
+  "expectedLessonCount": 35,
+  "index": "lessons/index.html",
+  "lessonGlob": "lessons/[0-9][0-9][0-9][0-9]-*.html",
+  "contentScans": [
+    {
+      "name": "no-csharp-in-lessons",
+      "paths": [
+        "lessons/*.html"
+      ],
+      "exclude": [
+        "lessons/_lesson*.html"
+      ],
+      "pattern": "C#|csharp|CSharp|GodotSharp|dotnet|\\.cs\\b",
+      "severity": "error",
+      "allow": []
+    },
+    {
+      "name": "gdscript-only-doc-csharp-audit",
+      "paths": [
+        "MISSION.md",
+        "NOTES.md",
+        "RESOURCES.md",
+        "README.md",
+        "GUIDE.md",
+        "TELOS.md",
+        "learning-records/*.md",
+        "projects/first-steps/project.godot"
+      ],
+      "pattern": "C#|csharp|CSharp|GodotSharp|dotnet|mono",
+      "severity": "warn",
+      "allow": [
+        "GDScript \\(not C#\\)",
+        "not C#",
+        "mono headings",
+        "stable\\.mono"
+      ]
+    }
+  ],
+  "lessons": [
+    {
+      "id": "0001",
+      "file": "lessons/0001-nodes-scenes-first-sprite.html",
+      "title": "Nodes, Scenes & Your First Sprite",
+      "claims": [
+        {
+          "type": "contains",
+          "path": "lessons/0001-nodes-scenes-first-sprite.html",
+          "value": "Node2D",
+          "label": "teaches node root"
+        },
+        {
+          "type": "path_exists",
+          "path": "projects/first-steps/main.tscn",
+          "label": "project scene exists"
+        },
+        {
+          "type": "path_exists",
+          "path": "projects/first-steps/icon.svg",
+          "label": "starter icon asset exists"
+        }
+      ],
+      "evolutionNotes": []
+    },
+    {
+      "id": "0002",
+      "file": "lessons/0002-first-gdscript-make-it-move.html",
+      "title": "Your First GDScript: Make It Move",
+      "claims": [
+        {
+          "type": "contains",
+          "path": "lessons/0002-first-gdscript-make-it-move.html",
+          "value": "extends</span> <span class=\"type\">Sprite2D",
+          "label": "historical Sprite2D script ramp"
+        },
+        {
+          "type": "path_exists",
+          "path": "projects/first-steps/player.gd",
+          "label": "player script exists"
+        }
+      ],
+      "evolutionNotes": [
+        "Historical ramp: lesson starts on Sprite2D; current player is CharacterBody2D after later lessons."
+      ]
+    },
+    {
+      "id": "0003",
+      "file": "lessons/0003-player-input-arrow-keys.html",
+      "title": "Take the Controls: Arrow-Key Movement",
+      "claims": [
+        {
+          "type": "contains",
+          "path": "lessons/0003-player-input-arrow-keys.html",
+          "value": "Input</span>.get_vector",
+          "label": "teaches get_vector"
+        },
+        {
+          "type": "input_action",
+          "name": "move_left",
+          "label": "current move_left action"
+        },
+        {
+          "type": "input_action",
+          "name": "move_right",
+          "label": "current move_right action"
+        },
+        {
+          "type": "input_action",
+          "name": "move_up",
+          "label": "current move_up action"
+        },
+        {
+          "type": "input_action",
+          "name": "move_down",
+          "label": "current move_down action"
+        },
+        {
+          "type": "known_debt",
+          "label": "input lesson debt",
+          "message": "Lesson 03 has a forward note for move_* actions, but no dedicated lesson teaches creating them yet."
+        }
+      ],
+      "evolutionNotes": [
+        "Hybrid repair: built-in ui_* is a low-friction ramp; current project uses custom move_* actions."
+      ]
+    },
+    {
+      "id": "0004",
+      "file": "lessons/0004-collision-walls-characterbody.html",
+      "title": "A Real Body: Collisions & Walls",
+      "claims": [
+        {
+          "type": "contains",
+          "path": "lessons/0004-collision-walls-characterbody.html",
+          "value": "CharacterBody2D",
+          "label": "teaches CharacterBody2D"
+        },
+        {
+          "type": "contains",
+          "path": "projects/first-steps/main.tscn",
+          "value": "CharacterBody2D",
+          "label": "current scene has character bodies"
+        }
+      ],
+      "evolutionNotes": []
+    },
+    {
+      "id": "0005",
+      "file": "lessons/0005-tilemap-floor.html",
+      "title": "Paint the World: Tiles & Floors",
+      "claims": [
+        {
+          "type": "contains",
+          "path": "lessons/0005-tilemap-floor.html",
+          "value": "TileMap",
+          "label": "teaches tilemaps"
+        },
+        {
+          "type": "path_exists",
+          "path": "projects/first-steps/assets/tileset.png",
+          "label": "historical tileset asset still exists"
+        },
+        {
+          "type": "path_exists",
+          "path": "projects/first-steps/assets/terrain.png",
+          "label": "current terrain atlas exists"
+        },
+        {
+          "type": "known_debt",
+          "label": "tilemap evolution",
+          "message": "Lesson 05 teaches tileset.png; current world uses terrain.png plus Road layer, needing evolution note or later lesson."
+        }
+      ],
+      "evolutionNotes": []
+    },
+    {
+      "id": "0006",
+      "file": "lessons/0006-camera-follow.html",
+      "title": "Bigger Than the Screen: Camera Follow",
+      "claims": [
+        {
+          "type": "contains",
+          "path": "lessons/0006-camera-follow.html",
+          "value": "Camera2D",
+          "label": "teaches Camera2D"
+        },
+        {
+          "type": "contains",
+          "path": "projects/first-steps/main.tscn",
+          "value": "Camera2D",
+          "label": "current scene has camera"
+        }
+      ],
+      "evolutionNotes": []
+    },
+    {
+      "id": "0007",
+      "file": "lessons/0007-animated-character-facing.html",
+      "title": "An Animated Character That Faces Where It Walks",
+      "claims": [
+        {
+          "type": "contains",
+          "path": "lessons/0007-animated-character-facing.html",
+          "value": "AnimatedSprite2D",
+          "label": "teaches AnimatedSprite2D"
+        },
+        {
+          "type": "contains",
+          "path": "projects/first-steps/main.tscn",
+          "value": "AnimatedSprite2D",
+          "label": "current player uses animated sprite"
+        }
+      ],
+      "evolutionNotes": []
+    },
+    {
+      "id": "0008",
+      "file": "lessons/0008-pickup-sword-signals.html",
+      "title": "Find the Sword: Areas & Signals",
+      "claims": [
+        {
+          "type": "contains",
+          "path": "lessons/0008-pickup-sword-signals.html",
+          "value": "signal",
+          "label": "teaches signals"
+        },
+        {
+          "type": "path_exists",
+          "path": "projects/first-steps/sword.gd",
+          "label": "sword script exists"
+        },
+        {
+          "type": "contains",
+          "path": "projects/first-steps/player.gd",
+          "value": "has_sword",
+          "label": "current pickup state exists"
+        }
+      ],
+      "evolutionNotes": []
+    },
+    {
+      "id": "0009",
+      "file": "lessons/0009-wolf-chase-ai.html",
+      "title": "The Wolf: Simple Chase AI",
+      "claims": [
+        {
+          "type": "contains",
+          "path": "lessons/0009-wolf-chase-ai.html",
+          "value": "wolf.gd",
+          "label": "teaches wolf script"
+        },
+        {
+          "type": "path_exists",
+          "path": "projects/first-steps/wolf.gd",
+          "label": "wolf script exists"
+        },
+        {
+          "type": "path_exists",
+          "path": "projects/first-steps/wolf.tscn",
+          "label": "wolf scene exists"
+        },
+        {
+          "type": "known_debt",
+          "label": "wolf sprite evolution",
+          "message": "Lesson 09 still describes Sprite2D; current wolf scene uses AnimatedSprite2D."
+        }
+      ],
+      "evolutionNotes": []
+    },
+    {
+      "id": "0010",
+      "file": "lessons/0010-aggro-leash-state-machine.html",
+      "title": "Aggro & Leash: The Enemy State Machine",
+      "claims": [
+        {
+          "type": "contains",
+          "path": "lessons/0010-aggro-leash-state-machine.html",
+          "value": "enum State",
+          "label": "teaches enum state machine"
+        },
+        {
+          "type": "contains",
+          "path": "projects/first-steps/wolf.gd",
+          "value": "target = null",
+          "label": "current wolf aggro target state"
+        },
+        {
+          "type": "known_debt",
+          "label": "state-machine evolution",
+          "message": "Lesson 10 teaches an explicit enum state machine; current wolf behavior is target/spawn driven without enum State."
+        }
+      ],
+      "evolutionNotes": []
+    },
+    {
+      "id": "0011",
+      "file": "lessons/0011-combat-aura-and-swing-timer.html",
+      "title": "Into Combat: The Aggro Aura & Swing Timer",
+      "claims": [
+        {
+          "type": "contains",
+          "path": "lessons/0011-combat-aura-and-swing-timer.html",
+          "value": "SwingTimer",
+          "label": "teaches SwingTimer"
+        },
+        {
+          "type": "contains",
+          "path": "projects/first-steps/wolf.tscn",
+          "value": "SwingTimer",
+          "label": "current wolf has SwingTimer"
+        }
+      ],
+      "evolutionNotes": []
+    },
+    {
+      "id": "0012",
+      "file": "lessons/0012-return-to-spawn.html",
+      "title": "Reset: Return to Spawn",
+      "claims": [
+        {
+          "type": "contains",
+          "path": "lessons/0012-return-to-spawn.html",
+          "value": "spawn",
+          "label": "teaches return state"
+        },
+        {
+          "type": "contains",
+          "path": "projects/first-steps/wolf.gd",
+          "value": "spawn",
+          "label": "current wolf spawn return anchor"
+        }
+      ],
+      "evolutionNotes": []
+    },
+    {
+      "id": "0013",
+      "file": "lessons/0013-health-and-health-bars.html",
+      "title": "Health: Taking Damage & a Health Bar",
+      "claims": [
+        {
+          "type": "contains",
+          "path": "lessons/0013-health-and-health-bars.html",
+          "value": "HealthBar",
+          "label": "teaches health bar"
+        },
+        {
+          "type": "contains",
+          "path": "projects/first-steps/hud.gd",
+          "value": "health",
+          "label": "current HUD tracks health"
+        },
+        {
+          "type": "known_debt",
+          "label": "HUD path evolution",
+          "message": "Early HUD lessons use ../HUD/HealthBar; current HUD is UnitFrame/TextureProgressBar and now signal-driven after L35."
+        }
+      ],
+      "evolutionNotes": []
+    },
+    {
+      "id": "0014",
+      "file": "lessons/0014-damage-numbers-reusable-scenes.html",
+      "title": "Damage Numbers & Reusable Scenes",
+      "claims": [
+        {
+          "type": "contains",
+          "path": "lessons/0014-damage-numbers-reusable-scenes.html",
+          "value": "damage_number.tscn",
+          "label": "teaches reusable scene"
+        },
+        {
+          "type": "path_exists",
+          "path": "projects/first-steps/damage_number.tscn",
+          "label": "damage number scene exists"
+        },
+        {
+          "type": "path_exists",
+          "path": "projects/first-steps/damage_number.gd",
+          "label": "damage number script exists"
+        }
+      ],
+      "evolutionNotes": []
+    },
+    {
+      "id": "0015",
+      "file": "lessons/0015-fight-back-sword.html",
+      "title": "Fight Back: Swing the Sword",
+      "claims": [
+        {
+          "type": "contains",
+          "path": "lessons/0015-fight-back-sword.html",
+          "value": "attack",
+          "label": "teaches attack action"
+        },
+        {
+          "type": "input_action",
+          "name": "attack",
+          "label": "current attack action"
+        },
+        {
+          "type": "contains",
+          "path": "projects/first-steps/player.gd",
+          "value": "attack()",
+          "label": "current attack function exists"
+        }
+      ],
+      "evolutionNotes": []
+    },
+    {
+      "id": "0016",
+      "file": "lessons/0016-player-auto-attack.html",
+      "title": "Auto-Attack: The Player's Swing Timer",
+      "claims": [
+        {
+          "type": "contains",
+          "path": "lessons/0016-player-auto-attack.html",
+          "value": "Auto-Attack",
+          "label": "teaches auto attack"
+        },
+        {
+          "type": "contains",
+          "path": "projects/first-steps/player.gd",
+          "value": "swing_timer",
+          "label": "current player swing timer field"
+        }
+      ],
+      "evolutionNotes": []
+    },
+    {
+      "id": "0017",
+      "file": "lessons/0017-wielding-the-sword.html",
+      "title": "Wielding the Sword",
+      "claims": [
+        {
+          "type": "contains",
+          "path": "lessons/0017-wielding-the-sword.html",
+          "value": "Sword",
+          "label": "teaches sword child"
+        },
+        {
+          "type": "path_exists",
+          "path": "projects/first-steps/assets/sword.png",
+          "label": "historical sword asset still exists"
+        },
+        {
+          "type": "path_exists",
+          "path": "projects/first-steps/assets/sword_held.png",
+          "label": "current held sword asset exists"
+        },
+        {
+          "type": "known_debt",
+          "label": "sword asset evolution",
+          "message": "Lesson 17 teaches sword.png/rest angle; current code uses baked sword_held.png and SWORD_REST_DEGREES = 0.0."
+        }
+      ],
+      "evolutionNotes": []
+    },
+    {
+      "id": "0018",
+      "file": "lessons/0018-building-the-pack.html",
+      "title": "Building the Pack",
+      "claims": [
+        {
+          "type": "contains",
+          "path": "lessons/0018-building-the-pack.html",
+          "value": "wolf.tscn",
+          "label": "teaches standalone wolf scene"
+        },
+        {
+          "type": "path_exists",
+          "path": "projects/first-steps/wolf.tscn",
+          "label": "wolf scene exists"
+        }
+      ],
+      "evolutionNotes": []
+    },
+    {
+      "id": "0019",
+      "file": "lessons/0019-click-targeting.html",
+      "title": "Click Targeting",
+      "claims": [
+        {
+          "type": "contains",
+          "path": "lessons/0019-click-targeting.html",
+          "value": "input_pickable",
+          "label": "teaches click targeting"
+        },
+        {
+          "type": "contains",
+          "path": "projects/first-steps/wolf.tscn",
+          "value": "input_pickable",
+          "label": "current wolf pickable"
+        },
+        {
+          "type": "input_action",
+          "name": "target_next",
+          "label": "current target_next action"
+        }
+      ],
+      "evolutionNotes": []
+    },
+    {
+      "id": "0020",
+      "file": "lessons/0020-swing-timing-and-levels.html",
+      "title": "Swing Timing & Levels",
+      "claims": [
+        {
+          "type": "contains",
+          "path": "lessons/0020-swing-timing-and-levels.html",
+          "value": "weapon_speed",
+          "label": "teaches weapon speed"
+        },
+        {
+          "type": "contains",
+          "path": "projects/first-steps/player.gd",
+          "value": "weapon_speed",
+          "label": "current player weapon speed"
+        },
+        {
+          "type": "contains",
+          "path": "projects/first-steps/wolf.gd",
+          "value": "level",
+          "label": "current wolf level"
+        }
+      ],
+      "evolutionNotes": []
+    },
+    {
+      "id": "0021",
+      "file": "lessons/0021-attack-table-hit-or-miss.html",
+      "title": "The Attack Table Hit or Miss",
+      "claims": [
+        {
+          "type": "contains",
+          "path": "lessons/0021-attack-table-hit-or-miss.html",
+          "value": "Miss",
+          "label": "teaches miss band"
+        },
+        {
+          "type": "contains",
+          "path": "projects/first-steps/combat_table.gd",
+          "value": "miss_chance",
+          "label": "current CombatTable miss chance"
+        }
+      ],
+      "evolutionNotes": []
+    },
+    {
+      "id": "0022",
+      "file": "lessons/0022-critical-strikes.html",
+      "title": "Critical Strikes",
+      "claims": [
+        {
+          "type": "contains",
+          "path": "lessons/0022-critical-strikes.html",
+          "value": "crit",
+          "label": "teaches crit"
+        },
+        {
+          "type": "contains",
+          "path": "projects/first-steps/combat_table.gd",
+          "value": "crit_chance",
+          "label": "current CombatTable crit chance"
+        }
+      ],
+      "evolutionNotes": []
+    },
+    {
+      "id": "0023",
+      "file": "lessons/0023-dodge-and-parry.html",
+      "title": "Dodge & Parry",
+      "claims": [
+        {
+          "type": "contains",
+          "path": "lessons/0023-dodge-and-parry.html",
+          "value": "Dodge",
+          "label": "teaches dodge"
+        },
+        {
+          "type": "contains",
+          "path": "projects/first-steps/combat_table.gd",
+          "value": "dodge_chance",
+          "label": "current CombatTable dodge chance"
+        },
+        {
+          "type": "contains",
+          "path": "projects/first-steps/combat_table.gd",
+          "value": "parry_chance",
+          "label": "current CombatTable parry chance"
+        }
+      ],
+      "evolutionNotes": []
+    },
+    {
+      "id": "0024",
+      "file": "lessons/0024-glancing-blows.html",
+      "title": "Glancing Blows",
+      "claims": [
+        {
+          "type": "contains",
+          "path": "lessons/0024-glancing-blows.html",
+          "value": "Glancing",
+          "label": "teaches glancing"
+        },
+        {
+          "type": "contains",
+          "path": "projects/first-steps/combat_table.gd",
+          "value": "glancing_chance",
+          "label": "current CombatTable glancing chance"
+        }
+      ],
+      "evolutionNotes": []
+    },
+    {
+      "id": "0025",
+      "file": "lessons/0025-rage.html",
+      "title": "Rage",
+      "claims": [
+        {
+          "type": "contains",
+          "path": "lessons/0025-rage.html",
+          "value": "rage",
+          "label": "teaches rage"
+        },
+        {
+          "type": "contains",
+          "path": "projects/first-steps/player.gd",
+          "value": "rage_changed",
+          "label": "current rage signal"
+        },
+        {
+          "type": "contains",
+          "path": "projects/first-steps/combat_table.gd",
+          "value": "rage_from_dealing",
+          "label": "current rage formula"
+        }
+      ],
+      "evolutionNotes": []
+    },
+    {
+      "id": "0026",
+      "file": "lessons/0026-procedural-forest.html",
+      "title": "The Forest: Procedural Generation",
+      "claims": [
+        {
+          "type": "contains",
+          "path": "lessons/0026-procedural-forest.html",
+          "value": "Procedural",
+          "label": "teaches procedural generation"
+        },
+        {
+          "type": "path_exists",
+          "path": "projects/first-steps/forest_generator.gd",
+          "label": "forest generator exists"
+        },
+        {
+          "type": "contains",
+          "path": "projects/first-steps/main.tscn",
+          "value": "forest_generator.gd",
+          "label": "current scene has forest generator"
+        }
+      ],
+      "evolutionNotes": []
+    },
+    {
+      "id": "0027",
+      "file": "lessons/0027-sound-from-nothing.html",
+      "title": "The Game Finds Its Voice: Autoloads & Sound",
+      "claims": [
+        {
+          "type": "contains",
+          "path": "lessons/0027-sound-from-nothing.html",
+          "value": "autoload",
+          "label": "teaches autoload"
+        },
+        {
+          "type": "autoload",
+          "name": "Sfx",
+          "path": "res://sfx.gd",
+          "label": "Sfx autoload registered"
+        },
+        {
+          "type": "path_exists",
+          "path": "projects/first-steps/sfx.gd",
+          "label": "Sfx script exists"
+        }
+      ],
+      "evolutionNotes": []
+    },
+    {
+      "id": "0028",
+      "file": "lessons/0028-the-pickup-moment.html",
+      "title": "Juice: The Pickup Moment",
+      "claims": [
+        {
+          "type": "contains",
+          "path": "lessons/0028-the-pickup-moment.html",
+          "value": "show_banner",
+          "label": "teaches banner feedback"
+        },
+        {
+          "type": "path_exists",
+          "path": "projects/first-steps/assets/pedestal.png",
+          "label": "pickup pedestal asset exists"
+        },
+        {
+          "type": "known_debt",
+          "label": "post-F3 HUD decoupling",
+          "message": "Lesson 28 still tours body.hud/show_banner directly; L35 changed final code to announce()/banner_requested."
+        }
+      ],
+      "evolutionNotes": []
+    },
+    {
+      "id": "0029",
+      "file": "lessons/0029-holding-it-right.html",
+      "title": "Holding It Right: The Directional Sword",
+      "claims": [
+        {
+          "type": "contains",
+          "path": "lessons/0029-holding-it-right.html",
+          "value": "show_behind_parent",
+          "label": "teaches draw ordering"
+        },
+        {
+          "type": "contains",
+          "path": "projects/first-steps/player.gd",
+          "value": "update_sword_pose",
+          "label": "current sword pose function"
+        },
+        {
+          "type": "path_exists",
+          "path": "projects/first-steps/assets/sword_held.png",
+          "label": "held sword asset exists"
+        }
+      ],
+      "evolutionNotes": []
+    },
+    {
+      "id": "0030",
+      "file": "lessons/0030-swing-feel.html",
+      "title": "Swing Feel: Weight, Impact & Frozen Time",
+      "claims": [
+        {
+          "type": "contains",
+          "path": "lessons/0030-swing-feel.html",
+          "value": "hit-stop",
+          "label": "teaches hit-stop"
+        },
+        {
+          "type": "contains",
+          "path": "projects/first-steps/player.gd",
+          "value": "Engine.time_scale",
+          "label": "current hit-stop implementation"
+        },
+        {
+          "type": "path_exists",
+          "path": "projects/first-steps/assets/slash_arc.png",
+          "label": "slash arc asset exists"
+        }
+      ],
+      "evolutionNotes": []
+    },
+    {
+      "id": "0031",
+      "file": "lessons/0031-a-death-worth-respawning-from.html",
+      "title": "A Death Worth Respawning From",
+      "claims": [
+        {
+          "type": "contains",
+          "path": "lessons/0031-a-death-worth-respawning-from.html",
+          "value": "show_death_screen",
+          "label": "teaches death screen"
+        },
+        {
+          "type": "contains",
+          "path": "projects/first-steps/hud.gd",
+          "value": "show_death_screen",
+          "label": "current death screen function"
+        },
+        {
+          "type": "known_debt",
+          "label": "post-F3 polling note",
+          "message": "Lesson 31 cites HUD polling debt; after L35 the final code is signal-driven and the note may need revision."
+        }
+      ],
+      "evolutionNotes": []
+    },
+    {
+      "id": "0032",
+      "file": "lessons/0032-the-hud-teaches-the-game.html",
+      "title": "The HUD Teaches the Game",
+      "claims": [
+        {
+          "type": "contains",
+          "path": "lessons/0032-the-hud-teaches-the-game.html",
+          "value": "hint",
+          "label": "teaches hint chips"
+        },
+        {
+          "type": "contains",
+          "path": "projects/first-steps/hud.gd",
+          "value": "_hints_done",
+          "label": "current HUD hint completion state"
+        },
+        {
+          "type": "known_debt",
+          "label": "post-F3 polling note",
+          "message": "Lesson 32 re-cites polling debt; after L35 it should point to the shipped signal refactor."
+        }
+      ],
+      "evolutionNotes": []
+    },
+    {
+      "id": "0033",
+      "file": "lessons/0033-the-attack-table-becomes-a-module.html",
+      "title": "The Attack Table Becomes a Module",
+      "claims": [
+        {
+          "type": "contains",
+          "path": "lessons/0033-the-attack-table-becomes-a-module.html",
+          "value": "CombatTable",
+          "label": "teaches CombatTable"
+        },
+        {
+          "type": "contains",
+          "path": "projects/first-steps/combat_table.gd",
+          "value": "class_name CombatTable",
+          "label": "CombatTable class exists"
+        }
+      ],
+      "evolutionNotes": []
+    },
+    {
+      "id": "0034",
+      "file": "lessons/0034-the-first-test.html",
+      "title": "The First Test",
+      "claims": [
+        {
+          "type": "contains",
+          "path": "lessons/0034-the-first-test.html",
+          "value": "test_combat_table.gd",
+          "label": "teaches first test"
+        },
+        {
+          "type": "path_exists",
+          "path": "projects/first-steps/tests/test_combat_table.gd",
+          "label": "combat test exists"
+        }
+      ],
+      "evolutionNotes": []
+    },
+    {
+      "id": "0035",
+      "file": "lessons/0035-the-hud-stops-polling.html",
+      "title": "The HUD Stops Polling",
+      "claims": [
+        {
+          "type": "contains",
+          "path": "lessons/0035-the-hud-stops-polling.html",
+          "value": "health_changed",
+          "label": "teaches health signal"
+        },
+        {
+          "type": "contains",
+          "path": "projects/first-steps/player.gd",
+          "value": "signal health_changed",
+          "label": "player health signal exists"
+        },
+        {
+          "type": "not_contains",
+          "path": "projects/first-steps/hud.gd",
+          "value": "func _process",
+          "label": "HUD no longer polls"
+        }
+      ],
+      "evolutionNotes": []
+    }
+  ]
+}
