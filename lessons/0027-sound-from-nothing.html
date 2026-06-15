@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lesson 27 — The Game Finds Its Voice: Autoloads &amp; Sound</title>
+<link rel="stylesheet" href="_lesson.css">
+</head>
+<body>
+<main>
+<header class="hero">
+  <div class="kicker">Godot · Lesson 27 · Game Feel 1</div>
+  <h1>The Game Finds Its Voice: <span>Autoloads &amp; Sound</span></h1>
+  <p class="sub">Twenty-six lessons of total silence. Today the forest gets wind and birdsong, the wolves growl
+  and yelp, and every swing of the sword <em>sounds</em> like something — all routed through one tiny global
+  script, built on a Godot concept you haven't met yet: the <em>autoload</em>.</p>
+</header>
+
+<div class="win">
+  <b>TODAY</b>
+  <p>One 40-line script, registered once, and any script in the game can say
+  <code class="inline">Sfx.play("hit")</code> — no paths, no setup. Eleven one-shot sounds (swings, bites,
+  a pickup chime, a death sting) plus a looping forest ambience, and a campfire you can <em>hear</em>
+  getting closer.</p>
+</div>
+
+<h2>The problem: who owns a sound?</h2>
+<p>
+  Sound has a property nothing else in your game has had: it must <strong>outlive the thing that made it</strong>.
+  When a wolf dies, the wolf node is freed — but its death yelp has barely started. If the
+  <code class="inline">AudioStreamPlayer</code> lived inside <code class="inline">wolf.tscn</code>, the yelp
+  would be cut off mid-cry, every time. And <em>everything</em> wants to make noise: the player swings, the
+  wolf bites, the sword pickup chimes, the HUD pings. Scatter players through every scene and you'll wire
+  the same nodes a dozen times.
+</p>
+<p>What we want is a <strong>sound bus</strong>: one script, alive for the whole game, that anyone can call.</p>
+
+<div class="defs">
+  <div class="def"><b>autoload</b><p>A script (or scene) Godot instances <em>once, at the top of the scene tree</em> — a child of <code class="inline">/root</code>, above your current scene — before your main scene loads. You give it a name — ours is <code class="inline">Sfx</code> — and from then on <strong>every script in the project</strong> can use that name directly. No <code class="inline">get_node()</code>, no paths. Other engines call this a <em>singleton</em>.</p></div>
+  <div class="def"><b>AudioStreamPlayer</b><p>The node that plays a sound. Plain <code class="inline">AudioStreamPlayer</code> plays at full volume everywhere; <code class="inline">AudioStreamPlayer2D</code> sits at a position in the world and gets quieter with distance.</p></div>
+  <div class="def"><b>volume_db</b><p>Loudness in <em>decibels</em> — a relative scale where <code class="inline">0</code> is "as authored", <code class="inline">-6</code> is roughly half as loud, <code class="inline">-12</code> half of that. Mixing a game is mostly choosing these numbers.</p></div>
+  <div class="def"><b>pitch_scale</b><p>Playback speed/pitch multiplier. <code class="inline">1.0</code> is normal. A few percent of random variation makes a repeated sound feel <em>performed</em> instead of <em>stamped</em>.</p></div>
+</div>
+
+<h2>Part A — the bus: sfx.gd</h2>
+<p>Create <code class="inline">sfx.gd</code> in the project root (next to <code class="inline">player.gd</code>).
+It extends plain <code class="inline">Node</code> — it has no body, no position; it's pure behaviour:</p>
+<div class="code">
+  <div class="bar"><span class="t">GDScript · sfx.gd</span><button class="copy">copy</button></div>
+<pre><span class="kw">extends</span> <span class="type">Node</span>
+
+<span class="com">## Tiny SFX bus (autoload "Sfx"). One-shot players that free themselves;</span>
+<span class="com">## slight pitch jitter keeps repeated sounds from feeling stamped.</span>
+
+<span class="kw">const</span> <span class="var">STREAMS</span> = {
+    <span class="str">"swing"</span>: <span class="fn">preload</span>(<span class="str">"res://assets/sounds/swing_whoosh.wav"</span>),
+    <span class="str">"miss"</span>: <span class="fn">preload</span>(<span class="str">"res://assets/sounds/swing_miss.wav"</span>),
+    <span class="str">"hit"</span>: <span class="fn">preload</span>(<span class="str">"res://assets/sounds/hit_flesh.wav"</span>),
+    <span class="str">"crit"</span>: <span class="fn">preload</span>(<span class="str">"res://assets/sounds/hit_crit.wav"</span>),
+    <span class="str">"hurt"</span>: <span class="fn">preload</span>(<span class="str">"res://assets/sounds/hurt_player.wav"</span>),
+    <span class="str">"growl"</span>: <span class="fn">preload</span>(<span class="str">"res://assets/sounds/wolf_growl.wav"</span>),
+    <span class="str">"bite"</span>: <span class="fn">preload</span>(<span class="str">"res://assets/sounds/wolf_bite.wav"</span>),
+    <span class="str">"yelp"</span>: <span class="fn">preload</span>(<span class="str">"res://assets/sounds/wolf_yelp.wav"</span>),
+    <span class="str">"pickup"</span>: <span class="fn">preload</span>(<span class="str">"res://assets/sounds/pickup_chime.wav"</span>),
+    <span class="str">"ping"</span>: <span class="fn">preload</span>(<span class="str">"res://assets/sounds/target_ping.wav"</span>),
+    <span class="str">"death"</span>: <span class="fn">preload</span>(<span class="str">"res://assets/sounds/death_sting.wav"</span>),
+}
+
+<span class="kw">func</span> <span class="fn">play</span>(<span class="var">key</span>: <span class="type">String</span>, <span class="var">volume_db</span>: <span class="type">float</span> = <span class="num">0.0</span>, <span class="var">pitch_jitter</span>: <span class="type">float</span> = <span class="num">0.06</span>):
+    <span class="kw">var</span> <span class="var">p</span> := <span class="type">AudioStreamPlayer</span>.<span class="fn">new</span>()
+    <span class="var">p</span>.stream = <span class="var">STREAMS</span>[<span class="var">key</span>]
+    <span class="var">p</span>.volume_db = <span class="var">volume_db</span>
+    <span class="var">p</span>.pitch_scale = <span class="num">1.0</span> + <span class="fn">randf_range</span>(-<span class="var">pitch_jitter</span>, <span class="var">pitch_jitter</span>)
+    <span class="fn">add_child</span>(<span class="var">p</span>)
+    <span class="var">p</span>.finished.<span class="fn">connect</span>(<span class="var">p</span>.queue_free)
+    <span class="var">p</span>.<span class="fn">play</span>()</pre>
+</div>
+<div class="annot">
+  <div class="line-note"><b>The dictionary is the menu.</b> Every sound gets a short name; callers say <code>Sfx.play("crit")</code> and never touch a file path. Add a sound to the game = add one line here.</div>
+  <div class="line-note"><b>The parameter is <code>key</code>, not <code>name</code></b> — same discipline as Lesson 26's <code>map_seed</code>: every Node already <em>has</em> a <code>name</code> property, and shadowing a built-in earns you a warning and future confusion.</div>
+  <div class="line-note"><code>p.finished.connect(p.queue_free)</code> — <b>a signal connected in code.</b> In Lesson 8 you wired <code>body_entered</code> with the editor's Signals tab; this is the same wire made by hand: <em>when this player finishes, delete it.</em> The bus never accumulates dead nodes — every sound cleans up after itself.</div>
+  <div class="line-note"><b>The pitch jitter</b> (±6%) is the whole difference between "a sword sound" and "a sound effect on a loop." Identical samples back-to-back scream <em>machine</em>; tiny random variation reads as <em>performance</em>. Set the default to <code>0.0</code> once, swing at a wolf for ten seconds, and you'll never remove it again.</div>
+</div>
+
+<h2>Part B — register it as an autoload</h2>
+<div class="flow">
+  <div class="phase"><div class="rail"><div class="num">1</div><div class="line"></div></div><div class="body"><p>Open <kbd>Project → Project Settings</kbd>, switch to the <strong>Globals</strong> tab (it hosts <strong>Autoload</strong>).</p></div></div>
+  <div class="phase"><div class="rail"><div class="num">2</div><div class="line"></div></div><div class="body"><p>Click the folder icon next to <em>Path</em>, choose <code class="inline">res://sfx.gd</code>. The <em>Node Name</em> auto-fills as <code class="inline">Sfx</code> — keep it.</p></div></div>
+  <div class="phase"><div class="rail"><div class="num">3</div></div><div class="body"><p>Click <kbd>Add</kbd>. It appears in the list with its checkbox ticked.</p></div></div>
+</div>
+<p>That's it. Behind the scenes this wrote one line into <code class="inline">project.godot</code>:</p>
+<div class="code">
+  <div class="bar"><span class="t">INI · project.godot</span><button class="copy">copy</button></div>
+<pre><span class="com">[autoload]</span>
+
+<span class="var">Sfx</span>=<span class="str">"*res://sfx.gd"</span></pre>
+</div>
+<div class="annot">
+  <div class="line-note">The <code>*</code> prefix is the ticked checkbox: it registers <code>Sfx</code> as a <em>global name</em> every script can use directly. Untick it and Godot still instances the node at startup — you'd just have to reach it the long way, <code>get_node("/root/Sfx")</code>, instead of by bare name.</div>
+</div>
+
+<div class="callout note">
+  <span class="ct">◈ THE AUTOLOAD LIVES ABOVE THE WORLD</span>
+  <p>When you die, the game calls <code class="inline">reload_current_scene()</code> — the whole forest,
+  wolves and all, is torn down and rebuilt. The death sting doesn't care:
+  <code class="inline">play()</code> parents its sound to <em>the bus itself</em>, not to the scene, so even
+  a reload landing mid-note couldn't cut it short. Things that must survive the world ending belong
+  in an autoload.</p>
+</div>
+
+<h2>Part C — sounds that live somewhere: play_at()</h2>
+<p>A growl shouldn't be the same volume from across the map. For sounds that belong to a <em>place</em>,
+the bus has a second function using the positional player:</p>
+<div class="code">
+  <div class="bar"><span class="t">GDScript · sfx.gd</span><button class="copy">copy</button></div>
+<pre><span class="com"># Positional one-shot (falls off with distance from the camera/player).</span>
+<span class="kw">func</span> <span class="fn">play_at</span>(<span class="var">key</span>: <span class="type">String</span>, <span class="var">pos</span>: <span class="type">Vector2</span>, <span class="var">volume_db</span>: <span class="type">float</span> = <span class="num">0.0</span>):
+    <span class="kw">var</span> <span class="var">p</span> := <span class="type">AudioStreamPlayer2D</span>.<span class="fn">new</span>()
+    <span class="var">p</span>.stream = <span class="var">STREAMS</span>[<span class="var">key</span>]
+    <span class="var">p</span>.volume_db = <span class="var">volume_db</span>
+    <span class="var">p</span>.max_distance = <span class="num">420.0</span>
+    <span class="var">p</span>.pitch_scale = <span class="num">1.0</span> + <span class="fn">randf_range</span>(-<span class="num">0.06</span>, <span class="num">0.06</span>)
+    <span class="fn">get_tree</span>().current_scene.<span class="fn">add_child</span>(<span class="var">p</span>)
+    <span class="var">p</span>.global_position = <span class="var">pos</span>
+    <span class="var">p</span>.finished.<span class="fn">connect</span>(<span class="var">p</span>.queue_free)
+    <span class="var">p</span>.<span class="fn">play</span>()</pre>
+</div>
+<div class="annot">
+  <div class="line-note"><code>max_distance = 420.0</code> — beyond ~420 pixels the sound is inaudible; inside that it swells as you approach. A growl at the edge of hearing is <em>information</em>: something noticed you.</div>
+  <div class="line-note"><b>Why <code>current_scene.add_child</code> this time?</b> Ownership. A growl belongs to a <em>place in the world</em> — if the world is torn down (death → reload), the growl should die with it, not haunt the respawn. Parenting it into the scene buys exactly that, and keeps the always-alive bus free of world-bound children. The two functions are a matched pair: <code>play()</code> = sounds that belong to the <em>game</em>, <code>play_at()</code> = sounds that belong to a <em>place</em>.</div>
+</div>
+
+<h2>Part D — mixing: the loudness ladder</h2>
+<p>Now any script can speak. Here's the player's attack table from Lesson 21–24 — listen to the
+<code class="inline">volume_db</code> values, they're doing design work:</p>
+<div class="code">
+  <div class="bar"><span class="t">GDScript · player.gd — inside attack()</span><button class="copy">copy</button></div>
+<pre><span class="kw">if</span> <span class="var">roll</span> &lt; <span class="var">miss</span>:
+    <span class="fn">spawn_text_over</span>(<span class="var">t</span>, <span class="str">"Miss"</span>, <span class="type">Color</span>.GRAY)
+    <span class="var">Sfx</span>.<span class="fn">play</span>(<span class="str">"miss"</span>, -<span class="num">8.0</span>)      <span class="com"># quiet — failure whispers</span>
+<span class="com"># … dodge, parry, glancing bands …</span>
+<span class="kw">elif</span> <span class="var">roll</span> &lt; <span class="var">miss</span> + <span class="var">dodge</span> + <span class="var">parry</span> + <span class="var">glancing</span> + <span class="var">crit</span>:
+    <span class="kw">var</span> <span class="var">dmg</span> = <span class="var">attack_damage</span> * <span class="num">2</span>
+    <span class="var">t</span>.<span class="fn">take_damage</span>(<span class="var">dmg</span>, <span class="kw">true</span>)
+    <span class="com"># … rage gain (L25) · sparks &amp; camera shake — Lesson 30's story …</span>
+    <span class="var">Sfx</span>.<span class="fn">play</span>(<span class="str">"crit"</span>, -<span class="num">2.0</span>)      <span class="com"># loud — triumph shouts</span>
+    <span class="fn">hit_stop</span>()                  <span class="com"># a heartbeat of frozen time — Lesson 30's story</span>
+<span class="kw">else</span>:
+    <span class="var">t</span>.<span class="fn">take_damage</span>(<span class="var">attack_damage</span>)
+    <span class="com"># … rage gain (L25) · a small white burst — Lesson 30 …</span>
+    <span class="var">Sfx</span>.<span class="fn">play</span>(<span class="str">"hit"</span>, -<span class="num">4.0</span>)       <span class="com"># the everyday thunk</span></pre>
+</div>
+<p>
+  Crit louder than hit, hit louder than miss: outcomes you should celebrate are <em>literally louder</em> than
+  outcomes you should shrug at. The wolf does the same with <code class="inline">play_at</code> — growl on
+  aggro (<code class="inline">wolf.gd</code>, the Lesson 11 aura), bite on each swing, yelp on death.
+</p>
+
+<div class="callout idea">
+  <span class="ct">TWO SOUNDS REFUSED THE BUS</span>
+  <p>The forest ambience (wind + birds) and the campfire crackle aren't in <code class="inline">STREAMS</code>.
+  They <em>loop forever</em>, so "play once, free on finish" is the wrong lifetime — instead they live as
+  ordinary nodes: an <code class="inline">AudioStreamPlayer</code> with <em>Autoplay</em> in
+  <code class="inline">main.tscn</code>, and an <code class="inline">AudioStreamPlayer2D</code> the forest
+  generator parks at the campfire. Same decision as ever: <strong>who owns this thing's lifetime?</strong>
+  One-shots own themselves; loops belong to the world that hums them.</p>
+</div>
+
+<div class="callout note">
+  <span class="ct">◈ WHERE THE WAVS CAME FROM</span>
+  <p>Every file in <code class="inline">assets/sounds/</code> was <em>synthesized</em> by
+  <code class="inline">assets/gen_sfx.py</code> — a detuned three-note sine arpeggio for the chime, shaped
+  noise bursts for hits, filtered wind for ambience — with a fixed random seed, exactly like the forest in
+  Lesson 26: run it again,
+  get the identical sounds. The ambience loops seamlessly because the script builds the noise on a circle
+  (so the end flows into the start) and the WAV import sets <code class="inline">loop_mode</code>. You don't
+  need to read it today — but when you want a new sound, it's one function in that file, not a trip to an
+  asset store.</p>
+</div>
+
+<h2>Check yourself</h2>
+<div class="quiz">
+  <p class="q">Why make Sfx an <em>autoload</em> instead of a node inside main.tscn?</p>
+  <button onclick="pick(this)">Autoloads play audio with lower latency</button>
+  <button onclick="pick(this)" data-correct>Every script can reach it by name with no paths — and it lives outside the current scene, so a reload can't cut its sounds short</button>
+  <button onclick="pick(this)">Nodes inside a scene can't have children added from code</button>
+  <div class="feedback"></div>
+</div>
+
+<h3>Codebase checkpoint</h3>
+<p>The project after this lesson:</p>
+<div class="tree">
+<span class="dim">projects/first-steps/</span>
+├─ <span class="leaf">project.godot</span>             <span class="dim">← changed: [autoload] Sfx="*res://sfx.gd"</span>
+├─ <span class="leaf">main.tscn</span>                 <span class="dim">← changed: + ForestAmbience (looping AudioStreamPlayer)</span>
+├─ <span class="leaf">sfx.gd</span>                    <span class="dim">← new: the sound bus — play() / play_at()</span>
+├─ <span class="leaf">player.gd</span>                 <span class="dim">← changed: attack table + hurt/death now call Sfx</span>
+├─ <span class="leaf">wolf.gd</span>                   <span class="dim">← changed: growl on aggro, bite on swing, yelp on death</span>
+├─ wolf.tscn                  <span class="dim">· chase, aggro, pack, clickable (L9–19)</span>
+├─ sword.gd                   <span class="dim">· the pickup (L8) — its big upgrade is next lesson</span>
+├─ damage_number.gd / .tscn   <span class="dim">· floating combat text (L14)</span>
+├─ <span class="leaf">forest_generator.gd</span>       <span class="dim">← changed: campfire gains a positional crackle loop</span>
+└─ assets/
+   ├─ <span class="leaf">sounds/</span>                <span class="dim">← new: 13 wavs, all synthesized</span>
+   └─ <span class="leaf">gen_sfx.py</span>             <span class="dim">← new: the deterministic sound generator</span>
+</div>
+
+<div class="teacher">
+  <b>TEACHER'S NOTE</b>
+  <p>Like the forest generator before it, the sound system entered the repo during an overhaul session ahead
+  of its lesson — this lesson and the next repay that debt, Lesson 26 style. The autoload you met today is
+  the first of several "lives above the world" tools the curriculum will lean on. Next:
+  <strong>Lesson 28 — The Pickup Moment</strong>, where five kinds of feedback fire in the same half-second
+  and you learn why that's the whole trick.</p>
+</div>
+
+<footer>
+  GODOT · LESSON 27 · GAME FEEL 1 · ONE WIN AT A TIME<br>
+  Primary reference: <a href="https://docs.godotengine.org/en/stable/tutorials/scripting/singletons_autoload.html">Godot — Singletons (Autoload)</a> · <a href="https://docs.godotengine.org/en/stable/classes/class_audiostreamplayer.html">AudioStreamPlayer</a> · <a href="https://docs.godotengine.org/en/stable/classes/class_audiostreamplayer2d.html">AudioStreamPlayer2D</a>
+</footer>
+</main>
+<script src="_lesson.js"></script>
+</body>
+</html>

@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lesson 28 — Juice: The Pickup Moment</title>
+<link rel="stylesheet" href="_lesson.css">
+</head>
+<body>
+<main>
+<header class="hero">
+  <div class="kicker">Godot · Lesson 28 · Game Feel 2</div>
+  <h1>Juice: <span>The Pickup Moment</span></h1>
+  <p class="sub">Lesson 8 made the sword vanish. Lesson 17 put it in the hero's hand. Today the pickup becomes a
+  <em>moment</em>: the blade bobs on its pedestal, glinting — and the instant you touch it, a chime, a burst
+  of gold, a banner, and the sword is drawn. Same event. Five kinds of feedback.</p>
+</header>
+
+<div class="win">
+  <b>TODAY</b>
+  <p>Walk the road north and the sword is <em>waiting</em> for you — bobbing gently over a stone pedestal,
+  sparkling. Step in: chime + gold spark burst + a "Rusty Sword equipped!" banner sliding in, and the blade
+  appears in the hand of <strong>Will</strong> — our warrior, named until now only by the window title,
+  <em>Will's First Steps</em>. And if you try to fight <em>before</em> that? "No weapon!" — with a hint where to go.</p>
+</div>
+
+<h2>The big idea: juice</h2>
+<p>
+  Game developers call it <strong>juice</strong>: when one event fires <em>many layers of feedback at once</em> —
+  motion, particles, sound, UI — all saying the same thing. The logic of our pickup hasn't changed since
+  Lesson 8: an <code class="inline">Area2D</code>, a <code class="inline">body_entered</code> signal, one
+  <code class="inline">if</code>. What changes today is everything <em>around</em> that logic. Feedback is the
+  game telling the player: <em>I heard you, and it mattered.</em> Polished games aren't polished because their
+  logic is fancier — they're polished because every event answers back.
+</p>
+
+<div class="defs">
+  <div class="def"><b>Tween</b><p>A node-less animator you create in code: <code class="inline">create_tween()</code>. You queue steps — "move this property to this value over this time" — and it runs them in order. You met one in Lesson 14's damage numbers; today they're everywhere.</p></div>
+  <div class="def"><b>set_loops()</b><p>Makes a tween repeat its whole sequence forever (or N times). Perfect for idle motion: bob down, bob up, repeat until the node dies.</p></div>
+  <div class="def"><b>transition &amp; ease</b><p>The <em>shape</em> of motion. <code class="inline">TRANS_SINE</code> drifts like breathing; <code class="inline">TRANS_BACK</code> overshoots and settles, like something landing with weight. <code class="inline">EASE_IN_OUT</code> = gentle at both ends.</p></div>
+  <div class="def"><b>set_deferred()</b><p>"Change this property at the <em>end</em> of the current frame, not right now." Required when physics is mid-step — you'll see exactly where below.</p></div>
+</div>
+
+<h2>Part A — make it beckon</h2>
+<p>
+  Before the player ever touches it, the sword should look <em>alive</em>. In the scene, the pickup's
+  <code class="inline">Sprite2D</code> floats at <code class="inline">y&nbsp;=&nbsp;-14</code> over a little stone
+  pedestal (a prop the forest generator places), with a <code class="inline">Glint</code> particle emitter
+  twinkling above it. The bob is three lines in <code class="inline">sword.gd</code>:
+</p>
+<div class="code">
+  <div class="bar"><span class="t">GDScript · sword.gd</span><button class="copy">copy</button></div>
+<pre><span class="kw">extends</span> <span class="type">Area2D</span>
+
+<span class="com">## The sword pickup: rests on its pedestal with a gentle bob and a golden</span>
+<span class="com">## glint until the player walks in — then chime, burst, banner, equip.</span>
+
+<span class="kw">@onready</span> <span class="kw">var</span> <span class="var">sprite</span> = <span class="var">$Sprite2D</span>
+
+<span class="kw">func</span> <span class="fn">_ready</span>():
+    <span class="kw">var</span> <span class="var">t</span> = <span class="fn">create_tween</span>().<span class="fn">set_loops</span>()
+    <span class="var">t</span>.<span class="fn">tween_property</span>(<span class="var">sprite</span>, <span class="str">"position:y"</span>, -<span class="num">17.0</span>, <span class="num">1.1</span>).<span class="fn">set_trans</span>(<span class="type">Tween</span>.TRANS_SINE).<span class="fn">set_ease</span>(<span class="type">Tween</span>.EASE_IN_OUT)
+    <span class="var">t</span>.<span class="fn">tween_property</span>(<span class="var">sprite</span>, <span class="str">"position:y"</span>, -<span class="num">12.0</span>, <span class="num">1.1</span>).<span class="fn">set_trans</span>(<span class="type">Tween</span>.TRANS_SINE).<span class="fn">set_ease</span>(<span class="type">Tween</span>.EASE_IN_OUT)</pre>
+</div>
+<div class="annot">
+  <div class="line-note"><b>Two steps, looped.</b> A tween runs its queue <em>in order</em>: drift up to −17 over 1.1s, then down to −12 over 1.1s — and <code>set_loops()</code> starts the pair again forever. Up and back is one breath; the loop is the breathing.</div>
+  <div class="line-note"><code>"position:y"</code> — <b>tween a sub-property.</b> The <code>:y</code> path animates just the height, leaving x alone. Also: we animate the <em>Sprite2D child</em>, not the Area2D — the pickup zone stays still while the art floats. The hitbox shouldn't breathe.</div>
+  <div class="line-note"><code>TRANS_SINE</code> + <code>EASE_IN_OUT</code> — linear motion looks mechanical; sine drift looks weightless. One method call is the difference.</div>
+</div>
+
+<h2>Part B — the moment itself</h2>
+<p>Here's the upgraded <code class="inline">body_entered</code> — the Lesson 8 wire, carrying five payloads:</p>
+<div class="code">
+  <div class="bar"><span class="t">GDScript · sword.gd</span><button class="copy">copy</button></div>
+<pre><span class="kw">func</span> <span class="fn">_on_body_entered</span>(<span class="var">body</span>):
+    <span class="kw">if</span> <span class="var">body</span>.<span class="fn">is_in_group</span>(<span class="str">"player"</span>):
+        <span class="var">Sfx</span>.<span class="fn">play</span>(<span class="str">"pickup"</span>)                                          <span class="com"># 1 · sound</span>
+        <span class="var">body</span>.<span class="fn">equip_sword</span>()                                          <span class="com"># 2 · the actual logic (L17)</span>
+        <span class="var">body</span>.hud.<span class="fn">show_banner</span>(<span class="str">"Rusty Sword equipped!"</span>)              <span class="com"># 3 · UI</span>
+        <span class="var">body</span>.<span class="fn">spawn_sparks</span>(<span class="var">global_position</span> + <span class="type">Vector2</span>(<span class="num">0</span>, -<span class="num">14</span>), <span class="type">Color</span>(<span class="num">1.0</span>, <span class="num">0.85</span>, <span class="num">0.4</span>), <span class="num">14</span>)   <span class="com"># 4 · particles</span>
+        <span class="var">sprite</span>.visible = <span class="kw">false</span>                                      <span class="com"># 5 · the world changes</span>
+        <span class="var">$Glint</span>.emitting = <span class="kw">false</span>
+        <span class="var">$CollisionShape2D</span>.<span class="fn">set_deferred</span>(<span class="str">"disabled"</span>, <span class="kw">true</span>)
+        <span class="fn">get_tree</span>().<span class="fn">create_timer</span>(<span class="num">1.5</span>).timeout.<span class="fn">connect</span>(<span class="var">queue_free</span>)   <span class="com"># outlast the glint's 1.4s particles</span></pre>
+</div>
+<div class="annot">
+  <div class="line-note"><b>One event, five answers.</b> Chime (ears), equip (hands — the sword appears in Will's grip via Lesson 17's <code>equip_sword()</code>), banner (eyes, top of screen), gold burst (eyes, world), and the pickup itself disappearing. Each is one line. Together they're a <em>moment</em>.</div>
+  <div class="line-note"><b>Two helpers ride along:</b> <code>body.hud</code> (the player keeps a HUD reference — <code>@onready var hud = get_node("../../HUD")</code> in player.gd) and <code>body.spawn_sparks(at, color, count)</code>, the player's gold-burst helper that builds a one-shot <code>CPUParticles2D</code> from code. Both arrived in the overhaul; this arc is touring them piece by piece.</div>
+  <div class="line-note"><code>set_deferred("disabled", true)</code> — <b>the physics rule.</b> <code>body_entered</code> fires <em>during</em> the physics step; flipping a collision shape off mid-step is forbidden (Godot will print an error). Deferred = "at the end of the frame, when physics is done." Any time you touch collision from inside a collision callback, defer it.</div>
+  <div class="line-note"><b>Why not <code>queue_free()</code> immediately, like Lesson 8?</b> Lifetime, again (Lesson 27's lesson!). The glint particles already in the air live 1.4 seconds — so: hide the art <em>now</em>, disable the trigger <em>now</em>, and free the node 1.5 seconds later, after the last sparkle has finished. Vanishing instantly is logic; lingering politely is craft.</div>
+</div>
+
+<h2>Part C — the banner: a UI toast</h2>
+<p>That <code class="inline">show_banner()</code> call lands in <code class="inline">hud.gd</code> — the
+script the overhaul attached to the HUD layer (new to the curriculum; its full tour comes later this arc).
+Today we read its best pattern, one you'll reuse forever — the <strong>toast</strong>: slide in, hold,
+fade out, and survive being called twice in a row:</p>
+<div class="code">
+  <div class="bar"><span class="t">GDScript · hud.gd</span><button class="copy">copy</button></div>
+<pre><span class="kw">var</span> <span class="var">_banner_tween</span>: <span class="type">Tween</span>
+
+<span class="kw">func</span> <span class="fn">show_banner</span>(<span class="var">text</span>):
+    <span class="kw">if</span> <span class="var">_banner_tween</span>:
+        <span class="var">_banner_tween</span>.<span class="fn">kill</span>()              <span class="com"># a new banner evicts the old one</span>
+    <span class="var">banner</span>.text = <span class="var">text</span>
+    <span class="var">banner</span>.visible = <span class="kw">true</span>
+    <span class="var">banner</span>.modulate.a = <span class="num">0.0</span>
+    <span class="var">banner</span>.position.y = <span class="num">96</span>
+    <span class="var">_banner_tween</span> = <span class="fn">create_tween</span>()
+    <span class="var">_banner_tween</span>.<span class="fn">tween_property</span>(<span class="var">banner</span>, <span class="str">"modulate:a"</span>, <span class="num">1.0</span>, <span class="num">0.25</span>)
+    <span class="var">_banner_tween</span>.<span class="fn">parallel</span>().<span class="fn">tween_property</span>(<span class="var">banner</span>, <span class="str">"position:y"</span>, <span class="num">84.0</span>, <span class="num">0.3</span>).<span class="fn">set_trans</span>(<span class="type">Tween</span>.TRANS_BACK).<span class="fn">set_ease</span>(<span class="type">Tween</span>.EASE_OUT)
+    <span class="var">_banner_tween</span>.<span class="fn">tween_interval</span>(<span class="num">2.2</span>)
+    <span class="var">_banner_tween</span>.<span class="fn">tween_property</span>(<span class="var">banner</span>, <span class="str">"modulate:a"</span>, <span class="num">0.0</span>, <span class="num">0.6</span>)
+    <span class="var">_banner_tween</span>.<span class="fn">tween_callback</span>(<span class="kw">func</span>(): <span class="var">banner</span>.visible = <span class="kw">false</span>)</pre>
+</div>
+<div class="annot">
+  <div class="line-note"><b>Kill before you re-run.</b> Tweens you store in a variable can be cancelled. Without the <code>kill()</code>, banner #2 arriving mid-fade fights banner #1's tween over the same properties — flicker, half-alpha, chaos. Stored-tween-then-kill is the standard guard for any re-triggerable animation.</div>
+  <div class="line-note"><code>parallel()</code> — <b>fade and slide at once.</b> Normal queue steps run one after another; <code>parallel()</code> says "this step runs <em>alongside the previous one</em>." Fade-in and the drop-into-place share the same quarter second.</div>
+  <div class="line-note"><code>tween_interval(2.2)</code> — a step that does nothing but wait. Slide in (0.3s) → <em>hold</em> (2.2s) → fade (0.6s): the toast's whole life in one queue, no timers, no <code>_process</code>.</div>
+</div>
+
+<h2>Part D — make it matter</h2>
+<p>
+  A reward is only as big as the want before it. The overhaul added one small mechanic-adjacent rule:
+  <strong>no sword, no attack</strong> — so the pickup is the moment combat unlocks, not just a sprite change:
+</p>
+<div class="code">
+  <div class="bar"><span class="t">GDScript · player.gd — start_auto_attack()</span><button class="copy">copy</button></div>
+<pre><span class="kw">func</span> <span class="fn">start_auto_attack</span>():
+    <span class="kw">if</span> <span class="kw">not</span> <span class="var">has_sword</span>:
+        <span class="kw">if</span> <span class="var">no_weapon_cooldown</span> == <span class="num">0.0</span>:
+            <span class="var">no_weapon_cooldown</span> = <span class="num">2.5</span>
+            <span class="fn">spawn_text_over</span>(<span class="var">self</span>, <span class="str">"No weapon!"</span>, <span class="type">Color</span>.GRAY)
+            <span class="var">hud</span>.<span class="fn">show_banner</span>(<span class="str">"Find the sword — follow the road north!"</span>)
+        <span class="kw">return</span>
+    <span class="kw">if</span> <span class="fn">is_instance_valid</span>(<span class="var">target</span>) <span class="kw">and</span> <span class="var">swing_timer</span>.<span class="fn">is_stopped</span>():
+        <span class="fn">swing</span>()                 <span class="com"># immediate first hit</span>
+        <span class="var">swing_timer</span>.<span class="fn">start</span>()     <span class="com"># then keep swinging on the tick</span></pre>
+</div>
+<div class="annot">
+  <div class="line-note"><b>The cooldown is politeness.</b> <code>no_weapon_cooldown</code> ticks down in <code>_physics_process</code>; without it, holding the attack key would re-fire the banner sixty times a second. Every player-triggered message needs a "don't repeat yourself" guard.</div>
+  <div class="line-note"><b>Failure gets feedback too.</b> Notice it's the same two tools — floating text + banner — answering a <em>denied</em> action. Silence on failure reads as "the game is broken"; a clear "no, and here's why" reads as design.</div>
+</div>
+
+<div class="callout idea">
+  <span class="ct">FEEL IT YOURSELF — TUNE ONE NUMBER</span>
+  <p>Open <code class="inline">sword.gd</code> and try the bob at <code class="inline">0.3</code> seconds
+  instead of <code class="inline">1.1</code> (frantic — a sword with somewhere to be), then
+  <code class="inline">3.0</code> (sleepy). Then put it back. Now do the same to the banner's
+  <code class="inline">TRANS_BACK</code> — change it to <code class="inline">TRANS_LINEAR</code> and watch the
+  toast go from "lands with weight" to "slides like a spreadsheet." Tuning is the skill; the numbers above
+  are just where we stopped.</p>
+</div>
+
+<h2>Check yourself</h2>
+<div class="quiz">
+  <p class="q">Why <code>set_deferred("disabled", true)</code> instead of <code>disabled = true</code>?</p>
+  <button onclick="pick(this)">It's faster</button>
+  <button onclick="pick(this)">Deferred calls work on hidden nodes</button>
+  <button onclick="pick(this)" data-correct>body_entered fires during the physics step, and collision state can't change mid-step — deferred waits until the frame ends</button>
+  <div class="feedback"></div>
+</div>
+
+<h3>Codebase checkpoint</h3>
+<p>The project after this lesson:</p>
+<div class="tree">
+<span class="dim">projects/first-steps/</span>
+├─ project.godot              <span class="dim">· [autoload] Sfx (L27)</span>
+├─ <span class="leaf">main.tscn</span>                 <span class="dim">← changed: Sword pickup gains a Glint particle child + a generous pickup zone</span>
+├─ <span class="leaf">sword.gd</span>                  <span class="dim">← changed: bob tween + the five-layer pickup moment</span>
+├─ <span class="leaf">hud.gd</span>                    <span class="dim">← new (overhaul): the HUD's script — today: show_banner()</span>
+├─ <span class="leaf">player.gd</span>                 <span class="dim">← changed: attacks gated on has_sword + "No weapon!" + spawn_sparks()</span>
+├─ sfx.gd                     <span class="dim">· the chime rides the Lesson 27 bus</span>
+├─ wolf.gd / wolf.tscn        <span class="dim">· chase, aggro, pack, clickable (L9–19)</span>
+├─ damage_number.gd / .tscn   <span class="dim">· floating combat text (L14)</span>
+├─ <span class="leaf">forest_generator.gd</span>       <span class="dim">← changed: places the solid stone pedestal under the sword</span>
+└─ assets/
+   ├─ <span class="leaf">pedestal.png / glint_star.png</span> <span class="dim">← new: via gen_pickup.py</span>
+   └─ <span class="leaf">gen_pickup.py</span>          <span class="dim">← new: pedestal, glint, window icon</span>
+</div>
+
+<div class="teacher">
+  <b>TEACHER'S NOTE</b>
+  <p>Logic unchanged since Lesson 8; <em>presentation</em> is the entire diff — that's the cleanest definition
+  of juice there is. The same layering shows up next lesson on the other side of the blade:
+  <strong>Lesson 29 — Holding It Right</strong>, where the equipped sword follows Will's hands through all
+  four facings — and one honest left-handed bug sets up the lesson after.</p>
+</div>
+
+<footer>
+  GODOT · LESSON 28 · GAME FEEL 2 · ONE WIN AT A TIME<br>
+  Primary reference: <a href="https://docs.godotengine.org/en/stable/classes/class_tween.html">Godot — Tween</a> · <a href="https://docs.godotengine.org/en/stable/classes/class_cpuparticles2d.html">CPUParticles2D</a> · <a href="https://docs.godotengine.org/en/stable/classes/class_area2d.html">Area2D</a>
+</footer>
+</main>
+<script src="_lesson.js"></script>
+</body>
+</html>

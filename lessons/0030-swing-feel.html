@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lesson 30 — Swing Feel: Weight, Impact &amp; Frozen Time</title>
+<link rel="stylesheet" href="_lesson.css">
+</head>
+<body>
+<main>
+<header class="hero">
+  <div class="kicker">Godot · Lesson 30 · Game Feel 4</div>
+  <h1>Swing Feel: <span>Weight, Impact &amp; Frozen Time</span></h1>
+  <p class="sub">The combat math has been right since Lesson 24 — but a swing is more than a dice roll.
+  Today the blade arcs through baked frames, Will leans into the blow, the camera flinches, and a critical
+  hit stops the world for a twentieth of a second. None of it changes a single number.</p>
+</header>
+
+<div class="win">
+  <b>TODAY</b>
+  <p>Press attack: Will lunges into the strike as the blade sweeps out and settles back, a white swoosh
+  flashes along the cut, sparks fly on contact — and when a crit lands, time itself hiccups and the
+  camera shakes. The hit <em>feels</em> heavy. The damage formula never changed.</p>
+</div>
+
+<h2>The big idea: impact is a frame story</h2>
+<p>
+  A hit, in code, is instant — one function call, damage applied. What makes it <em>feel</em> like impact is
+  everything you wrap around that instant: motion <em>into</em> it (anticipation), an exclamation <em>at</em> it
+  (contact), and motion <em>out</em> of it (recovery). Film editors have known this for a century; games add one
+  trick film can't: briefly stopping time. Each layer below is a few lines. Stacked, they're the difference
+  between "the wolf's number went down" and <em>"I hit that wolf."</em>
+</p>
+
+<div class="defs">
+  <div class="def"><b>tween_method</b><p>Tweens don't only animate properties — <code class="inline">tween_method(f, from, to, time)</code> sweeps a <em>value</em> and calls your function with it every frame. Today it sweeps a frame index.</p></div>
+  <div class="def"><b>Engine.time_scale</b><p>A global speed dial for the whole game. <code class="inline">1.0</code> is normal, <code class="inline">0.05</code> is one-twentieth speed — physics, timers, animations, everything obeys it. (Almost everything — see the trap below.)</p></div>
+  <div class="def"><b>hit-stop</b><p>The oldest impact trick in action games: freeze (or near-freeze) the world for a few hundredths of a second at the moment of contact. Street Fighter has done it since the '90s. The brain reads the hiccup as <em>force</em>.</p></div>
+  <div class="def"><b>camera offset</b><p>A displacement layered <em>on top of</em> wherever the camera is. Shaking the offset never fights the camera's follow logic — position is "where am I," offset is "how rattled am I."</p></div>
+</div>
+
+<h2>Part A — the swing becomes frames</h2>
+<p>
+  Lesson 29 baked the <em>rest pose</em> into the art, warned that the swing still rotated live, and named
+  the left-handed mirror debt. Today both are paid at once. First, two cast members join
+  <code class="inline">player.gd</code>'s <code class="inline">@onready</code> block — the camera you placed
+  back in Lesson 6, and a new effect sprite:
+</p>
+<div class="code">
+  <div class="bar"><span class="t">GDScript · player.gd — with the other @onready vars</span><button class="copy">copy</button></div>
+<pre><span class="kw">@onready</span> <span class="kw">var</span> <span class="var">slash_arc</span> = <span class="var">$SlashArc</span>
+<span class="kw">@onready</span> <span class="kw">var</span> <span class="var">camera</span> = <span class="var">$Camera2D</span></pre>
+</div>
+<div class="flow">
+  <div class="phase"><div class="rail"><div class="num">1</div></div><div class="body"><p>Add a child <code class="inline">Sprite2D</code> to <code class="inline">Player</code>, name it <code class="inline">SlashArc</code>, texture → <code class="inline">assets/slash_arc.png</code> (a white swoosh; it comes from <code class="inline">gen_uifx.py</code>, the effects generator this arc tours later). In the Inspector: <strong>Visible off</strong>, <strong>Position</strong> (0,&nbsp;−2), <strong>Z&nbsp;Index</strong> 5 (so the flash rides above nearby world sprites), and <strong>Offset</strong> x&nbsp;=&nbsp;18 — the swoosh hangs 18px out along its own angle, so rotating the sprite sweeps it <em>around</em> Will like a blade trail.</p></div></div>
+</div>
+<p>
+  The pipeline now bakes <strong>four</strong> sword textures — rest plus three steps toward full extension —
+  and the swing animates an <em>index</em> instead of an angle:
+</p>
+<div class="code">
+  <div class="bar"><span class="t">GDScript · player.gd</span><button class="copy">copy</button></div>
+<pre><span class="com"># The swing is pre-rotated in the art pipeline too — four frames from rest to</span>
+<span class="com"># full extension. Stepping textures keeps every texel on the pixel grid.</span>
+<span class="kw">const</span> <span class="var">SWING_FRAMES</span> = [
+    <span class="fn">preload</span>(<span class="str">"res://assets/sword_held.png"</span>),
+    <span class="fn">preload</span>(<span class="str">"res://assets/sword_swing_1.png"</span>),
+    <span class="fn">preload</span>(<span class="str">"res://assets/sword_swing_2.png"</span>),
+    <span class="fn">preload</span>(<span class="str">"res://assets/sword_swing_3.png"</span>),
+]
+<span class="kw">var</span> <span class="var">_swing_tween</span>: <span class="type">Tween</span></pre>
+</div>
+<div class="code">
+  <div class="bar"><span class="t">GDScript · player.gd</span><button class="copy">copy</button></div>
+<pre><span class="kw">func</span> <span class="fn">swing_sword</span>():
+    <span class="com"># Animate an index, not an angle: each frame is pre-rotated in the art,</span>
+    <span class="com"># so the blade stays crisp mid-arc. flip_h mirrors the frames for free</span>
+    <span class="com"># when the sword is in the left hand.</span>
+    <span class="kw">if</span> <span class="var">_swing_tween</span>:
+        <span class="var">_swing_tween</span>.<span class="fn">kill</span>()
+    <span class="var">_swing_tween</span> = <span class="fn">create_tween</span>()
+    <span class="var">_swing_tween</span>.<span class="fn">tween_method</span>(<span class="var">_set_swing_frame</span>, <span class="num">0.0</span>, <span class="num">3.0</span>, <span class="num">0.08</span>)   <span class="com"># slash out</span>
+    <span class="var">_swing_tween</span>.<span class="fn">tween_method</span>(<span class="var">_set_swing_frame</span>, <span class="num">3.0</span>, <span class="num">0.0</span>, <span class="num">0.12</span>)   <span class="com"># and settle back to rest</span>
+    <span class="com"># white swoosh flashed along the cut, aimed at the target (15° steps keep it crisp)</span>
+    <span class="kw">if</span> <span class="fn">is_instance_valid</span>(<span class="var">target</span>):
+        <span class="var">slash_arc</span>.rotation = <span class="fn">snappedf</span>((<span class="var">target</span>.global_position - <span class="var">global_position</span>).<span class="fn">angle</span>(), <span class="var">TAU</span> / <span class="num">24.0</span>)
+    <span class="var">slash_arc</span>.visible = <span class="kw">true</span>
+    <span class="var">slash_arc</span>.modulate.a = <span class="num">0.9</span>
+    <span class="var">slash_arc</span>.scale = <span class="type">Vector2</span>(<span class="num">0.6</span>, <span class="num">0.6</span>)
+    <span class="kw">var</span> <span class="var">s</span> = <span class="fn">create_tween</span>()
+    <span class="var">s</span>.<span class="fn">tween_property</span>(<span class="var">slash_arc</span>, <span class="str">"scale"</span>, <span class="type">Vector2</span>(<span class="num">1.1</span>, <span class="num">1.1</span>), <span class="num">0.1</span>)
+    <span class="var">s</span>.<span class="fn">parallel</span>().<span class="fn">tween_property</span>(<span class="var">slash_arc</span>, <span class="str">"modulate:a"</span>, <span class="num">0.0</span>, <span class="num">0.16</span>)
+    <span class="var">s</span>.<span class="fn">tween_callback</span>(<span class="kw">func</span>(): <span class="var">slash_arc</span>.visible = <span class="kw">false</span>)
+
+<span class="kw">func</span> <span class="fn">_set_swing_frame</span>(<span class="var">i</span>: <span class="type">float</span>):
+    <span class="var">sword</span>.texture = <span class="var">SWING_FRAMES</span>[<span class="fn">clampi</span>(<span class="fn">roundi</span>(<span class="var">i</span>), <span class="num">0</span>, <span class="var">SWING_FRAMES</span>.<span class="fn">size</span>() - <span class="num">1</span>)]</pre>
+</div>
+<div class="annot">
+  <div class="line-note"><b><code>tween_method</code> is new:</b> it sweeps a number (0.0 → 3.0) and calls <code>_set_swing_frame</code> with every in-between value; rounding turns the sweep into clean steps. Same Tween, but the target is a <em>function</em>, not a property — the most flexible tool in the tween box.</div>
+  <div class="line-note"><b>Out fast, back slow.</b> 0.08s to full extension, 0.12s to recover — attacks <em>snap</em>, recoveries <em>settle</em>. Reverse the two numbers and the swing feels like it's underwater. (This asymmetry is the single most copied rhythm in action-game animation.)</div>
+  <div class="line-note"><b>The kill guard</b> is Lesson 28's toast trick again: a stored tween, killed before re-trigger, so spam-swinging never leaves the blade stuck mid-arc.</div>
+  <div class="line-note"><code>snappedf(angle, TAU / 24.0)</code> — the swoosh sprite rotates live (it's a translucent effect, allowed to be soft), but snapping its angle to 15° steps keeps it from landing at arbitrary near-miss angles every swing.</div>
+</div>
+<div class="callout note">
+  <span class="ct">◈ WHERE THE FRAMES COME FROM</span>
+  <p>Lesson 29's <code class="inline">make_sword_held()</code> grows a loop — four rotations, each
+  <em>from the clean source</em>, never re-rotating an already-rotated frame (every resample costs pixel
+  quality; always go back to the original):</p>
+</div>
+<div class="code">
+  <div class="bar"><span class="t">Python · assets/gen_polish.py</span><button class="copy">copy</button></div>
+<pre><span class="kw">def</span> <span class="fn">make_sword_held</span>():
+    <span class="var">im</span> = <span class="type">Image</span>.<span class="fn">open</span>(<span class="str">'sword_clean.png'</span>).<span class="fn">convert</span>(<span class="str">'RGBA'</span>)
+    <span class="kw">for</span> <span class="var">angle</span>, <span class="var">name</span> <span class="kw">in</span> ((-<span class="num">25</span>, <span class="str">'sword_held.png'</span>), (-<span class="num">47</span>, <span class="str">'sword_swing_1.png'</span>),
+                        (-<span class="num">69</span>, <span class="str">'sword_swing_2.png'</span>), (-<span class="num">90</span>, <span class="str">'sword_swing_3.png'</span>)):
+        <span class="var">rot</span> = <span class="var">im</span>.<span class="fn">rotate</span>(<span class="var">angle</span>, resample=<span class="type">Image</span>.NEAREST, expand=<span class="kw">False</span>)
+        <span class="var">rot</span>.<span class="fn">save</span>(<span class="var">name</span>)</pre>
+</div>
+<div class="annot">
+  <div class="line-note"><b>Mind the sign:</b> PIL's positive angle is counter-clockwise; Godot's is clockwise. These −25…−90 rotations sweep the blade <em>clockwise on screen</em> — down toward the target, a proper chop. (Sharp eyes will notice the old live swing swept the <em>other</em> way, up over the shoulder. The bake didn't just crisp the pixels — it was the chance to point the arc at the victim.)</div>
+  <div class="line-note"><b><code>expand=False</code> is load-bearing:</b> every frame stays on the same 32×32 canvas, so swapping <code>sword.texture</code> mid-swing never moves or resizes the sprite — same canvas, same hand anchor from Lesson 29. Let PIL expand the canvas and the blade would jump each frame.</div>
+  <div class="line-note">Lesson 29's rule, extended: rotation that never changes belongs in the art — <em>and so does rotation that animates, if you can afford a frame per step.</em></div>
+</div>
+
+<h2>Part B — the lunge: lean without moving</h2>
+<div class="code">
+  <div class="bar"><span class="t">GDScript · player.gd</span><button class="copy">copy</button></div>
+<pre><span class="com"># Brief body lean into the strike (visual only — the body doesn't move).</span>
+<span class="kw">func</span> <span class="fn">lunge_toward</span>(<span class="var">point</span>: <span class="type">Vector2</span>):
+    <span class="kw">var</span> <span class="var">dir</span> = (<span class="var">point</span> - <span class="var">global_position</span>).<span class="fn">normalized</span>()
+    <span class="kw">var</span> <span class="var">t</span> = <span class="fn">create_tween</span>()
+    <span class="var">t</span>.<span class="fn">tween_property</span>(<span class="var">anim</span>, <span class="str">"position"</span>, <span class="var">dir</span> * <span class="num">5.0</span>, <span class="num">0.07</span>).<span class="fn">set_trans</span>(<span class="type">Tween</span>.TRANS_CUBIC).<span class="fn">set_ease</span>(<span class="type">Tween</span>.EASE_OUT)
+    <span class="var">t</span>.<span class="fn">tween_property</span>(<span class="var">anim</span>, <span class="str">"position"</span>, <span class="type">Vector2</span>.ZERO, <span class="num">0.14</span>)</pre>
+</div>
+<div class="annot">
+  <div class="line-note"><b>It animates <code>anim</code> — the sprite child — not the body.</b> The CharacterBody2D (collision, position, physics) never moves; only the <em>drawing</em> leans 5px toward the victim and settles back. Faking motion on the visual layer means combat can never shove you into a tree.</div>
+  <div class="line-note"><b>Same rhythm as the swing:</b> fast out (0.07, cubic-eased so it <em>launches</em> and lands soft), slower home (0.14). Note the pair: <code>set_ease()</code> only shapes a non-linear transition — on the default linear tween it does nothing, so it always travels with a <code>set_trans()</code>.</div>
+  <div class="line-note">The two tweens run in parallel with the blade frames because each is its own <code>create_tween()</code> — independent animations, one synchronized feel.</div>
+</div>
+
+<h2>Part C — hit-stop: the frozen heartbeat</h2>
+<p>On a critical hit, <code class="inline">attack()</code> adds the heavyweight layer — you'll wire the full
+crit branch in below:</p>
+<div class="code">
+  <div class="bar"><span class="t">GDScript · player.gd</span><button class="copy">copy</button></div>
+<pre><span class="com"># A heartbeat of frozen time sells the crit.</span>
+<span class="kw">func</span> <span class="fn">hit_stop</span>():
+    <span class="type">Engine</span>.time_scale = <span class="num">0.05</span>
+    <span class="kw">await</span> <span class="fn">get_tree</span>().<span class="fn">create_timer</span>(<span class="num">0.05</span>, <span class="kw">true</span>, <span class="kw">false</span>, <span class="kw">true</span>).timeout
+    <span class="type">Engine</span>.time_scale = <span class="num">1.0</span></pre>
+</div>
+<div class="annot">
+  <div class="line-note"><b><code>await</code> is new:</b> it pauses <em>this function</em> at that line until the timer's <code>timeout</code> signal fires — while the rest of the game keeps running. No callback wiring, no connect: "wait here, then continue."</div>
+  <div class="line-note"><b>The fourth argument is the whole trick.</b> <code>create_timer(time, process_always, process_in_physics, ignore_time_scale)</code> — that last <code>true</code> makes the timer tick in <em>real</em> time. Without it, the timer itself would run at 5% speed, and your 0.05-second heartbeat would freeze the game for a full second.</div>
+  <div class="line-note"><b>Why 0.05 and 0.05?</b> Long enough for the brain to register a hitch, short enough to never read as lag. Hit-stop lives in the 30–100ms window; outside it, the magic dies in both directions.</div>
+</div>
+
+<h2>Part D — the camera flinch</h2>
+<div class="code">
+  <div class="bar"><span class="t">GDScript · player.gd</span><button class="copy">copy</button></div>
+<pre><span class="kw">func</span> <span class="fn">shake_camera</span>(<span class="var">strength</span>: <span class="type">float</span>):
+    <span class="kw">var</span> <span class="var">t</span> = <span class="fn">create_tween</span>()
+    <span class="kw">for</span> <span class="var">i</span> <span class="kw">in</span> <span class="num">4</span>:
+        <span class="kw">var</span> <span class="var">off</span> = <span class="type">Vector2</span>(<span class="fn">randf_range</span>(-<span class="var">strength</span>, <span class="var">strength</span>), <span class="fn">randf_range</span>(-<span class="var">strength</span>, <span class="var">strength</span>))
+        <span class="var">t</span>.<span class="fn">tween_property</span>(<span class="var">camera</span>, <span class="str">"offset"</span>, <span class="var">off</span>, <span class="num">0.04</span>)
+    <span class="var">t</span>.<span class="fn">tween_property</span>(<span class="var">camera</span>, <span class="str">"offset"</span>, <span class="type">Vector2</span>.ZERO, <span class="num">0.05</span>)</pre>
+</div>
+<div class="annot">
+  <div class="line-note"><b>Offset, not position.</b> The camera's <em>position</em> belongs to its follow-the-player logic (Lesson 6); shaking the <em>offset</em> rattles the lens without ever fighting the follow. When the tween ends at <code>Vector2.ZERO</code>, the shake is guaranteed to leave no trace.</div>
+  <div class="line-note"><b>Four jolts, then home.</b> A loop queues four random displacements at 0.04s each — chained, remember, not parallel — so the camera staggers drunkenly for ~0.16s and snaps back. <code>strength</code> is the only knob: crits pass 4.0.</div>
+</div>
+
+<h2>Wire it up — the swing, assembled</h2>
+<p>Every layer exists; now they meet. <code class="inline">swing()</code> (Lesson 16's tick handler) becomes
+the conductor — and its dead-target reset now restores the rest <em>texture</em> instead of a rest angle:</p>
+<div class="code">
+  <div class="bar"><span class="t">GDScript · player.gd</span><button class="copy">copy</button></div>
+<pre><span class="kw">func</span> <span class="fn">swing</span>():
+    <span class="kw">if</span> <span class="kw">not</span> <span class="fn">is_instance_valid</span>(<span class="var">target</span>):
+        <span class="var">swing_timer</span>.<span class="fn">stop</span>()
+        <span class="var">target</span> = <span class="kw">null</span>
+        <span class="var">sword</span>.texture = <span class="var">SWING_FRAMES</span>[<span class="num">0</span>]   <span class="com"># settle back to the rest pose</span>
+        <span class="kw">return</span>
+    <span class="fn">face_toward</span>(<span class="var">target</span>.global_position)   <span class="com"># L29: square up</span>
+    <span class="fn">swing_sword</span>()                          <span class="com"># Part A: the frames + the swoosh</span>
+    <span class="fn">lunge_toward</span>(<span class="var">target</span>.global_position)   <span class="com"># Part B: the lean</span>
+    <span class="kw">if</span> <span class="fn">global_position</span>.<span class="fn">distance_to</span>(<span class="var">target</span>.global_position) &lt;= <span class="var">attack_range</span>:
+        <span class="var">Sfx</span>.<span class="fn">play</span>(<span class="str">"swing"</span>, -<span class="num">4.0</span>)
+        <span class="fn">attack</span>(<span class="var">target</span>)        <span class="com"># in range -&gt; roll the table</span>
+    <span class="kw">else</span>:
+        <span class="var">Sfx</span>.<span class="fn">play</span>(<span class="str">"miss"</span>, -<span class="num">10.0</span>)</pre>
+</div>
+<p>And the crit band of <code class="inline">attack()</code> (Lesson 22) gets its full celebration — sparks,
+flinch, the loud sound from Lesson 27, and the freeze:</p>
+<div class="code">
+  <div class="bar"><span class="t">GDScript · player.gd — inside attack()</span><button class="copy">copy</button></div>
+<pre><span class="kw">elif</span> <span class="var">roll</span> &lt; <span class="var">miss</span> + <span class="var">dodge</span> + <span class="var">parry</span> + <span class="var">glancing</span> + <span class="var">crit</span>:
+    <span class="kw">var</span> <span class="var">dmg</span> = <span class="var">attack_damage</span> * <span class="num">2</span>
+    <span class="var">t</span>.<span class="fn">take_damage</span>(<span class="var">dmg</span>, <span class="kw">true</span>)
+    <span class="fn">gain_rage_dealing</span>(<span class="var">dmg</span>, <span class="kw">true</span>)
+    <span class="fn">spawn_sparks</span>(<span class="var">t</span>.global_position, <span class="type">Color</span>(<span class="num">1.0</span>, <span class="num">0.85</span>, <span class="num">0.3</span>), <span class="num">10</span>)   <span class="com"># gold burst (L28's helper)</span>
+    <span class="fn">shake_camera</span>(<span class="num">4.0</span>)
+    <span class="var">Sfx</span>.<span class="fn">play</span>(<span class="str">"crit"</span>, -<span class="num">2.0</span>)
+    <span class="fn">hit_stop</span>()</pre>
+</div>
+<p>The everyday hit, one band below, gets the quiet version: a small white burst —
+<code class="inline">spawn_sparks(t.global_position, Color(1, 1, 1), 5)</code> — and no shake, no freeze.
+Save the loud grammar for the rare outcome, or it stops being loud.</p>
+
+<div class="callout idea">
+  <span class="ct">FEEL IT YOURSELF — BREAK THE TIMER</span>
+  <p>In <code class="inline">hit_stop()</code>, change the fourth argument to <code class="inline">false</code>
+  and land a crit: the "frozen heartbeat" becomes a one-second stutter, because the timer is now counting
+  frozen seconds. Put it back, then try <code class="inline">Engine.time_scale = 0.4</code> with a 0.4s timer —
+  congratulations, you've invented the slow-motion finisher. Revert when done (or don't; it's your game).</p>
+</div>
+
+<h2>Check yourself</h2>
+<div class="quiz">
+  <p class="q">In <code>hit_stop()</code>, why must the timer be created with <code>ignore_time_scale = true</code>?</p>
+  <button onclick="pick(this)">It makes the timer more precise</button>
+  <button onclick="pick(this)">Timers can't run while time_scale is below 1.0</button>
+  <button onclick="pick(this)" data-correct>The timer would otherwise obey the 0.05× time scale too — the freeze it's supposed to end would stretch from 0.05s to a full second</button>
+  <div class="feedback"></div>
+</div>
+
+<h3>Codebase checkpoint</h3>
+<p>The project after this lesson:</p>
+<div class="tree">
+<span class="dim">projects/first-steps/</span>
+├─ project.godot              <span class="dim">· [autoload] Sfx (L27)</span>
+├─ <span class="leaf">main.tscn</span>                 <span class="dim">← changed: SlashArc swoosh sprite under Player</span>
+├─ <span class="leaf">player.gd</span>                 <span class="dim">← changed: SWING_FRAMES, frame-stepped swing_sword(), lunge, crit branch (sparks + shake + hit_stop)</span>
+├─ sword.gd                   <span class="dim">· the pickup moment (L28)</span>
+├─ hud.gd                     <span class="dim">· the banner toast (L28; full tour later this arc)</span>
+├─ sfx.gd                     <span class="dim">· the sound bus (L27)</span>
+├─ wolf.gd / wolf.tscn        <span class="dim">· chase, aggro, pack, clickable (L9–19)</span>
+├─ damage_number.gd / .tscn   <span class="dim">· floating combat text (L14)</span>
+├─ forest_generator.gd        <span class="dim">· the world (L26)</span>
+└─ assets/
+   ├─ <span class="leaf">slash_arc.png</span>          <span class="dim">← new here: the white swoosh (gen_uifx.py, toured later)</span>
+   ├─ <span class="leaf">sword_swing_1/2/3.png</span>  <span class="dim">← new: the arc, baked frame by frame</span>
+   └─ <span class="leaf">gen_polish.py</span>          <span class="dim">← changed: make_sword_held() bakes all four poses</span>
+</div>
+
+<div class="teacher">
+  <b>TEACHER'S NOTE</b>
+  <p>Today retired the last live rotation on the blade — and paid Lesson 29's mirror debt without writing
+  the mirror: baked frames + <code class="inline">flip_h</code> made the left-handed swing correct for free.
+  Watch for that pattern: the best polish often <em>deletes</em> code. Next:
+  <strong>Lesson 31 — A Death Worth Respawning From</strong>, where running out of health stops being a
+  scene reload and becomes a scene: the sting, the fade, the words, the dawn.</p>
+</div>
+
+<footer>
+  GODOT · LESSON 30 · GAME FEEL 4 · ONE WIN AT A TIME<br>
+  Primary reference: <a href="https://docs.godotengine.org/en/stable/classes/class_tween.html#class-tween-method-tween-method">Godot — Tween.tween_method</a> · <a href="https://docs.godotengine.org/en/stable/classes/class_engine.html#class-engine-property-time-scale">Engine.time_scale</a> · <a href="https://docs.godotengine.org/en/stable/classes/class_scenetree.html#class-scenetree-method-create-timer">SceneTree.create_timer</a>
+</footer>
+</main>
+<script src="_lesson.js"></script>
+</body>
+</html>

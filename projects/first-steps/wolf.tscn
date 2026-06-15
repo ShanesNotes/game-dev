@@ -64,7 +64,7 @@ border_width_left = 1
 border_width_top = 1
 border_width_right = 1
 border_width_bottom = 1
-border_color = Color(0.42, 0.353, 0.227, 1)
+border_color = Color(0.102, 0.0784, 0.0588, 1)
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_wfill"]
 bg_color = Color(0.788, 0.184, 0.141, 1)
@@ -72,7 +72,7 @@ border_width_left = 1
 border_width_top = 1
 border_width_right = 1
 border_width_bottom = 1
-border_color = Color(0.42, 0.353, 0.227, 1)
+border_color = Color(0.102, 0.0784, 0.0588, 1)
 
 [node name="Wolf" type="CharacterBody2D" unique_id=125961179]
 input_pickable = true
@@ -109,9 +109,9 @@ shape = SubResource("CircleShape2D_272bh")
 [node name="HealthBar" type="ProgressBar" parent="." unique_id=1748578485]
 custom_minimum_size = Vector2(32, 5)
 offset_left = -16.0
-offset_top = -18.0
+offset_top = -12.0
 offset_right = 16.0
-offset_bottom = -13.0
+offset_bottom = -7.0
 theme_override_styles/background = SubResource("StyleBoxFlat_wbg")
 theme_override_styles/fill = SubResource("StyleBoxFlat_wfill")
 show_percentage = false

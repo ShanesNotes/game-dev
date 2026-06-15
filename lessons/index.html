@@ -23,7 +23,7 @@
 <body>
 <main>
 <header class="hero">
-  <div class="kicker">Godot · Course Index · 26 lessons</div>
+  <div class="kicker">Godot · Course Index · 32 lessons</div>
   <h1>From <span>"what is a node"</span> to a real combat system</h1>
   <p class="sub">Every lesson is one small win, built by hand, inside one story: find a sword, a wolf appears,
   a WoW-style fight breaks out in Elwynn Forest. Each lesson ends with a <em>codebase checkpoint</em> —
@@ -33,8 +33,12 @@
 <div class="win">
   <b>THE STATE OF THE QUEST</b>
   <p>Playable now: click-targeted wolf-pack combat on swing timers, a Classic-accurate one-roll attack
-  table (miss · dodge · parry · glancing · crit), levels, a rage bar, and a procedurally generated forest.
-  Next: XP &amp; leveling, then inventory, quests, and the first real ability.</p>
+  table (miss · dodge · parry · glancing · crit), levels, a rage bar, a procedurally generated forest —
+  now with a full synthesized sound pack, a sword pickup that feels like an event, and a blade that
+  changes hands with Will's facing and swings with real weight (hit-stop included), a death
+  that's a staged scene, and a HUD that teaches the controls then gets out of the way.
+  Next: XP &amp; leveling, inventory, quests, and the first real ability — or The Forge
+  (the engineering arc) first; that's the next planning call.</p>
 </div>
 
 <section class="arc">
@@ -106,16 +110,32 @@
   </div>
 </section>
 
+<section class="arc">
+  <h2>VII · Game Feel</h2>
+  <p class="arc-note">The 2026-06-11 overhaul, understood — sound, juice, and production polish, back-engineered
+  into lessons the L26 way: what entered the repo gets taught, line by line.</p>
+  <div class="toc">
+    <a class="row" href="0027-sound-from-nothing.html"><span class="n">27</span><span><span class="t">The Game Finds Its Voice: Autoloads &amp; Sound</span><span class="d">One global Sfx bus — any script says Sfx.play("hit"). Autoloads, self-freeing one-shots, positional growls.</span></span></a>
+    <a class="row" href="0028-the-pickup-moment.html"><span class="n">28</span><span><span class="t">Juice: The Pickup Moment</span><span class="d">One event, five layers of feedback — bob tween, glint, chime, gold burst, banner toast. And "No weapon!" makes it matter.</span></span></a>
+    <a class="row" href="0029-holding-it-right.html"><span class="n">29</span><span><span class="t">Holding It Right: The Directional Sword</span><span class="d">The blade follows the hands through all four facings — position, flip_h, show_behind_parent, and a rest pose baked into the pixels.</span></span></a>
+    <a class="row" href="0030-swing-feel.html"><span class="n">30</span><span><span class="t">Swing Feel: Weight, Impact &amp; Frozen Time</span><span class="d">Baked swing frames, the lunge, camera shake — and hit-stop: a twentieth of a second of frozen time that sells every crit.</span></span></a>
+    <a class="row" href="0031-a-death-worth-respawning-from.html"><span class="n">31</span><span><span class="t">A Death Worth Respawning From</span><span class="d">Hurt flash, a low-health heartbeat, the dying latch — and a death that's a scene (sting, fade, gold words, dawn), not a reload.</span></span></a>
+    <a class="row" href="0032-the-hud-teaches-the-game.html"><span class="n">32</span><span><span class="t">The HUD Teaches the Game<span class="tag">★ ARC COMPLETE</span></span><span class="d">Hint chips that watch for their own verbs, dim when proven learned, and excuse themselves — the reactive tutorial.</span></span></a>
+  </div>
+</section>
+
 <div class="callout idea">
   <span class="ct">NEXT UP</span>
-  <p><strong>Lesson 27 — XP &amp; Leveling:</strong> kills grant XP on the mob-XP formula, the level
-  actually grows, and a ding bumps your stats. Then: inventory, wolf pelts, a wizard with a quest,
-  Heroic Strike, Whirlwind. The full arc lives in
-  <code class="inline">learning-records/0002-roadmap-combat-quests-progression.md</code>.</p>
+  <p><strong>The Game Feel arc is complete (27–32).</strong> Two roads from here: the progression arc —
+  <strong>XP &amp; Leveling</strong> on the mob-XP formula, inventory, wolf pelts, a wizard with a quest,
+  Heroic Strike, Whirlwind (<code class="inline">learning-records/0002-roadmap-combat-quests-progression.md</code>) —
+  or <strong>The Forge</strong>: the combat core becomes tested, signal-driven modules
+  (<code class="inline">learning-records/0003-architecture-review-and-curriculum-expansion.md</code>).
+  Which goes first is the next planning session's call.</p>
 </div>
 
 <footer>
-  GODOT LEARNING WORKSPACE · 26 LESSONS · ONE WIN AT A TIME · EVERY LESSON ENDS IN A CODEBASE CHECKPOINT<br>
+  GODOT LEARNING WORKSPACE · 32 LESSONS · ONE WIN AT A TIME · EVERY LESSON ENDS IN A CODEBASE CHECKPOINT<br>
   The method behind this course is documented in <code class="inline">GUIDE.md</code> at the repo root ·
   purpose audited by <code class="inline">/goal</code> → <code class="inline">TELOS.md</code>
 </footer>
