@@ -852,12 +852,15 @@
           "label": "pickup pedestal asset exists"
         },
         {
-          "type": "known_debt",
-          "label": "post-F3 HUD decoupling",
-          "message": "Lesson 28 still tours body.hud/show_banner directly; L35 changed final code to announce()/banner_requested."
+          "type": "contains",
+          "path": "lessons/0028-the-pickup-moment.html",
+          "value": "banner_requested",
+          "label": "documents L35 banner signal evolution"
         }
       ],
-      "evolutionNotes": []
+      "evolutionNotes": [
+        "Pickup lesson preserves pre-Forge body.hud checkpoint; L35 replaces direct HUD calls with announce()/banner_requested."
+      ]
     },
     {
       "id": "0029",
@@ -927,12 +930,15 @@
           "label": "current death screen function"
         },
         {
-          "type": "known_debt",
-          "label": "post-F3 polling note",
-          "message": "Lesson 31 cites HUD polling debt; after L35 the final code is signal-driven and the note may need revision."
+          "type": "contains",
+          "path": "lessons/0031-a-death-worth-respawning-from.html",
+          "value": "Lesson 35 pays the debt",
+          "label": "documents L35 health signal payoff"
         }
       ],
-      "evolutionNotes": []
+      "evolutionNotes": [
+        "Death lesson keeps checkpoint-era HUD polling as historical debt; L35 pays it with health_changed-driven HUD updates."
+      ]
     },
     {
       "id": "0032",
@@ -952,12 +958,15 @@
           "label": "current HUD hint completion state"
         },
         {
-          "type": "known_debt",
-          "label": "post-F3 polling note",
-          "message": "Lesson 32 re-cites polling debt; after L35 it should point to the shipped signal refactor."
+          "type": "contains",
+          "path": "lessons/0032-the-hud-teaches-the-game.html",
+          "value": "Lesson 35 pays",
+          "label": "documents L35 HUD signal payoff"
         }
       ],
-      "evolutionNotes": []
+      "evolutionNotes": [
+        "HUD tutorial lesson keeps checkpoint-era probes explicit; L35 pays the durable HUD polling debt with signals."
+      ]
     },
     {
       "id": "0033",

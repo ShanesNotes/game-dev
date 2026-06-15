@@ -141,12 +141,11 @@ already looks the player up every frame — gains a counter and one more call:</
   <div class="line-note"><b><code>maxf()</code> is the diplomacy.</b> The pulse and the bite-flash share one node. Taking the <em>maximum</em> means a fresh 0.22 flash always wins over the 0.11 pulse — the pulse can never dim a wince in progress.</div>
 </div>
 <div class="callout warn">
-  <span class="ct">⚠ HONEST DEBT: THIS IS POLLING</span>
-  <p>This rides the HUD's <code class="inline">_process()</code>, which asks the player's health <em>every
+  <span class="ct">⚠ HISTORICAL DEBT: THIS WAS POLLING</span>
+  <p>This checkpoint rides the HUD's <code class="inline">_process()</code>, which asks the player's health <em>every
   frame</em> — exactly what Lesson 11 taught us to avoid ("events over polling"). The overhaul shipped it
-  this way, and the refactor (the player <em>announcing</em> <code class="inline">health_changed</code>,
-  the HUD listening) is already on the books as a future lesson —
-  <code class="inline">learning-records/0003</code>, "The Forge." Touring real code means touring its debts.</p>
+  this way because the death pass needed to land. Lesson 35 pays the debt: the final HUD starts and stops
+  the low-health pulse from <code class="inline">health_changed</code> instead of polling.</p>
 </div>
 
 <h2>Part C — the latch flips: die()</h2>
