@@ -49,4 +49,3 @@ public partial class HitSpark : GpuParticles2D
 > Use **Add** blend mode on the CanvasItemMaterial for particles with black backgrounds (fire, sparks, magic).
 
 ---
-

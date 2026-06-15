@@ -64,4 +64,3 @@ particles.DrawPass1 = trailMesh;
 > **Important:** Trail materials need **Use Particle Trails** enabled in the StandardMaterial3D's Transform section to render correctly.
 
 ---
-

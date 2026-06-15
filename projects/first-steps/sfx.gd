@@ -3,6 +3,8 @@ extends Node
 ## Tiny SFX bus (autoload "Sfx"). One-shot players that free themselves;
 ## slight pitch jitter keeps repeated sounds from feeling stamped.
 
+const EFFECTS_LAYER_GROUP: StringName = &"effects_layer"
+
 const STREAMS: Dictionary[String, AudioStream] = {
 	"swing": preload("res://assets/sounds/swing_whoosh.wav"),
 	"miss": preload("res://assets/sounds/swing_miss.wav"),
@@ -41,7 +43,17 @@ func play_at(key: String, pos: Vector2, volume_db: float = 0.0) -> void:
 	player.volume_db = volume_db
 	player.max_distance = 420.0
 	player.pitch_scale = 1.0 + randf_range(-0.06, 0.06)
-	get_tree().current_scene.add_child(player)
+	_effects_root().add_child(player)
 	player.global_position = pos
 	player.finished.connect(player.queue_free)
 	player.play()
+
+
+func _effects_root() -> Node:
+	var layer: Node = get_tree().get_first_node_in_group(EFFECTS_LAYER_GROUP)
+	if layer != null:
+		return layer
+	var scene: Node = get_tree().current_scene
+	if scene != null:
+		return scene
+	return get_tree().root

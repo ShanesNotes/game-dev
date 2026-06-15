@@ -70,4 +70,3 @@ private string Interpolate(string raw)
 > For Godot's `RichTextLabel`, BBCode tags and `{placeholder}` tokens can coexist in the same string — `format()` only replaces `{key}` patterns and leaves all other characters untouched.
 
 ---
-

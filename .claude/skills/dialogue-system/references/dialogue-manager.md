@@ -249,4 +249,3 @@ public partial class DialogueManager : Node
 ```
 
 ---
-

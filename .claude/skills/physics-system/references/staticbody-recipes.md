@@ -61,4 +61,3 @@ public partial class MovingPlatform : AnimatableBody2D
 > **Note:** `AnimatableBody2D`/`3D` is the correct node for moving platforms. A plain `StaticBody` moved by code will not push CharacterBodies reliably.
 
 ---
-

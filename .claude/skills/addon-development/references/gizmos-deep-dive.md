@@ -206,4 +206,3 @@ public partial class SpawnerGizmoPlugin : EditorNode3DGizmoPlugin
 ```
 
 ---
-

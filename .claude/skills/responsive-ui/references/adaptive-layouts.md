@@ -98,4 +98,3 @@ private void Relayout(Vector2 size)
 | `SIZE_SHRINK_END` | Align to end; take only minimum size |
 
 ---
-

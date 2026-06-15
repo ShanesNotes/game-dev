@@ -96,4 +96,3 @@ To clip the minimap to a circle, wrap the `SubViewportContainer` in a `TextureRe
 ```
 
 ---
-

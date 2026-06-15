@@ -151,4 +151,3 @@ public partial class Chest : Node3D
 ```
 
 ---
-

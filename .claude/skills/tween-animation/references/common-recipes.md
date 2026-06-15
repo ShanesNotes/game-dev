@@ -172,4 +172,3 @@ public void Dissolve(Sprite2D sprite, float duration = 1.0f)
 ```
 
 ---
-

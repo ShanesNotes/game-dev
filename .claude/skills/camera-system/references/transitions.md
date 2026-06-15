@@ -128,4 +128,3 @@ CameraTransitionManager.transition_2d($CutsceneCam, 0.6)
 ```
 
 ---
-

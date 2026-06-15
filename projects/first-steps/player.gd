@@ -37,6 +37,8 @@ const SWING_FRAMES: Array[Texture2D] = [
 	preload("res://assets/sword_swing_3.png"),
 ]
 
+const GameContracts = preload("res://game_contracts.gd")
+
 @export var speed: float = 200.0
 @export var max_health: int = 30
 @export var level: int = 1
@@ -371,13 +373,11 @@ func _combat_level(actor: Node) -> int:
 
 
 func _apply_target_damage(actor: Node, amount: int, is_crit: bool = false) -> void:
-	if actor.has_method("take_damage"):
-		actor.call("take_damage", amount, is_crit)
+	GameContracts.damage_enemy(actor, amount, is_crit)
 
 
 func _set_targeted(actor: Node, on: bool) -> void:
-	if actor.has_method("set_targeted"):
-		actor.call("set_targeted", on)
+	GameContracts.set_targeted(actor, on)
 
 
 func _facing_animation() -> StringName:

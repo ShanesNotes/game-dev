@@ -170,4 +170,3 @@ public partial class LagCompensationManager : Node
 - Cap the rewind window to a max latency tolerance (e.g. 300 ms) to prevent abuse.
 
 ---
-

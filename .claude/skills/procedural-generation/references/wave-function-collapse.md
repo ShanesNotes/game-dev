@@ -199,4 +199,3 @@ public partial class SimpleWFC : RefCounted
 > **For production WFC**, consider the community addon [godot-wfc](https://github.com/AlexeyBond/godot-wfc) which provides editor integration, TileMap support, and 3D grid WFC.
 
 ---
-

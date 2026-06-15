@@ -161,4 +161,3 @@ signal notification_requested(message: String)
 ```
 
 ---
-

@@ -236,4 +236,3 @@ func _set_health(new_value: int) -> void:
 ```
 
 ---
-

@@ -60,4 +60,3 @@ private void OnSearchFieldTextChanged(string newText) { }
 ```
 
 ---
-

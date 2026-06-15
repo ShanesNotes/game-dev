@@ -112,4 +112,3 @@ Scale: 0.5 → 1.5 (curve), Color Ramp: white → transparent
 ```
 
 ---
-

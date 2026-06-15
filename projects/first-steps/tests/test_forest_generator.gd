@@ -48,7 +48,12 @@ func _run() -> void:
 	expect_vec("sword pedestal position", sword.global_position, Vector2(1104, 272))
 	expect("world y-sorts actors and props", world.y_sort_enabled)
 
-	if _fails == 0:
+	var passed: bool = _fails == 0
+	_stop_audio_players(scene)
+	scene.queue_free()
+	await process_frame
+
+	if passed:
 		print("PASS — forest seed 1337 generates the expected world invariants")
 		quit(0)
 	else:
@@ -102,6 +107,23 @@ func _has_bounds_body(scene: Node) -> bool:
 		if child is StaticBody2D and child.get_child_count() >= 4:
 			return true
 	return false
+
+
+func _stop_audio_players(node: Node) -> void:
+	if node is AudioStreamPlayer:
+		var player: AudioStreamPlayer = node as AudioStreamPlayer
+		player.stop()
+		player.stream = null
+	elif node is AudioStreamPlayer2D:
+		var player_2d: AudioStreamPlayer2D = node as AudioStreamPlayer2D
+		player_2d.stop()
+		player_2d.stream = null
+	elif node is AudioStreamPlayer3D:
+		var player_3d: AudioStreamPlayer3D = node as AudioStreamPlayer3D
+		player_3d.stop()
+		player_3d.stream = null
+	for child: Node in node.get_children():
+		_stop_audio_players(child)
 
 
 func _install_singleton(singleton_name: StringName, script: GDScript) -> void:

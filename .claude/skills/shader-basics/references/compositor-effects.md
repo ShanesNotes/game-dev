@@ -110,4 +110,3 @@ Godot uses the Compositor internally for:
 You can stack multiple CompositorEffects in order. Lower array indices execute first.
 
 ---
-

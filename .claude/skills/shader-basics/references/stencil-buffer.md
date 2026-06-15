@@ -63,4 +63,3 @@ In your scene, assign `portal_mask.gdshader` to the portal mesh and `xray_object
 C# uses the same shader code and `ShaderMaterial.SetShaderParameter()` API — stencil state is set entirely in the `.gdshader` render modes, not in GDScript/C#.
 
 ---
-

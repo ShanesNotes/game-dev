@@ -66,4 +66,3 @@ public partial class XRPointerController : XRController3D
 > **Tip:** Use the community addon [Godot XR Tools](https://github.com/GodotVR/godot-xr-tools) for production-ready interaction systems, locomotion, and UI helpers.
 
 ---
-

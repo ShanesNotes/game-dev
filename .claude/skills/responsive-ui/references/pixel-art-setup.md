@@ -92,4 +92,3 @@ GetNode<Sprite2D>("Sprite2D").TextureFilter = CanvasItem.TextureFilterEnum.Neare
 ```
 
 ---
-

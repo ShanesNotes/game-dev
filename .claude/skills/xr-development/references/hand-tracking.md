@@ -62,4 +62,3 @@ public partial class XRHandTrackingOrigin : XROrigin3D
 > **Note:** Hand tracking availability depends on the XR headset. Meta Quest, Apple Vision Pro, and some SteamVR setups support it. Always fall back to controller input.
 
 ---
-

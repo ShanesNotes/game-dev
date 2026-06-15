@@ -79,4 +79,3 @@ public partial class CloudLayer : Parallax2D
 For split-screen games, clone parallax nodes into each `SubViewport`. Use `visibility_layer` on parent nodes and `canvas_cull_mask` on SubViewports to isolate parallax per viewport.
 
 ---
-

@@ -128,4 +128,3 @@ For larger projects, **[Dialogic](https://github.com/coppolaemilio/dialogic)** i
 For small-to-medium projects the hand-rolled system in this skill keeps dependencies minimal and stays fully under your control.
 
 ---
-

@@ -244,4 +244,3 @@ typewriter_timer.timeout.connect(_on_typewriter_tick)
 ```
 
 ---
-

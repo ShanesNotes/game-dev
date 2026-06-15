@@ -119,7 +119,7 @@ func _exit_tree() -> void:
 
 # Lambdas can capture 'self' — if self is freed the lambda may call invalid memory
 # Prefer named methods or guard with is_instance_valid()
-some_node.some_signal.connect(func(): 
+some_node.some_signal.connect(func():
     if is_instance_valid(self):
         _do_work()
 )
@@ -180,4 +180,3 @@ private void EmitReadySignal()
 ```
 
 ---
-

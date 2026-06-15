@@ -44,4 +44,3 @@ Enable in **Project > Project Settings > Input Devices > Pointing > Emulate Touc
 The reverse (**Emulate Mouse From Touch**) is enabled by default — touchscreen taps generate mouse events so UI controls work on mobile without changes.
 
 ---
-

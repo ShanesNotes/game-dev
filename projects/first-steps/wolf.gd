@@ -4,6 +4,8 @@ extends CharacterBody2D
 signal health_changed(health: int, max_health: int)
 signal died
 
+const GameContracts = preload("res://game_contracts.gd")
+
 @export var speed: float = 120.0
 @export var melee_range: float = 40.0
 @export var swing_damage: int = 2
@@ -119,7 +121,7 @@ func _on_swing_timer_timeout() -> void:
 	if is_instance_valid(target) and global_position.distance_to(target.global_position) <= melee_range + 16.0:
 		sprite.play(&"attack")
 		Sfx.play_at("bite", global_position, -4.0)
-		target.call("take_damage", swing_damage, self)   # pass self as the attacker
+		GameContracts.damage_player(target, swing_damage, self)   # pass self as the attacker
 
 
 func face_target() -> void:
@@ -133,8 +135,8 @@ func face_target() -> void:
 func _on_input_event(_viewport: Node, event: InputEvent, _shape_idx: int) -> void:
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 		var player: Node = get_tree().get_first_node_in_group("player")
-		if player != null and player.has_method("set_target"):
-			player.call("set_target", self)
+		if player != null:
+			GameContracts.set_target(player, self)
 
 
 func set_targeted(on: bool) -> void:

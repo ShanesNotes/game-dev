@@ -83,4 +83,3 @@ public partial class MyPlugin : EditorPlugin
 | `DOCK_SLOT_RIGHT_BL` | Right column, lower |
 
 ---
-

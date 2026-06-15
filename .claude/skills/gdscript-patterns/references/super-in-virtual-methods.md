@@ -75,4 +75,3 @@ public partial class SpecialEnemy : EnemyBase
 > **Rule of thumb:** If you extend a script that you or someone else wrote (not a bare Godot class), always call `super()` as the first line of any overridden virtual method.
 
 ---
-

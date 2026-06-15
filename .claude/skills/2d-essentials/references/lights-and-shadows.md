@@ -97,4 +97,3 @@ Apply this shader via `ShaderMaterial` on each lit sprite that should have pixel
 Set `CanvasItemMaterial > Blend Mode` to **Add** on a Sprite2D for a cheap glow effect. Faster than real lights but no shadows, no normal map support, and inaccurate blending in dark areas.
 
 ---
-

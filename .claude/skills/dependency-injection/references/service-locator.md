@@ -159,4 +159,3 @@ public partial class Pickup : Area2D
 ```
 
 ---
-

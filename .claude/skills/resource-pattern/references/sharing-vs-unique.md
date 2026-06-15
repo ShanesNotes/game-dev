@@ -55,4 +55,3 @@ public partial class Enemy : CharacterBody3D
 - Mutable runtime state (current health, active buffs) — always `duplicate()` in `_ready()`.
 
 ---
-

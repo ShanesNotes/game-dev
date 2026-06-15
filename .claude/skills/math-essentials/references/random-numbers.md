@@ -105,4 +105,3 @@ float height = noise.GetNoise2D(x, y);
 ```
 
 ---
-

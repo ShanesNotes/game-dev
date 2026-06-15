@@ -104,4 +104,3 @@ World
 **Tip:** Size each `CollisionShape2D` to the visible room rectangle. For pixel-art games, align shapes to tile boundaries so there is no overlap between adjacent rooms. If rooms share a wall, a thin 1-pixel gap between shapes avoids double-triggers.
 
 ---
-

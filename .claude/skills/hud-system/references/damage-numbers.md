@@ -198,4 +198,3 @@ EventBus.Instance.DamageDealt += (Vector2 pos, int amount, bool crit) =>
 **Pool notes:** The simple modular pool above recycles labels before they finish animating if POOL_SIZE is too small. Increase the pool size or skip pooling entirely for games with infrequent hits. A more robust pool tracks which instances are free using a `free_list` array.
 
 ---
-

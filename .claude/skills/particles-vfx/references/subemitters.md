@@ -64,4 +64,3 @@ public partial class Explosion : GpuParticles3D
 - Subemitters can chain (sub-sub-emitters) but watch performance
 
 ---
-

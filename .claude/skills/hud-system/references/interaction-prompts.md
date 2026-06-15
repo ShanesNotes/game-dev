@@ -187,4 +187,3 @@ public partial class Interactable : Area2D
 **World-space alternative:** Instead of a HUD Label, add a `Label3D` (3D) or a `Label` with `top_level = true` (2D) directly to the interactable scene. This floats above the object in world space and is naturally occluded by camera zoom or rotation. The trade-off is that it requires a `CanvasItem` in the world tree rather than the HUD layer, and does not automatically stay in screen bounds.
 
 ---
-

@@ -3,6 +3,8 @@ extends Area2D
 ## The sword pickup: rests on its pedestal with a gentle bob and a golden
 ## glint until the player walks in — then chime, burst, banner, equip.
 
+const GameContracts = preload("res://game_contracts.gd")
+
 @onready var sprite: Sprite2D = $Sprite2D
 @onready var glint: CPUParticles2D = $Glint
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
@@ -17,8 +19,8 @@ func _ready() -> void:
 func _on_body_entered(body: Node2D) -> void:
 	if body.is_in_group("player"):
 		Sfx.play("pickup")
-		body.call("equip_sword")
-		body.call("announce", "Rusty Sword equipped!")
+		GameContracts.equip_sword(body)
+		GameContracts.announce(body, "Rusty Sword equipped!")
 		CombatFX.sparks(global_position + Vector2(0, -14), Color(1.0, 0.85, 0.4), 14)
 		sprite.visible = false
 		glint.emitting = false

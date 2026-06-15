@@ -118,4 +118,3 @@ Characters snagging on edges between adjacent tile colliders is a common issue:
 > See **physics-system** for more collision troubleshooting.
 
 ---
-

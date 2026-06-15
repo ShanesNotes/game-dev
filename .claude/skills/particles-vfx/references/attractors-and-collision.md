@@ -95,4 +95,3 @@ mat.TurbulenceInfluenceMax = 0.8f;
 > **Performance:** 3D noise is GPU-intensive. Use sparingly on mobile/web targets. Higher `noise_scale` values are cheaper but produce weaker turbulence.
 
 ---
-

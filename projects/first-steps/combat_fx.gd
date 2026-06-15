@@ -6,6 +6,7 @@ extends Node
 const DAMAGE_NUMBER: PackedScene = preload("res://damage_number.tscn")
 const SPARK: Texture2D = preload("res://assets/spark.png")
 const BLOOD: Texture2D = preload("res://assets/soft_dot.png")
+const EFFECTS_LAYER_GROUP: StringName = &"effects_layer"
 
 
 func text_over(target: Node2D, words: String, color: Color, font_size: int = 18) -> Label:
@@ -23,7 +24,7 @@ func text_at(at: Vector2, words: String, color: Color, font_size: int = 18) -> L
 	if number == null:
 		push_error("damage_number.tscn must instantiate a Label")
 		return null
-	_world_root().add_child(number)
+	_effects_root().add_child(number)
 	number.global_position = at
 	number.show_text(words, color, font_size)
 	return number
@@ -51,14 +52,17 @@ func _particle_burst(texture: Texture2D, at: Vector2, color: Color, count: int, 
 	particles.scale_amount_max = scale_max
 	particles.color = color
 	particles.z_index = 30
-	_world_root().add_child(particles)
+	_effects_root().add_child(particles)
 	particles.global_position = at
 	particles.emitting = true
 	particles.finished.connect(particles.queue_free)
 	return particles
 
 
-func _world_root() -> Node:
+func _effects_root() -> Node:
+	var layer: Node = get_tree().get_first_node_in_group(EFFECTS_LAYER_GROUP)
+	if layer != null:
+		return layer
 	var scene: Node = get_tree().current_scene
 	if scene != null:
 		return scene

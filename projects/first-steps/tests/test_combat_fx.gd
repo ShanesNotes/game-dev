@@ -19,6 +19,11 @@ func _run() -> void:
 	root.add_child(scene)
 	current_scene = scene
 
+	var effects_layer := Node2D.new()
+	effects_layer.name = "EffectsLayer"
+	scene.add_child(effects_layer)
+	effects_layer.add_to_group(&"effects_layer")
+
 	var fx = COMBAT_FX_SCRIPT.new()
 	fx.name = "CombatFX"
 	root.add_child(fx)
@@ -30,7 +35,7 @@ func _run() -> void:
 
 	var miss = fx.text_over(actor, "Miss", Color.GRAY)
 	expect_valid("text_over returns label", miss)
-	expect("text_over parent is scene", miss.get_parent() == scene)
+	expect("text_over parent is effects layer", miss.get_parent() == effects_layer)
 	expect_equal("text_over text", miss.text, "Miss")
 	expect_equal("text_over size", miss.get_theme_font_size("font_size"), 18)
 	expect("text_over starts above actor", miss.global_position.y < actor.global_position.y)
@@ -43,6 +48,7 @@ func _run() -> void:
 	var sparks = fx.sparks(Vector2(10, 20), Color(1.0, 0.85, 0.3), 4)
 	expect_valid("sparks returns particles", sparks)
 	expect("sparks is CPUParticles2D", sparks is CPUParticles2D)
+	expect("sparks parent is effects layer", sparks.get_parent() == effects_layer)
 	expect_equal("sparks amount", sparks.amount, 4)
 	expect("sparks one-shot", sparks.one_shot)
 	expect("sparks emitting", sparks.emitting)

@@ -68,4 +68,3 @@ public override void _PhysicsProcess(double delta)
 | `cubic_interp`   | Use cubic interpolation for smoother following   |
 
 ---
-

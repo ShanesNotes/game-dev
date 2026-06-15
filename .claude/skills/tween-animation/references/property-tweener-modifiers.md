@@ -56,4 +56,3 @@ tween.tween_property($Label3, "modulate:a", 1.0, 0.3).from(0.0).set_delay(0.2)
 ```
 
 ---
-

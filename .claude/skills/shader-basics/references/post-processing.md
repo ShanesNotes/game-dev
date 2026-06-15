@@ -95,4 +95,3 @@ For 3D, use the built-in Environment resource on WorldEnvironment:
 These require **no shader code** — configure in Inspector on the Environment resource.
 
 ---
-

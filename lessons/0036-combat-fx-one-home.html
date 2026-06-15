@@ -44,7 +44,7 @@ sword.gd:  body.spawn_sparks(...)</pre>
 <div class="defs">
   <div class="def"><b>autoload</b><p>A script Godot creates once at startup and exposes by name. Use it for small global services like <code class="inline">Sfx</code> and now <code class="inline">CombatFX</code>.</p></div>
   <div class="def"><b>factory</b><p>A function whose job is to build a node correctly. Callers ask for the result; they do not know the construction recipe.</p></div>
-  <div class="def"><b>scene root</b><p><code class="inline">get_tree().current_scene</code> is where these world-space FX should live. If a headless test has no current scene, the helper falls back to <code class="inline">root</code>.</p></div>
+  <div class="def"><b>effects layer</b><p>The scene marks <code class="inline">World</code> with the <code class="inline">"effects_layer"</code> group. CombatFX spawns world-space feedback there, then falls back to <code class="inline">current_scene</code> only for tests or tiny scenes.</p></div>
 </div>
 
 <h2>Part A — register the bus</h2>
@@ -66,6 +66,7 @@ CombatFX="*res://combat_fx.gd"</pre>
 const DAMAGE_NUMBER = preload("res://damage_number.tscn")
 const SPARK = preload("res://assets/spark.png")
 const BLOOD = preload("res://assets/soft_dot.png")
+const EFFECTS_LAYER_GROUP = &"effects_layer"
 
 func text_over(target, words: String, color: Color, font_size: int = 18):
     if not is_instance_valid(target):
@@ -77,7 +78,7 @@ func damage_number(target, amount: int, color: Color, font_size: int = 18):
 
 func text_at(at: Vector2, words: String, color: Color, font_size: int = 18):
     var n = DAMAGE_NUMBER.instantiate()
-    _world_root().add_child(n)
+    _effects_root().add_child(n)
     n.global_position = at
     n.show_text(words, color, font_size)
     return n</pre>
@@ -115,11 +116,20 @@ func _particle_burst(texture, at: Vector2, color: Color, count: int, lifetime: f
     p.scale_amount_max = scale_max
     p.color = color
     p.z_index = 30
-    _world_root().add_child(p)
+    _effects_root().add_child(p)
     p.global_position = at
     p.emitting = true
     p.finished.connect(p.queue_free)
-    return p</pre>
+    return p
+
+func _effects_root():
+    var layer = get_tree().get_first_node_in_group(EFFECTS_LAYER_GROUP)
+    if layer != null:
+        return layer
+    if get_tree().current_scene != null:
+        return get_tree().current_scene
+    return get_tree().root
+</pre>
 </div>
 <div class="callout note">
   <span class="ct">◈ why not make a giant VFX system?</span>
@@ -177,7 +187,7 @@ PASS — CombatFX builds shared text and particle effects</pre>
 </div>
 <div class="annot">
   <div class="line-note"><b>Why test visual code at all?</b> Not to judge prettiness — a screenshot verdict can do that later. This test checks the factories: correct node type, correct text, correct font size, one-shot particles, and the offsets we depend on.</div>
-  <div class="line-note"><b>Why keep the boot check?</b> The test proves the helper. The boot proves the project autoload name is registered and real gameplay scripts compile against <code>CombatFX</code>.</div>
+  <div class="line-note"><b>Why keep the boot check?</b> The test proves the helper and its effects-layer target. The boot proves the project autoload name is registered and real gameplay scripts compile against <code>CombatFX</code>.</div>
 </div>
 
 <h2>Check yourself</h2>

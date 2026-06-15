@@ -160,4 +160,3 @@ int kbHeight = DisplayServer.VirtualKeyboardGetHeight();
 > **Note:** `LineEdit` and `TextEdit` show/hide the virtual keyboard automatically when they gain and lose focus. Call the API manually only when building custom text input widgets.
 
 ---
-

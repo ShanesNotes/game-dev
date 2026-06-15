@@ -72,4 +72,3 @@ func get_display_name() -> String:
 > **Partial abstraction:** Only the methods annotated `@abstract` are required by subclasses. A class can be `@abstract` without any abstract methods (to signal "don't instantiate this directly") or can have abstract methods without the class-level annotation (each method still enforces implementation).
 
 ---
-

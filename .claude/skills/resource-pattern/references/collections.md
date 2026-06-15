@@ -118,4 +118,3 @@ public static class ItemDatabaseLoader
 > Use `Godot.Collections.Array<T>` (not `System.Collections.Generic.List<T>`) for `[Export]` — only the Godot collection is editor-serializable.
 
 ---
-

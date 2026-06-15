@@ -38,4 +38,3 @@ private void EnablePassthrough()
 > **Passthrough support:** Meta Quest 3/Pro, Apple Vision Pro, Varjo XR-4. Not all headsets support it.
 
 ---
-

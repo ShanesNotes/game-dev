@@ -93,4 +93,3 @@ public partial class SplitScreenSetup : Node
 | `handle_input_locally` | `false` | Let the root scene handle input routing |
 
 ---
-

@@ -72,4 +72,3 @@ env.SdfgiEnabled = true;
 env.SdfgiCascades = 4;
 env.SdfgiUseOcclusion = true;
 ```
-

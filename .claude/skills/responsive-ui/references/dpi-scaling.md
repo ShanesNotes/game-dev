@@ -76,4 +76,3 @@ GD.Print($"Screen DPI: {dpi}");
 > **Tip:** On macOS Retina displays `screen_get_dpi()` returns 220+. On Windows with 200 % scaling it returns 192. Use these thresholds to decide whether to enable a 2x UI scale.
 
 ---
-

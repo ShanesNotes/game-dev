@@ -31,6 +31,7 @@ extends TileMapLayer
 
 const SHADOW: Texture2D = preload("res://assets/shadow.png")
 const WOLF_SCENE: PackedScene = preload("res://wolf.tscn")
+const GameContracts = preload("res://game_contracts.gd")
 const TREES: Array[Texture2D] = [
 	preload("res://assets/tree_oak_a.png"),
 	preload("res://assets/tree_oak_b.png"),
@@ -296,12 +297,13 @@ func _place_story_positions() -> void:
 	_dress_camp(start)
 	if player != null:
 		player.global_position = cell_to_world(start)
-		var camera: Camera2D = player.get_node("Camera2D") as Camera2D
-		camera.limit_left = 0
-		camera.limit_top = 0
-		camera.limit_right = map_width * 32
-		camera.limit_bottom = map_height * 32
-		camera.call_deferred("reset_smoothing")
+		var camera: Camera2D = GameContracts.player_camera(player)
+		if camera != null:
+			camera.limit_left = 0
+			camera.limit_top = 0
+			camera.limit_right = map_width * 32
+			camera.limit_bottom = map_height * 32
+			camera.call_deferred("reset_smoothing")
 	if pickup_sword != null:
 		var spot: Vector2 = cell_to_world(_sword_cell())
 		var pedestal: Node2D = _make_prop(PEDESTAL, true)   # solid: you grab the sword, you never stand in the stone

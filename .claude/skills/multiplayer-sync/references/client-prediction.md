@@ -158,4 +158,3 @@ public partial class PredictedPlayer : CharacterBody2D
 - Use `unreliable` channel for position corrections — timeliness matters more than ordering.
 
 ---
-

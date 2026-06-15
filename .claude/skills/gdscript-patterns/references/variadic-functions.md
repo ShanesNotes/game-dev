@@ -49,4 +49,3 @@ spawn_enemies(enemy_scene,
 > **Rules:** The variadic parameter must be the **last** parameter. It always arrives as a plain `Array` (not typed). A function may have at most one variadic parameter.
 
 ---
-

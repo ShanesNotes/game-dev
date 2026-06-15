@@ -101,4 +101,3 @@ public partial class DisconnectHandler : Node
 > **Always check `is_instance_valid(node)`** before accessing a node reference that may have been freed. `peer_disconnected` and `queue_free` can race in the same frame.
 
 ---
-

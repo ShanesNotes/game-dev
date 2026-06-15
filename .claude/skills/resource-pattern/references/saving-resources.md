@@ -58,4 +58,3 @@ SaveResource(myItem, "user://generated/custom_sword.res");
 > **Security:** Never load `.tres` or `.res` files from untrusted sources (user uploads, downloaded mods). They can execute embedded GDScript. Use JSON for user-controlled data.
 
 ---
-

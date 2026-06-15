@@ -139,4 +139,3 @@ public void TakeDamage_DoesNotGoBelowZero_Regression()
 ```
 
 ---
-
