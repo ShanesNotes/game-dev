@@ -29,6 +29,10 @@
   <span class="ct">◇ we build the table one band at a time</span>
   <p>The full order is <code class="inline">Miss → Dodge → Parry → Glancing → Block → Crit → Hit</code> (reference doc §0). That's a lot at once — so today we lay down just the <strong>first band (Miss)</strong> and leave the rest as "hit." Later lessons slot Crit, Dodge, and Parry into the same single roll.</p>
 </div>
+<div class="callout idea">
+  <span class="ct">📍 what the real code does now</span>
+  <p>Lessons 21–25 build the formulas directly in <code class="inline">player.gd</code> so each band is visible as you learn it. The Forge arc later extracts those exact formulas into <code class="inline">CombatTable</code> and proves them with <code class="inline">tests/test_combat_table.gd</code>. If you inspect the final repo, look there for the math.</p>
+</div>
 <div class="defs">
   <div class="def"><b>The roll</b><p><code class="inline">randf() * 100</code> gives a number from 0 to 100 — our d100.</p></div>
   <div class="def"><b>The miss band</b><p>If the roll lands below your <em>miss chance</em>, it's a Miss. Otherwise (for now) it's a Hit.</p></div>

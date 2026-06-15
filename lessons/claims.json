@@ -537,9 +537,23 @@
           "type": "path_exists",
           "path": "projects/first-steps/wolf.tscn",
           "label": "wolf scene exists"
+        },
+        {
+          "type": "contains",
+          "path": "lessons/0018-building-the-pack.html",
+          "value": "TargetRing",
+          "label": "documents final wolf scene targeting child"
+        },
+        {
+          "type": "contains",
+          "path": "projects/first-steps/wolf.tscn",
+          "value": "TargetRing",
+          "label": "current wolf scene has target ring"
         }
       ],
-      "evolutionNotes": []
+      "evolutionNotes": [
+        "Final wolf.tscn remains self-contained but now uses AnimatedSprite2D and TargetRing children."
+      ]
     },
     {
       "id": "0019",
@@ -562,9 +576,23 @@
           "type": "input_action",
           "name": "target_next",
           "label": "current target_next action"
+        },
+        {
+          "type": "contains",
+          "path": "lessons/0019-click-targeting.html",
+          "value": "TargetRing",
+          "label": "documents target ring evolution"
+        },
+        {
+          "type": "contains",
+          "path": "projects/first-steps/wolf.gd",
+          "value": "target_ring.visible = on",
+          "label": "current target ring toggled"
         }
       ],
-      "evolutionNotes": []
+      "evolutionNotes": [
+        "Final targeting uses TargetRing instead of tinting sprite.modulate."
+      ]
     },
     {
       "id": "0020",
@@ -608,9 +636,22 @@
           "path": "projects/first-steps/combat_table.gd",
           "value": "miss_chance",
           "label": "current CombatTable miss chance"
+        },
+        {
+          "type": "contains",
+          "path": "lessons/0021-attack-table-hit-or-miss.html",
+          "value": "CombatTable",
+          "label": "documents Forge CombatTable extraction"
+        },
+        {
+          "type": "path_exists",
+          "path": "projects/first-steps/tests/test_combat_table.gd",
+          "label": "combat table test exists"
         }
       ],
-      "evolutionNotes": []
+      "evolutionNotes": [
+        "Lessons 21-25 build formulas in player.gd first; Forge later extracts the same math to CombatTable and tests it."
+      ]
     },
     {
       "id": "0022",
@@ -700,9 +741,23 @@
           "path": "projects/first-steps/combat_table.gd",
           "value": "rage_from_dealing",
           "label": "current rage formula"
+        },
+        {
+          "type": "contains",
+          "path": "lessons/0025-rage.html",
+          "value": "CombatTable.rage_from_dealing",
+          "label": "documents final rage formula home"
+        },
+        {
+          "type": "contains",
+          "path": "projects/first-steps/player.gd",
+          "value": "rage_changed.emit",
+          "label": "current rage signal emitted"
         }
       ],
-      "evolutionNotes": []
+      "evolutionNotes": [
+        "Final rage formulas live in CombatTable and HUD updates through rage_changed/UnitFrame instead of direct RageBar path."
+      ]
     },
     {
       "id": "0026",
@@ -725,9 +780,35 @@
           "path": "projects/first-steps/main.tscn",
           "value": "forest_generator.gd",
           "label": "current scene has forest generator"
+        },
+        {
+          "type": "contains",
+          "path": "lessons/0026-procedural-forest.html",
+          "value": "64\u00d748",
+          "label": "documents final forest map size"
+        },
+        {
+          "type": "contains",
+          "path": "lessons/0026-procedural-forest.html",
+          "value": "terrain.png",
+          "label": "documents final terrain atlas"
+        },
+        {
+          "type": "contains",
+          "path": "projects/first-steps/forest_generator.gd",
+          "value": "map_width: int = 64",
+          "label": "current forest width"
+        },
+        {
+          "type": "contains",
+          "path": "projects/first-steps/forest_generator.gd",
+          "value": "_dress_camp",
+          "label": "current forest camp dressing"
         }
       ],
-      "evolutionNotes": []
+      "evolutionNotes": [
+        "Lesson teaches forest generator v1; current generator v2 keeps the seed spine but expands map, terrain atlas, Road layer, camp dressing, and boundaries."
+      ]
     },
     {
       "id": "0027",

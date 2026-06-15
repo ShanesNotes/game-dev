@@ -47,6 +47,10 @@
   <span class="ct">◈ why the extraction is safe</span>
   <p>The wolf's script accesses <code class="inline">$SwingTimer</code>, <code class="inline">$HealthBar</code>, <code class="inline">$Sprite2D</code> — all relative paths within its own branch. It detects the player via <code class="inline">is_in_group("player")</code>, not a hardcoded node path. Nothing pointed <em>out</em> at the parent scene — that's the property that makes a branch safe to extract.</p>
 </div>
+<div class="callout idea">
+  <span class="ct">📍 what the real wolf scene does now</span>
+  <p>The final <code class="inline">wolf.tscn</code> keeps this self-contained shape, but its child list is richer: <code class="inline">AnimatedSprite2D</code> replaces <code class="inline">Sprite2D</code>, and targeting uses a <code class="inline">TargetRing</code> child instead of tinting the body art. The extraction lesson still stands: keep a reusable scene's references inside its own branch.</p>
+</div>
 
 <h2>Part B — drag in the pack</h2>
 <div class="flow">

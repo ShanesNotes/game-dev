@@ -29,6 +29,10 @@
   <div class="def"><b>Dealing damage</b><p><code class="inline">7.5 × dmg / C + (f × speed) / 2</code>, where <code class="inline">f</code> is 3.5 (normal) or 7.0 (crit).</p></div>
   <div class="def"><b>Taking damage</b><p><code class="inline">2.5 × dmg / C</code> — getting hit makes you angrier too.</p></div>
 </div>
+<div class="callout idea">
+  <span class="ct">📍 what the real code does now</span>
+  <p>This lesson first wires rage through a simple <code class="inline">HUD/RageBar</code> path and local helper functions. The final code keeps the same resource but moves the formulas to <code class="inline">CombatTable.rage_from_dealing()</code> / <code class="inline">rage_from_taking()</code>, and the HUD updates from the Player's <code class="inline">rage_changed</code> signal inside the <code class="inline">UnitFrame</code>.</p>
+</div>
 
 <h2>Part A — the rage bar</h2>
 <div class="flow">
