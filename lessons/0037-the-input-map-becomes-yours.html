@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lesson 37 — The Input Map Becomes Yours</title>
+<link rel="stylesheet" href="_lesson.css">
+</head>
+<body>
+<main>
+<header class="hero">
+  <div class="kicker">Godot · Lesson 37 · Control Bridge</div>
+  <h1>The Input Map <span>Becomes Yours</span></h1>
+  <p class="sub">Lesson 3 used Godot's built-in <code class="inline">ui_*</code> actions so movement worked immediately. The real game now owns its controls by name: movement, targeting, and attack all live in Project Settings → Input Map.</p>
+</header>
+
+<div class="win">
+  <b>TODAY</b>
+  <p><strong>Open the final Input Map and understand every action the game reads.</strong> WASD, arrows, stick, D-pad, Tab/RB, Space/right mouse/A — many devices, one set of game verbs.</p>
+</div>
+
+<h2>Why this lesson exists</h2>
+<p>
+  Early lessons were allowed to use <code class="inline">ui_left</code>, <code class="inline">ui_right</code>,
+  <code class="inline">ui_up</code>, and <code class="inline">ui_down</code> because they need no setup. That's the right
+  first five minutes. But <code class="inline">ui_*</code> belongs to Godot's UI navigation vocabulary: menu focus,
+  buttons, sliders, dialog boxes. A game eventually deserves names that describe <em>game intent</em>.
+</p>
+<div class="callout note">
+  <span class="ct">◈ action names should be verbs, not devices</span>
+  <p><code class="inline">move_left</code> means "the player wants to move left." It can be A, Left Arrow, D-pad Left, or a stick tilted left. The code never asks which device did it — it asks whether the <em>verb</em> is active.</p>
+</div>
+
+<h2>The final map</h2>
+<p>Open <kbd>Project</kbd> → <kbd>Project Settings…</kbd> → <strong>Input Map</strong>. These are the custom actions the project now uses:</p>
+<div class="defs">
+  <div class="def"><b>move_left</b><p><kbd>A</kbd>, <kbd>Left Arrow</kbd>, left stick X−, D-pad Left.</p></div>
+  <div class="def"><b>move_right</b><p><kbd>D</kbd>, <kbd>Right Arrow</kbd>, left stick X+, D-pad Right.</p></div>
+  <div class="def"><b>move_up</b><p><kbd>W</kbd>, <kbd>Up Arrow</kbd>, left stick Y−, D-pad Up.</p></div>
+  <div class="def"><b>move_down</b><p><kbd>S</kbd>, <kbd>Down Arrow</kbd>, left stick Y+, D-pad Down.</p></div>
+  <div class="def"><b>target_next</b><p><kbd>Tab</kbd> or right shoulder / RB. Cycles to the nearest wolf you are not already targeting.</p></div>
+  <div class="def"><b>attack</b><p><kbd>Space</kbd>, right mouse button, or gamepad bottom face button (A / Cross).</p></div>
+</div>
+
+<div class="callout warn">
+  <span class="ct">⚠ why right mouse, not left?</span>
+  <p>Lesson 15 could get away with a simple attack binding before click-targeting existed. Once Lesson 19 gives left click to wolf selection, attack's mouse binding moves to the right mouse button. The action name stays <code class="inline">attack</code>; only the event list changes.</p>
+</div>
+
+<h2>Movement code does not get more complicated</h2>
+<p>The whole movement swap is just the action names inside the same <code class="inline">Input.get_vector</code> call:</p>
+<div class="code">
+  <div class="bar"><span class="t">GDScript · player.gd — final movement read</span><button class="copy">copy</button></div>
+<pre>var direction = Input.get_vector("move_left", "move_right", "move_up", "move_down")
+velocity = direction * speed
+move_and_slide()</pre>
+</div>
+<div class="annot">
+  <div class="line-note"><b>Same order as Lesson 3:</b> left, right, up, down. Negative X, positive X, negative Y, positive Y.</div>
+  <div class="line-note"><b>More devices, no more branches:</b> keyboard, D-pad, and analog stick all flow through the same vector. Diagonals still normalize; stick deadzones still apply.</div>
+</div>
+
+<h2>Discrete actions: target and attack</h2>
+<p>Movement is continuous, so it is read every physics frame. Targeting and attacking are one-shot verbs, so the player asks whether they were just pressed:</p>
+<div class="code">
+  <div class="bar"><span class="t">GDScript · player.gd — final discrete reads</span><button class="copy">copy</button></div>
+<pre>if Input.is_action_just_pressed("target_next"):
+    target_nearest_wolf()
+if Input.is_action_just_pressed("attack"):
+    start_auto_attack()</pre>
+</div>
+<div class="annot">
+  <div class="line-note"><code>target_next</code> — <b>Tab/RB as a targeting verb.</b> The function chooses the nearest wolf you are not already targeting. Mouse targeting still works through the wolf's click handler; the Input Map adds a keyboard/controller route.</div>
+  <div class="line-note"><code>attack</code> — <b>one action, many devices.</b> Space, right mouse, and A/Cross all call the same code. When the sword is missing, the same action triggers the "Find the sword" feedback.</div>
+</div>
+
+<h2>Do it: inspect one action</h2>
+<div class="flow">
+  <div class="phase"><div class="rail"><div class="num">1</div><div class="line"></div></div><div class="body"><p>Open the Input Map and expand <code class="inline">move_left</code>. Confirm it has <kbd>A</kbd>, <kbd>Left Arrow</kbd>, a negative left-stick X axis, and D-pad Left.</p></div></div>
+  <div class="phase"><div class="rail"><div class="num">2</div><div class="line"></div></div><div class="body"><p>Expand <code class="inline">attack</code>. Confirm it has <kbd>Space</kbd>, right mouse, and A/Cross.</p></div></div>
+  <div class="phase"><div class="rail"><div class="num">3</div></div><div class="body"><p>Run the game. Move with WASD, then arrows. Target with <kbd>Tab</kbd>. Attack with <kbd>Space</kbd>. The code did not branch by device once.</p></div></div>
+</div>
+
+<h2>Check yourself</h2>
+<div class="quiz">
+  <p class="q">1. Why not keep using <code class="inline">ui_left</code> for player movement forever?</p>
+  <button onclick="pick(this)">Because <code class="inline">ui_left</code> is slower</button>
+  <button onclick="pick(this)" data-correct>Because <code class="inline">ui_*</code> is UI-navigation vocabulary; game verbs deserve game-specific action names</button>
+  <button onclick="pick(this)">Because controllers cannot use <code class="inline">ui_*</code></button>
+  <div class="feedback"></div>
+</div>
+<div class="quiz">
+  <p class="q">2. What changes in code when you bind a second device to <code class="inline">attack</code>?</p>
+  <button onclick="pick(this)" data-correct>Nothing — the code still checks the action name</button>
+  <button onclick="pick(this)">Add a second <code class="inline">if</code> for the gamepad</button>
+  <button onclick="pick(this)">Replace <code class="inline">is_action_just_pressed</code> with raw keycodes</button>
+  <div class="feedback"></div>
+</div>
+<div class="quiz">
+  <p class="q">3. Which action should a HUD hint display for targeting?</p>
+  <button onclick="pick(this)">The raw Tab key only</button>
+  <button onclick="pick(this)" data-correct><code class="inline">target_next</code>, because Tab and RB are just bindings for the same verb</button>
+  <button onclick="pick(this)"><code class="inline">ui_accept</code></button>
+  <div class="feedback"></div>
+</div>
+
+<h3>Codebase checkpoint</h3>
+<p>The project after this lesson:</p>
+<div class="tree">
+<span class="dim">projects/first-steps/</span>
+├─ <span class="leaf">project.godot</span>   <span class="dim">← contains move_*, target_next, attack actions</span>
+├─ <span class="leaf">player.gd</span>       <span class="dim">← reads move_*, target_next, attack by action name</span>
+├─ hud.gd          <span class="dim">· hint strip displays Move / Target / Attack verbs</span>
+└─ <span class="dim">…</span>
+</div>
+<p class="cite">The old Lesson 3 forward note is now paid: the custom Input Map is taught, and current controls are no longer magic.</p>
+
+<div class="teacher">
+  <b>I'M YOUR TEACHER — ASK ME ANYTHING</b>
+  <p>Want to add rebinding later? This is the foundation: save a different event list for the same action names, and the gameplay code stays untouched. When you can explain why <code class="inline">move_left</code> is better than <code class="inline">A_key</code>, say <em>"done"</em> — the progression arc can now start on clean controls and a tested combat core.</p>
+</div>
+
+<footer>
+  LESSON 37 · Control Bridge · grounded in <a href="../MISSION.md">your mission</a> · pays the Lesson 03 Input Map debt<br>
+  Primary references: <a href="https://docs.godotengine.org/en/stable/tutorials/inputs/input_examples.html">Godot — Input examples</a> · <a href="https://docs.godotengine.org/en/stable/tutorials/inputs/inputevent.html#actions">Godot — Input actions</a> · <a href="https://docs.godotengine.org/en/stable/classes/class_input.html#class-input-method-get-vector">Input.get_vector()</a>
+</footer>
+</main>
+<script src="_lesson.js"></script>
+</body>
+</html>

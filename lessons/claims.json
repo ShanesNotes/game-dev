@@ -1,7 +1,7 @@
 {
   "version": 1,
   "description": "Seeded lesson/code claims for the Godot learning repo. Error claims must pass now; known_debt warnings are burn-down items for the Ultragoal lesson audit.",
-  "expectedLessonCount": 36,
+  "expectedLessonCount": 37,
   "index": "lessons/index.html",
   "lessonGlob": "lessons/[0-9][0-9][0-9][0-9]-*.html",
   "contentScans": [
@@ -117,13 +117,15 @@
           "label": "current move_down action"
         },
         {
-          "type": "known_debt",
-          "label": "input lesson debt",
-          "message": "Lesson 03 has a forward note for move_* actions, but no dedicated lesson teaches creating them yet."
+          "type": "contains",
+          "path": "lessons/0003-player-input-arrow-keys.html",
+          "value": "Lesson 37",
+          "label": "points to L37 final Input Map lesson"
         }
       ],
       "evolutionNotes": [
-        "Hybrid repair: built-in ui_* is a low-friction ramp; current project uses custom move_* actions."
+        "Hybrid repair: built-in ui_* is a low-friction ramp; current project uses custom move_* actions.",
+        "Input Map debt paid by Lesson 37: final project controls use custom move_*, target_next, and attack actions."
       ]
     },
     {
@@ -1093,6 +1095,82 @@
       ],
       "evolutionNotes": [
         "Forge F4 moves floating text and combat particle construction out of actors and into the CombatFX autoload."
+      ]
+    },
+    {
+      "id": "0037",
+      "file": "lessons/0037-the-input-map-becomes-yours.html",
+      "title": "The Input Map Becomes Yours",
+      "claims": [
+        {
+          "type": "contains",
+          "path": "lessons/0037-the-input-map-becomes-yours.html",
+          "value": "move_left",
+          "label": "teaches move_left action"
+        },
+        {
+          "type": "contains",
+          "path": "lessons/0037-the-input-map-becomes-yours.html",
+          "value": "target_next",
+          "label": "teaches target_next action"
+        },
+        {
+          "type": "contains",
+          "path": "lessons/0037-the-input-map-becomes-yours.html",
+          "value": "right mouse",
+          "label": "documents final attack mouse binding"
+        },
+        {
+          "type": "contains",
+          "path": "projects/first-steps/player.gd",
+          "value": "Input.get_vector(\"move_left\", \"move_right\", \"move_up\", \"move_down\")",
+          "label": "player reads custom movement actions"
+        },
+        {
+          "type": "contains",
+          "path": "projects/first-steps/player.gd",
+          "value": "Input.is_action_just_pressed(\"target_next\")",
+          "label": "player reads target_next"
+        },
+        {
+          "type": "contains",
+          "path": "projects/first-steps/player.gd",
+          "value": "Input.is_action_just_pressed(\"attack\")",
+          "label": "player reads attack"
+        },
+        {
+          "type": "input_action",
+          "name": "move_left",
+          "label": "move_left action exists"
+        },
+        {
+          "type": "input_action",
+          "name": "move_right",
+          "label": "move_right action exists"
+        },
+        {
+          "type": "input_action",
+          "name": "move_up",
+          "label": "move_up action exists"
+        },
+        {
+          "type": "input_action",
+          "name": "move_down",
+          "label": "move_down action exists"
+        },
+        {
+          "type": "input_action",
+          "name": "target_next",
+          "label": "target_next action exists"
+        },
+        {
+          "type": "input_action",
+          "name": "attack",
+          "label": "attack action exists"
+        }
+      ],
+      "evolutionNotes": [
+        "Control Bridge pays the L03 forward note by teaching the final custom Input Map after Forge."
       ]
     }
   ]

@@ -174,7 +174,7 @@
 <div class="teacher">
   <b>I'M YOUR TEACHER — ASK ME ANYTHING</b>
   <p>You built click-to-target — the backbone of WoW combat. Snags: nothing happens on click → check the wolf root's <strong>Pickable</strong> is ON <em>in wolf.tscn</em> (not a Main override) and <code class="inline">input_event</code> is connected. "Attempt to call set_target on null" → the Player isn't in the <code class="inline">"player"</code> group — check <code class="inline">add_to_group("player")</code> is in <code class="inline">_ready()</code>. AggroArea swallowing clicks → its Pickable must be OFF. Glow stays on a dead wolf → that's fine, the node is freed; the highlight only lingers on living ones.<br><br>
-  <b>Want more (ask me):</b> <strong>Tab to cycle targets</strong>, <strong>Esc / right-click to deselect</strong>, or a <strong>target ring sprite</strong> instead of a tint. And the big one — <strong>Whirlwind</strong>, an ability that hits every wolf in range (an Area2D sweep + the "enemies" group) — that's a real Warrior ability coming in the combat-depth arc.<br><br>
+  <b>Later payoff:</b> Tab/RB target cycling is now real via the <code class="inline">target_next</code> action, and Lesson 37 teaches that final Input Map. Still optional future ideas: <strong>Esc / right-click to deselect</strong> or a <strong>target ring sprite</strong> instead of a tint. And the big one — <strong>Whirlwind</strong>, an ability that hits every wolf in range (an Area2D sweep + the "enemies" group) — that's a real Warrior ability coming in the combat-depth arc.<br><br>
   Say <em>"done"</em> — Lesson 20 gives the combat math real numbers straight from <code class="inline">wow-combat-values.md</code>: weapon speed, attack table, glancing blows.</p>
 </div>
 

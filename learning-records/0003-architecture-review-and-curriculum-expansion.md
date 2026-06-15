@@ -1,6 +1,6 @@
 # 0003 — Architecture review & curriculum expansion (the overhaul, reconciled)
 
-**Date:** 2026-06-11 · status: **active record / Forge complete** (major retrofit decisions resolved; remaining debt tracked by the Ultragoal)
+**Date:** 2026-06-11 · status: **active record / Forge + Input bridge complete** (remaining cleanup tracked by the Ultragoal)
 
 ## Context
 
@@ -28,7 +28,7 @@ This record is **canonical** for those findings; the visual report is attached a
 Untaught systems now in the codebase (the retrofit inventory):
 
 - **Input map v2** — `move_*` actions (WASD/arrows/stick/d-pad), `target_next` (Tab/RB),
-  `attack` gains Space + A-button. *(Contradicts L03's `ui_*` teaching — see drift table.)*
+  `attack` gains Space/right mouse/A-button. *(Forward-noted in L03; paid by L37.)*
 - **Scene restructure** — `Main → {Ground, Road, World}`; actors live under a
   **Y-sorted `World`**; floor layers use negative `z_index`. Trees/props anchor their
   origin at the visual base so Y-sort layers them correctly.
@@ -241,8 +241,8 @@ what entered the repo ahead of its lesson):
 
 ## Remaining decisions / debts
 
-1. **Input Map teaching debt:** the custom `move_*`, `target_next`, and `attack` actions are
-   used by the game and only forward-noted in L03; close this before progression.
+1. **Input Map teaching debt:** ✅ paid by L37, "The Input Map Becomes Yours" — final
+   `move_*`, `target_next`, and `attack` bindings are now taught explicitly.
 2. **Repair style:** resolved in practice as hybrid repair — factual drift fixed in place,
    deliberate build-order ramps preserved with evolution notes.
 3. **Retrofit depth:** keep O-lessons as guided tours unless a system's trigger demands a
