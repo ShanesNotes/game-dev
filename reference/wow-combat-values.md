@@ -191,20 +191,23 @@ where `Diff(L)=0` for L≤28. Total 1→60 = 4,084,700 XP. Source:
 [wowpedia Experience to level](https://wowpedia.fandom.com/wiki/Experience_to_level)
 
 **Mob kill XP:**
-- Base (mob = your level) = `5 × mobLevel + 45`.
-- Higher mob (up to +4): `× (1 + 0.05 × (mobLevel − charLevel))`.
-- Lower mob: `× (1 − (charLevel − mobLevel) / ZD)` until it's gray (ZD: 5 at low levels).
+- Same-level base = `5 × playerLevel + 45`.
+- Higher mob (up to +4): `base × (1 + 0.05 × (mobLevel − playerLevel))`; red mobs cap at the +4 multiplier.
+- Lower mob above gray: `base × (1 − (playerLevel − mobLevel) / ZD)`.
+- **Gray level:** level 1–5 characters have gray level 0; for 6–49 use `playerLevel − floor(playerLevel / 10) − 5`; at 50, gray = 40; for 51–59 use `playerLevel − floor(playerLevel / 5) − 1`; 60 uses 51.
+- **ZD:** 5 at levels 1–7; 6 at 8–9; 7 at 10–11; 8 at 12–15; 9 at 16–19; 11 at 20–29; 12 at 30–39; 13 at 40–44; 14 at 45–49; 15 at 50–54; 16 at 55–59; 17 at 60.
 - **Elite = 2×** normal.
 - **Con colors:** red ≥ +5 · orange +3/+4 · yellow ±2 · green −3..gray · **gray = 0 XP**.
-- Source: [warcraft.wiki Mob experience](https://warcraft.wiki.gg/wiki/Mob_experience)
+- Source: [wowwiki Formulas:Mob XP](https://wowwiki-archive.fandom.com/wiki/Formulas:Mob_XP) + [warcraft.wiki Mob experience](https://warcraft.wiki.gg/wiki/Mob_experience)
 
 **Rested XP:** **200%** kill XP while rested; accrues 5% of a level per 8h logged out
 (faster in inns), cap 150% of a level.
 
 **In our game:** start the player at **level 1**, wolves around **level 1–3**. Killing a
-L1 wolf = `5×1+45 = 50` XP; a L3 wolf (orange, +2 over a L1 player → use the +mod) gives
-a bit more. The two starter quests + ~a dozen wolf kills should ding the player to the
-level that unlocks Heroic Strike. We'll use the table above for level thresholds.
+L1 wolf = `5×1+45 = 50` XP; a L3 wolf is still yellow (+2 over a L1 player)
+and gives `round(50 × 1.10) = 55` XP. The two starter quests + ~a dozen wolf kills
+should ding the player to the level that unlocks Heroic Strike. We'll use the table
+above for level thresholds and skip rested XP until an inn/logout loop exists.
 
 ---
 
@@ -262,8 +265,8 @@ weapon damage + 11, rolls on the attack table. The first real *ability*.
 ---
 
 ## Open decisions to lock when we get there
-- Player & wolf exact **levels** (suggest player L1, wolves L1–3) — sets every Δ above.
+- Player & wolf exact **levels** for the starter arc are locked: player L1, wolves L1–3. Future zones may vary them.
 - Whether the player ever carries a **shield** (enables player block + the crush-immunity
   fantasy) or stays 1H-sword-only.
 - How **agility/crit** scales early (flat 5% vs a real agility stat).
-- Whether to model **rest XP** at all (probably skip — no logout in our game).
+- Whether to model **rest XP** later; skipped for now because there is no inn/logout loop.

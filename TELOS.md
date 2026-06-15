@@ -11,8 +11,9 @@ the work starts to feel busy instead of purposeful.*
 > lessons/index.html + learning-records/0002); next aligned was XP & leveling.
 > Current state updated to match shipped reality (no law changes).
 > 2026-06-15 — Ultragoal review sync: 37 lessons shipped; Game Feel, The Forge,
-> Control Bridge, code architecture, forest/assets, and records cleanup are aligned.
-> Next aligned is the progression readiness review before Lesson 38.
+> Control Bridge, code architecture, forest/assets, records cleanup, and progression
+> readiness are aligned. Next aligned learner-facing build is Lesson 38 after the
+> final verification gate.
 
 ## Prime mover
 
@@ -78,7 +79,7 @@ Things that would look like progress and betray the purpose:
 engineering arc, and the Control Bridge. Playable WoW-style combat now has a
 tested attack table, signal-driven HUD, shared CombatFX autoload, explicit input
 actions, a generated forest, and deterministic asset workflow, per
-lessons/index.html and learning-records/0003. Next aligned step after the
-Ultragoal cleanup is the progression readiness review, then **Lesson 38 — XP &
-leveling** when the learner returns to building by hand. The smallest move that
+lessons/index.html and learning-records/0003. Next aligned learner-facing step after the
+Ultragoal final gate is **Lesson 38 — XP & leveling** when the learner returns to
+building by hand. The smallest move that
 advances the telos is still the next single understood lesson.

@@ -3,11 +3,11 @@
 *Updated 2026-06-15 during Ultragoal review. Keep overwriting when stale.*
 
 ## TL;DR
-The Forge engineering arc, Input Map bridge, first Godot architecture pass, world/assets pass, and curriculum/records cleanup are now **complete**: F1–F4 are implemented/taught, Lesson 37 closes the `move_*`/`target_next`/`attack` teaching debt, G009 typed/cleaned the core combat/HUD scripts, G010 hardened the forest generator plus asset pipeline, and G011 synced the durable docs to the 37-lesson reality. The active durable plan is the Ultragoal in `.omx/ultragoal/goals.json`; resume with the next pending story, **G012 — progression readiness review**.
+The Forge engineering arc, Input Map bridge, first Godot architecture pass, world/assets pass, curriculum/records cleanup, and progression readiness review are now **complete**: F1–F4 are implemented/taught, Lesson 37 closes the `move_*`/`target_next`/`attack` teaching debt, G009 typed/cleaned the core combat/HUD scripts, G010 hardened the forest generator plus asset pipeline, G011 synced durable docs, and G012 added a tested XP formula seam without wiring gameplay. The active durable plan is the Ultragoal in `.omx/ultragoal/goals.json`; resume with the final pending story, **G013 — final verification, cleanup, and review gate**.
 
 - **Branch:** `ultragoal-review-refactor` (local; not pushed or merged).
 - **Durable plan:** `.omx/ultragoal/goals.json` + `.omx/ultragoal/ledger.jsonl`.
-- **Record:** `learning-records/0003-architecture-review-and-curriculum-expansion.md` marks Forge F1–F4, L37, and G009–G011 shipped.
+- **Record:** `learning-records/0003-architecture-review-and-curriculum-expansion.md` marks Forge F1–F4, L37, and G009–G012 shipped.
 - **Lesson contract:** `lessons/claims.json` + `tools/check_lessons.py` now track 37 lessons.
 
 ## Done in The Forge
@@ -24,6 +24,12 @@ The Forge engineering arc, Input Map bridge, first Godot architecture pass, worl
 - **G010 / Forest** — `forest_generator.gd` now uses exported NodePath wiring for Road/World/Player/Sword/bounds, explicit typed procedural state, and no remaining parent-chain add. Added `tests/test_forest_generator.gd` to lock seed-1337 world invariants (ground cells, road cells, child count, wolves, player/sword positions, Y-sort).
 - **G010 / Assets** — generator scripts no longer depend on `/home/ark/...` or caller CWD. `SPRITE_WORKFLOW.md` now documents current generator order, legacy ramp assets, and v2 asset outputs. Temp-copy rebuild of all generators passed without mutating repo assets.
 - **ForestPlan decision** — remains parked: still one consumer, no generation-logic bug found, and the new invariant test gives regression coverage without splitting pure plan/apply layers yet.
+
+## Done in progression readiness
+
+- **G012 / Progression math** — `progression_table.gd` is a pure, tested formula module for XP-to-next, mob kill XP, con colors, gray levels, and ZD thresholds. It is not wired into `player.gd`; Lesson 38 should still build XP state, HUD display, and ding feedback by hand.
+- **G012 / Test** — `tests/test_progression_table.gd` locks low-level XP table values, same/higher/lower/gray/elite XP, and con-color thresholds.
+- **G012 / Records** — `reference/wow-combat-values.md` and `learning-records/0002` now reflect the corrected +2-yellow/+3-orange con-color rule and post-L37 progression numbering.
 
 ## Done in docs/records cleanup
 
@@ -42,6 +48,7 @@ godot --headless --path projects/first-steps --import
 godot --headless --path projects/first-steps --script res://tests/test_combat_table.gd
 godot --headless --path projects/first-steps --script res://tests/test_combat_fx.gd
 godot --headless --audio-driver Dummy --path projects/first-steps --script res://tests/test_forest_generator.gd
+godot --headless --audio-driver Dummy --path projects/first-steps --script res://tests/test_progression_table.gd
 godot --headless --audio-driver Dummy --path projects/first-steps res://main.tscn --quit-after 120
 ```
 
@@ -49,8 +56,8 @@ Expected current lesson checker state: **0 errors / 0 warnings**. The stale proj
 
 ## Next up
 
-1. **G012** — XP/progression readiness review after the docs are clean.
-2. **G013** — final verification, ai-slop cleanup, and independent review gate.
+1. **G013** — final verification, ai-slop cleanup, and independent review gate.
+2. After G013, the next learner-facing build is **Lesson 38 — XP & leveling**.
 
 ## Working model
 

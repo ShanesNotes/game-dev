@@ -83,6 +83,23 @@ repo ahead of its lesson). Everything below from "26 · XP & leveling" onward
 shifts one number later: XP = **27**, inventory = **28**, chest = **29**, gather =
 **30**, wizard = **31**, tracking = **32**, Heroic Strike = **33**, Whirlwind = **34**.
 
+## Numbering update (2026-06-15, post-Forge/Input bridge)
+Game Feel (27–32), The Forge (33–36), and Control Bridge (37) now sit between the
+forest and progression. Progression resumes at **Lesson 38 — XP & leveling**, then
+inventory **39**, chest **40**, gather **41**, wizard **42**, quest tracking **43**,
+Heroic Strike **44**, and Whirlwind **45** unless lesson granularity changes.
+
+## Progression readiness update (2026-06-15)
+- Added `progression_table.gd` as a pure, tested formula seam for XP-to-next, mob kill
+  XP, gray/ZD thresholds, and con colors. It is intentionally **not wired into**
+  `player.gd` yet; Lesson 38 should add player XP state, HUD display, and ding feedback
+  by hand.
+- Added `tests/test_progression_table.gd` so formula drift fails headless before it
+  reaches a lesson.
+- Locked the starter levels already present in code: player L1; forest wolves L1–3.
+- Resolved the con-color wording: a +2 wolf is yellow; +3/+4 is orange; +5 is red.
+- Rested XP remains out of scope until the game has an inn/logout loop.
+
 ## Notes
 - Numbered 19–33 here (15 lessons); granularity may shift as we build (e.g. 23/24 could
   split or merge). We do them **one at a time**.

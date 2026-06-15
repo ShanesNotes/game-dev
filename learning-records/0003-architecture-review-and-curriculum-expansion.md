@@ -1,6 +1,6 @@
 # 0003 — Architecture review & curriculum expansion (the overhaul, reconciled)
 
-**Date:** 2026-06-11 · status: **active record / Forge + Input bridge + G009–G011 passes complete** (remaining cleanup tracked by the Ultragoal)
+**Date:** 2026-06-11 · status: **active record / Forge + Input bridge + G009–G012 passes complete** (remaining cleanup tracked by the Ultragoal)
 
 ## Context
 
@@ -244,6 +244,7 @@ what entered the repo ahead of its lesson):
 - **G009 · Godot code architecture and GDScript refactor pass** — ✅ shipped. Core scripts now use explicit return/parameter/export/onready types across `player.gd`, `wolf.gd`, `hud.gd`, `sword.gd`, `combat_fx.gd`, `damage_number.gd`, `sfx.gd`, and the last untyped `CombatTable` default. Player one-shot actions moved out of `_physics_process` into `_unhandled_input`; continuous movement still polls via `Input.get_vector`. `hud.gd` remains signal-driven/no `_process`; signal connections now use `StringName` constants and base-node contracts instead of depending on ignored global-script cache refreshes. Removed the stale .NET project block from `project.godot`. Lesson 37 and `lessons/claims.json` were updated to teach/check the final event-driven input shape. Verified lesson contract (0 errors / 4 planned doc warnings), combat-table test, CombatFX test, and 120-frame boot with no script errors/warnings.
 - **G010 · World, forest, and asset pipeline refactor pass** — ✅ shipped. `forest_generator.gd` now exposes scene wiring as typed NodePaths, keeps procedural state/local variables typed, and adds bounds through an explicit parent reference instead of an inline parent-chain call. Added `tests/test_forest_generator.gd`, which registers the test-only autoloads, instantiates `main.tscn`, and locks seed-1337 invariants: 3072 ground cells, 219 road cells, 431 world children, 9 wolves, camp/sword coordinates, and World Y-sort. Asset generator scripts now anchor paths to their own folder (removing the absolute `gen_props.py` output path and caller-CWD assumptions), and `assets/SPRITE_WORKFLOW.md` documents the v2 generator order plus legacy lesson-ramp assets. ForestPlan remains parked: one consumer, no generation-logic bug, and the new invariant test gives enough regression coverage without splitting plan/application yet.
 - **G011 · Curriculum architecture and durable records cleanup** — ✅ shipped. Top-level docs now match the 37-lesson reality, the GDScript-only environment wording is consistent, `GUIDE.md`/`TELOS.md`/`NOTES.md`/`HANDOFF.md` point to progression after Lesson 37, and the lesson contract checker burns down the planned doc warnings to 0. `lessons/claims.json` now treats future non-GDScript runtime drift in scanned docs as unconditionally warnable instead of allow-listing old wording.
+- **G012 · XP/progression readiness review** — ✅ shipped. Added `progression_table.gd` and `tests/test_progression_table.gd` as the progression equivalent of CombatTable: pure formulas first, gameplay wiring later. The seam covers XP-to-next, kill XP, gray/ZD thresholds, and con colors; it deliberately does not add player XP, an XP bar, quest rewards, inventory, or abilities. Updated `reference/wow-combat-values.md` and `learning-records/0002` so Lesson 38 starts from tested math and a corrected +2-yellow/+3-orange con-color rule.
 
 ## Remaining decisions / debts
 
@@ -255,3 +256,4 @@ what entered the repo ahead of its lesson):
    rebuild-from-scratch lesson.
 4. **ForestPlan** stays parked unless its trigger fires first. G010 rechecked the trigger and kept it parked.
 5. **Docs/records drift:** paid by G011. Lesson checker now reports 0 errors / 0 warnings; future drift should be fixed in docs or code rather than allow-listed away.
+6. **Progression wiring:** still intentionally unbuilt. G012 prepared/tested formulas only; Lesson 38 should be the learner-built vertical slice that adds XP state, HUD display, and ding feedback.
