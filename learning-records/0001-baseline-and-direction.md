@@ -11,7 +11,7 @@
   AI build the whole game" attempts failed. Wants to learn the craft, not delegate it.
 
 ## Direction
-- GDScript (not C#).
+- GDScript only.
 - 2D, top-down adventure/sim vibe as a loose compass (Zelda / Stardew / Pokémon).
 - Hobby pace, exploratory — discovering preferences is itself a goal.
 - Throughline: a tiny playable story, one mechanic per lesson, modelled on WoW's

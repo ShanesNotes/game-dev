@@ -8,8 +8,11 @@ the work starts to feel busy instead of purposeful.*
 > 2026-06-10 (later) — curriculum v2: lessons re-sequenced/deepened so the course
 > is the codebase's build order (serves the packaging telos; the laws unchanged).
 > 2026-06-11 — housekeeping sync: 26 lessons (0026 = procedural forest per
-> lessons/index.html + learning-records/0002); next aligned is 27 XP & leveling.
+> lessons/index.html + learning-records/0002); next aligned was XP & leveling.
 > Current state updated to match shipped reality (no law changes).
+> 2026-06-15 — Ultragoal review sync: 37 lessons shipped; Game Feel, The Forge,
+> Control Bridge, code architecture, forest/assets, and records cleanup are aligned.
+> Next aligned is the progression readiness review before Lesson 38.
 
 ## Prime mover
 
@@ -47,8 +50,9 @@ Principles that have actually been enforced, not just stated:
    `reference/wow-combat-values.md`, researched once and cited per lesson —
    never re-derived from vibes.
 5. **Simplest thing that works; refactors wait for their trigger.** Events over
-   polling (L11), the `WeaponData` refactor parked until a second weapon exists
-   (L27), AoE deferred until it became Whirlwind's job (L33). YAGNI, enforced.
+   polling (L11 and L35), the `WeaponData` refactor parked until a second weapon
+   exists, `ForestPlan` parked until a second consumer or generation bug appears,
+   and AoE deferred until Whirlwind needs it. YAGNI, enforced.
 6. **Locked decisions stay locked.** E.g. collision layers stay unified —
    recorded with "do NOT re-suggest." The records are memory; respect them.
 
@@ -70,9 +74,11 @@ Things that would look like progress and betray the purpose:
 
 ## Current state (at distillation)
 
-26 lessons done (Foundations through VI · The World / procedural Elwynn forest).
-Playable WoW-style combat (attack table through rage) + generated forest, per
-lessons/index.html, 0026-procedural-forest.html, and learning-records/0002
-(reseq note). Next aligned step per roadmap 0002 + index: **Lesson 27 — XP &
-leveling.** The smallest move that advances the telos is always the next single
-lesson, done by hand.
+37 lessons done: Foundations through The World, the Game Feel retrofit, The Forge
+engineering arc, and the Control Bridge. Playable WoW-style combat now has a
+tested attack table, signal-driven HUD, shared CombatFX autoload, explicit input
+actions, a generated forest, and deterministic asset workflow, per
+lessons/index.html and learning-records/0003. Next aligned step after the
+Ultragoal cleanup is the progression readiness review, then **Lesson 38 — XP &
+leveling** when the learner returns to building by hand. The smallest move that
+advances the telos is still the next single understood lesson.

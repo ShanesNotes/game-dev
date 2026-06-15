@@ -12,7 +12,7 @@ how games are built, well enough to start seeing what kind of game I want to mak
 - The "top-down adventure/sim" feel (Zelda / Stardew / Pokémon) as a loose direction
 
 ## Constraints
-- Engine: Godot 4.6.2 stable, **GDScript** (not C#)
+- Engine: Godot 4.6.2 stable, **GDScript only**
 - Hobby pace — explore when time allows, no deadline
 - Total beginner: learning by doing, one small win at a time
 
@@ -28,6 +28,6 @@ A tiny playable story, one mechanic per lesson:
 This gives every new mechanic a *reason to exist* inside a story I care about.
 
 ## Out of scope (for now)
-- C# / .NET — revisit only if GDScript ever becomes limiting
+- Other Godot scripting languages — revisit only if GDScript ever becomes limiting
 - 3D — staying 2D while learning fundamentals
 - Shipping/publishing a finished game — exploration first

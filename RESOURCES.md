@@ -13,8 +13,10 @@ sharpens. Knowledge for lessons is drawn from here — not from parametric guess
   Nodes, scenes, signals, scripting fundamentals. Use for: core mental model.
 - [GDScript reference](https://docs.godotengine.org/en/stable/tutorials/scripting/gdscript/gdscript_basics.html)
   Language syntax. Use for: GDScript questions.
-- [C# / .NET in Godot](https://docs.godotengine.org/en/stable/tutorials/scripting/c_sharp/index.html)
-  Relevant since this is the mono build. Use for: if we go the C# route.
+- [GDScript exported properties](https://docs.godotengine.org/en/stable/tutorials/scripting/gdscript/gdscript_exports.html)
+  Official reference for `@export`, typed inspector fields, and editor-facing script contracts. Use for: lessons that expose tuneable values.
+- [GDScript static typing](https://docs.godotengine.org/en/stable/tutorials/scripting/gdscript/static_typing.html)
+  Official reference for typed variables, return values, typed arrays, and warnings. Use for: refactors and tests that make the codebase safer.
 
 ## Wisdom (Communities)
 

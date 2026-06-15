@@ -31,12 +31,7 @@
       ],
       "pattern": "C#|csharp|CSharp|GodotSharp|dotnet|mono",
       "severity": "warn",
-      "allow": [
-        "GDScript \\(not C#\\)",
-        "not C#",
-        "mono headings",
-        "stable\\.mono"
-      ]
+      "allow": []
     }
   ],
   "lessons": [

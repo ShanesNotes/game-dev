@@ -4,7 +4,7 @@ Scratchpad for your teaching preferences and working notes.
 
 ## Environment (verified 2026-06-07)
 - Godot binary: `/home/ark/.local/bin/godot` → run as `godot`
-- Version: **4.6.2.stable.mono** (C# + GDScript both available)
+- Version: **4.6.2.stable**; the course and project are GDScript-only
 - Open the editor: `godot` (project manager) or `godot --path projects/<name>`
 - Godot projects live in `./projects/`
 
@@ -18,7 +18,7 @@ Scratchpad for your teaching preferences and working notes.
 - All lessons link `_lesson.css` + `_lesson.js` (in `lessons/`). USE THESE for every
   new lesson — do not inline styles.
 - Aesthetic: Tiny Game Factory doctrine look — dark (#0a0d12), blueprint grid bg,
-  mono headings (JetBrains Mono) + serif body (Charter), amber/cyan/green accents.
+  code-style headings + serif body (Charter), amber/cyan/green accents.
 - Components: `.hero`+`.kicker`, `.win` banner, `.callout {note|warn|forbid|idea}`,
   `.defs/.def`, `.code` block (with copy button + `.kw/.fn/.var/.num/.com/.str/.type`
   token spans), `.annot/.line-note`, `.tree`, `.flow/.phase` steps, `.quiz` (buttons
@@ -28,7 +28,7 @@ Scratchpad for your teaching preferences and working notes.
 - **Curriculum v2 conventions (2026-06-10):** the player script is `player.gd`
   (renamed from `sprite_2d.gd`); kickers carry the arc — Foundations 1–7,
   The Encounter 8–13, Fighting Back 14–17, The Pack 18–19, Combat Depth 20–25,
-  The World 26, Game Feel 27–32; every lesson ends with a **Codebase checkpoint** (`h3` + `.tree`
+  The World 26, Game Feel 27–32, The Forge 33–36, Control Bridge 37, Progression 38+; every lesson ends with a **Codebase checkpoint** (`h3` + `.tree`
   of the project files, changed files in `.leaf` green with a `← changed:` note)
   so the lesson sequence doubles as the build order of the codebase.
 

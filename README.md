@@ -43,4 +43,4 @@ the AI only teaches.
 
 ## Environment
 
-Godot **4.6.2 stable (mono)** at `~/.local/bin/godot`. See `NOTES.md`.
+Godot **4.6.2 stable** at `~/.local/bin/godot`. See `NOTES.md`.

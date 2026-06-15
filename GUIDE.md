@@ -4,8 +4,9 @@
 packaged so you can run it yourself.**
 
 This repository is a live example: a total beginner (never wrote code in any
-language) learning Godot game development, 26 lessons in, with a playable
-WoW-style combat system built entirely by their own hands. The lessons double
+language) learning Godot game development, 37 lessons in, with a playable
+WoW-style combat system, generated forest, sound/juice layer, tested combat core,
+and explicit control map built as a teaching sequence. The lessons double
 as the codebase's build order — each one ends with a "codebase checkpoint"
 showing exactly what the project looks like at that point. This guide explains
 the method that got there. Substitute your own subject freely — the method
@@ -36,11 +37,11 @@ to guess at:
 |---|---|---|
 | `MISSION.md` | *Why* are we learning? What does success look like? What's out of scope? | Learn the craft, 2D top-down, GDScript, hobby pace — no shipping pressure |
 | `NOTES.md` | *How* should lessons be taught? What's true of the environment? | One win per lesson; split-screen loop; Godot 4.6.2; the lesson design system |
-| `learning-records/` | What has actually been learned? What decisions are locked? | Records 0001–0002: every lesson summarized, every decision logged |
+| `learning-records/` | What has actually been learned? What decisions are locked? | Records 0001–0003: lessons summarized, decisions logged, refactor debt tracked |
 | `RESOURCES.md` | Where does knowledge come from (instead of AI guesswork)? | Official Godot docs + community wisdom, each with a "use for" |
 | `reference/` | What facts must stay pinned across many lessons? | WoW 1.12 combat values + the AI asset-pipeline research, each done once and cited ever after |
-| `lessons/` | The actual teaching: one self-contained HTML page per win | 26 lessons + [`index.html`](lessons/index.html) to browse them |
-| `projects/` | The real work, made by the learner's hands | A Godot project with click-targeting, a one-roll attack table, rage |
+| `lessons/` | The actual teaching: one self-contained HTML page per win | 37 lessons + [`index.html`](lessons/index.html) to browse them |
+| `projects/` | The real work, made by the learner's hands | A Godot project with click-targeting, a generated forest, a tested one-roll attack table, rage |
 | `TELOS.md` | What is all of it *for*? (See "The telos discipline" below) | [`TELOS.md`](TELOS.md) |
 
 The deep magic is `learning-records/`. After every session the teacher writes
@@ -131,10 +132,11 @@ polishing the exhibit instead of learning).
 ## What it produced here
 
 Browse [`lessons/index.html`](lessons/index.html) for the full course this
-process generated — from "what is a node" to a one-roll attack table with
-miss, dodge, parry, glancing, crit, and rage, every value sourced from
-Vanilla 1.12. The roadmap for lessons 26–33 (XP, inventory, quests, Heroic
-Strike, Whirlwind) is in
-[`learning-records/0002-roadmap-combat-quests-progression.md`](learning-records/0002-roadmap-combat-quests-progression.md).
+process generated — from "what is a node" to a generated Elwynn forest, a sound/juice pass,
+a signal-driven HUD, a tested combat core, and a custom Input Map bridge.
+Every combat value is sourced from Vanilla 1.12. The progression roadmap
+(XP, inventory, quests, Heroic Strike, Whirlwind) is still anchored in
+[`learning-records/0002-roadmap-combat-quests-progression.md`](learning-records/0002-roadmap-combat-quests-progression.md),
+but it now resumes after Lesson 37.
 
 The learner still writes every line.

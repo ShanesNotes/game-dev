@@ -3,11 +3,11 @@
 *Updated 2026-06-15 during Ultragoal review. Keep overwriting when stale.*
 
 ## TL;DR
-The Forge engineering arc, Input Map bridge, first Godot architecture pass, and world/assets pass are now **complete**: F1–F4 are implemented/taught, Lesson 37 closes the `move_*`/`target_next`/`attack` teaching debt, G009 typed/cleaned the core combat/HUD scripts, and G010 hardened the forest generator plus asset pipeline. The active durable plan is the Ultragoal in `.omx/ultragoal/goals.json`; resume with the next pending story, **G011 — curriculum architecture and durable records cleanup**.
+The Forge engineering arc, Input Map bridge, first Godot architecture pass, world/assets pass, and curriculum/records cleanup are now **complete**: F1–F4 are implemented/taught, Lesson 37 closes the `move_*`/`target_next`/`attack` teaching debt, G009 typed/cleaned the core combat/HUD scripts, G010 hardened the forest generator plus asset pipeline, and G011 synced the durable docs to the 37-lesson reality. The active durable plan is the Ultragoal in `.omx/ultragoal/goals.json`; resume with the next pending story, **G012 — progression readiness review**.
 
 - **Branch:** `ultragoal-review-refactor` (local; not pushed or merged).
 - **Durable plan:** `.omx/ultragoal/goals.json` + `.omx/ultragoal/ledger.jsonl`.
-- **Record:** `learning-records/0003-architecture-review-and-curriculum-expansion.md` marks Forge F1–F4, L37, G009, and G010 shipped.
+- **Record:** `learning-records/0003-architecture-review-and-curriculum-expansion.md` marks Forge F1–F4, L37, and G009–G011 shipped.
 - **Lesson contract:** `lessons/claims.json` + `tools/check_lessons.py` now track 37 lessons.
 
 ## Done in The Forge
@@ -25,6 +25,12 @@ The Forge engineering arc, Input Map bridge, first Godot architecture pass, and 
 - **G010 / Assets** — generator scripts no longer depend on `/home/ark/...` or caller CWD. `SPRITE_WORKFLOW.md` now documents current generator order, legacy ramp assets, and v2 asset outputs. Temp-copy rebuild of all generators passed without mutating repo assets.
 - **ForestPlan decision** — remains parked: still one consumer, no generation-logic bug found, and the new invariant test gives regression coverage without splitting pure plan/apply layers yet.
 
+## Done in docs/records cleanup
+
+- **G011 / Docs** — `README.md`, `GUIDE.md`, `TELOS.md`, `NOTES.md`, `MISSION.md`, `RESOURCES.md`, and this handoff now describe the current GDScript-only, 37-lesson state instead of the older 26-lesson / runtime-flavor wording.
+- **G011 / Records** — `learning-records/0003-architecture-review-and-curriculum-expansion.md` now includes the G011 checkpoint and current remaining debts. Historical `0001` wording was normalized to GDScript-only.
+- **G011 / Contract** — `lessons/claims.json` no longer allow-lists the stale scanned doc strings; future non-GDScript runtime drift should show up as a checker warning.
+
 ## Verify the world is green
 
 ```bash
@@ -39,13 +45,12 @@ godot --headless --audio-driver Dummy --path projects/first-steps --script res:/
 godot --headless --audio-driver Dummy --path projects/first-steps res://main.tscn --quit-after 120
 ```
 
-Expected current lesson checker state: **0 errors / 4 warnings**. The stale .NET project section is gone; the remaining warnings are planned C# / mono wording in top-level docs for G011.
+Expected current lesson checker state: **0 errors / 0 warnings**. The stale project/runtime wording is gone from scanned docs.
 
 ## Next up
 
-1. **G011 — curriculum/records cleanup.** This includes the remaining C# / mono wording warnings and any stale handoff/index wording.
-2. **G012** — XP/progression readiness review after the docs are clean.
-3. **G013** — final verification, ai-slop cleanup, and independent review gate.
+1. **G012** — XP/progression readiness review after the docs are clean.
+2. **G013** — final verification, ai-slop cleanup, and independent review gate.
 
 ## Working model
 
