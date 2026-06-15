@@ -19,6 +19,7 @@ from urllib.parse import unquote, urlparse
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_MANIFEST = ROOT / "lessons" / "claims.json"
+UNSAFE_LINK_SCHEMES = {"javascript", "data"}
 
 
 @dataclass
@@ -49,8 +50,39 @@ def read_text(path: Path) -> str:
     return path.read_text(encoding="utf-8", errors="replace")
 
 
+def resolve_repo_path(value: str, findings: list[Finding], label: str, severity: str = "error") -> Path | None:
+    raw = Path(value)
+    if raw.is_absolute():
+        add(findings, severity, f"{label} uses absolute path outside the repo contract: {value}")
+        return None
+    path = (ROOT / raw).resolve()
+    try:
+        path.relative_to(ROOT)
+    except ValueError:
+        add(findings, severity, f"{label} escapes repo: {value}")
+        return None
+    return path
+
+
+def glob_paths(pattern: str, findings: list[Finding], label: str, severity: str = "error") -> list[Path]:
+    raw = Path(pattern)
+    if raw.is_absolute() or ".." in raw.parts:
+        add(findings, severity, f"{label} glob escapes repo: {pattern}")
+        return []
+    paths: list[Path] = []
+    for path in sorted(ROOT.glob(pattern)):
+        resolved = path.resolve()
+        try:
+            resolved.relative_to(ROOT)
+        except ValueError:
+            add(findings, severity, f"{label} glob produced path outside repo: {pattern} -> {path}")
+            continue
+        paths.append(resolved)
+    return paths
+
+
 def is_external_link(value: str) -> bool:
-    if value.startswith(("#", "mailto:", "tel:", "javascript:", "data:")):
+    if value.startswith(("#", "mailto:", "tel:")):
         return True
     parsed = urlparse(value)
     return bool(parsed.scheme and parsed.scheme not in {"", "file"})
@@ -60,6 +92,10 @@ def check_local_links(path: Path, findings: list[Finding]) -> None:
     parser = LinkParser()
     parser.feed(read_text(path))
     for attr, value in parser.links:
+        parsed = urlparse(value)
+        if parsed.scheme in UNSAFE_LINK_SCHEMES:
+            findings.append(Finding("error", f"{rel(path)} {attr} uses unsafe link scheme: {value}"))
+            continue
         if is_external_link(value):
             continue
         target = unquote(value.split("#", 1)[0])
@@ -73,10 +109,6 @@ def check_local_links(path: Path, findings: list[Finding]) -> None:
             continue
         if not target_path.exists():
             findings.append(Finding("error", f"{rel(path)} {attr} missing target: {value}"))
-
-
-def glob_paths(pattern: str) -> list[Path]:
-    return sorted(ROOT.glob(pattern))
 
 
 def excluded(path: Path, patterns: list[str]) -> bool:
@@ -94,13 +126,17 @@ def check_claim(claim: dict, findings: list[Finding]) -> None:
     label = claim.get("label") or ctype
 
     if ctype == "path_exists":
-        path = ROOT / claim["path"]
+        path = resolve_repo_path(claim["path"], findings, f"claim [{label}] path")
+        if path is None:
+            return
         if not path.exists():
             add(findings, severity, f"claim failed [{label}]: missing path {claim['path']}")
         return
 
     if ctype in {"contains", "not_contains"}:
-        path = ROOT / claim["path"]
+        path = resolve_repo_path(claim["path"], findings, f"claim [{label}] path")
+        if path is None:
+            return
         if not path.exists():
             add(findings, severity, f"claim failed [{label}]: missing file {claim['path']}")
             return
@@ -114,7 +150,9 @@ def check_claim(claim: dict, findings: list[Finding]) -> None:
         return
 
     if ctype == "regex":
-        path = ROOT / claim["path"]
+        path = resolve_repo_path(claim["path"], findings, f"claim [{label}] path")
+        if path is None:
+            return
         if not path.exists():
             add(findings, severity, f"claim failed [{label}]: missing file {claim['path']}")
             return
@@ -148,9 +186,11 @@ def run(manifest_path: Path, fail_on_warn: bool) -> int:
     findings: list[Finding] = []
 
     lesson_pattern = manifest.get("lessonGlob", "lessons/[0-9][0-9][0-9][0-9]-*.html")
-    lesson_files = glob_paths(lesson_pattern)
+    lesson_files = glob_paths(lesson_pattern, findings, "lessonGlob")
     expected_count = manifest["expectedLessonCount"]
-    index_path = ROOT / manifest.get("index", "lessons/index.html")
+    index_path = resolve_repo_path(manifest.get("index", "lessons/index.html"), findings, "index")
+    if index_path is None:
+        return 1
     index_text = read_text(index_path)
 
     if len(lesson_files) != expected_count:
@@ -178,7 +218,9 @@ def run(manifest_path: Path, fail_on_warn: bool) -> int:
         add(findings, "error", f"manifest has lesson {lesson_id}, but no matching file")
 
     for lesson in manifest_lessons:
-        path = ROOT / lesson["file"]
+        path = resolve_repo_path(lesson["file"], findings, f"lesson {lesson['id']} file")
+        if path is None:
+            continue
         if not path.exists():
             add(findings, "error", f"lesson {lesson['id']} missing file {lesson['file']}")
             continue
@@ -202,7 +244,7 @@ def run(manifest_path: Path, fail_on_warn: bool) -> int:
         allow = [re.compile(a, re.IGNORECASE if scan.get("ignoreCase", True) else 0) for a in scan.get("allow", [])]
         excludes = scan.get("exclude", [])
         for glob in scan.get("paths", []):
-            for path in glob_paths(glob):
+            for path in glob_paths(glob, findings, f"content scan [{scan['name']}]"):
                 if path.is_dir() or excluded(path, excludes):
                     continue
                 text = read_text(path)

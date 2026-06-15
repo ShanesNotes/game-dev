@@ -1,10 +1,9 @@
 {
   "mcpServers": {
     "godot": {
-      "command": "node",
-      "args": ["/home/ark/.local/share/godot-mcp/build/index.js"],
+      "command": "bash",
+      "args": ["tools/run-godot-mcp.sh"],
       "env": {
-        "GODOT_PATH": "/home/ark/.local/bin/godot",
         "DEBUG": "false"
       }
     }

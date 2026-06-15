@@ -242,6 +242,11 @@ func _make_prop(tex: Texture2D, solid: bool) -> Node2D:
 		root.add_child(shape)
 	else:
 		root = Node2D.new()
+	root.add_to_group("forest_props")
+	root.set_meta("forest_prop_asset", tex.resource_path.get_file())
+	root.set_meta("forest_prop_solid", solid)
+	if solid:
+		root.add_to_group("solid_forest_props")
 	root.add_child(shadow)
 	root.add_child(sprite)
 	return root

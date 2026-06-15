@@ -1,4 +1,4 @@
-[gd_scene load_steps=45 format=4 uid="uid://x584hiir57lw"]
+[gd_scene load_steps=46 format=4 uid="uid://x584hiir57lw"]
 
 [ext_resource type="Texture2D" path="res://assets/terrain.png" id="1_terrain"]
 [ext_resource type="Script" uid="uid://c3ncgr4ahy5b8" path="res://player.gd" id="2_player"]
@@ -22,6 +22,7 @@
 [ext_resource type="Script" path="res://hud.gd" id="19_hud"]
 [ext_resource type="Texture2D" path="res://assets/glint_star.png" id="20_glint"]
 [ext_resource type="AudioStream" path="res://assets/sounds/forest_ambience.wav" id="21_amb"]
+[ext_resource type="Script" path="res://main.gd" id="22_main"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_terrain"]
 texture = ExtResource("1_terrain")
@@ -229,6 +230,7 @@ animations = [{
 }]
 
 [node name="Main" type="Node2D"]
+script = ExtResource("22_main")
 
 [node name="Ambience" type="CanvasModulate" parent="."]
 color = Color(1.06, 1, 0.82, 1)

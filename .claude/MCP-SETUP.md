@@ -1,7 +1,7 @@
 # MCP servers for this repo
 
 Project-scoped MCP servers are declared in `../.mcp.json` at the repo root, so any agent
-working in this repo can use them.
+working in this repo can use them after local environment variables are set.
 
 ## godot — editor & runtime control
 
@@ -10,25 +10,28 @@ output, introspect the project (version, structure, scenes/nodes), build scenes 
 load sprites/textures, and manage 4.4+ resource UIDs (`get_uid`, `update_project_uids`).
 
 - Source: https://github.com/Coding-Solo/godot-mcp
-- Built from: commit `1209744` (GitHub HEAD, Apr 2026 — newer than npm `0.1.1`, which lacked
-  the 4.4+ UID tools the Godot 4.6 project needs)
-- Installed at: `/home/ark/.local/share/godot-mcp` (`build/index.js`)
-- Godot binary: `/home/ark/.local/bin/godot` (4.6.2-stable mono), set via `GODOT_PATH`
+- Built from: a recent commit with 4.4+ UID tools (npm `0.1.1` was too old for this project).
 - License: MIT
-- Verified: 2026-06-14 — responds to MCP `initialize` over stdio, resolves the Godot binary.
+- Verified in this workspace: 2026-06-14 — responds to MCP `initialize` over stdio.
 
-### ⚠️ Machine-specific paths
+### Local setup
 
-`.mcp.json` hard-codes two absolute paths (the built server and the Godot binary). On a different
-machine you must:
+`.mcp.json` intentionally does **not** hard-code personal absolute paths. It runs
+`tools/run-godot-mcp.sh`, which requires explicit local environment variables:
 
-1. Clone + build the server:
-   ```
-   git clone https://github.com/Coding-Solo/godot-mcp ~/.local/share/godot-mcp
-   cd ~/.local/share/godot-mcp && npm install && npm run build
-   ```
-2. Point `args[0]` at that `build/index.js` and `GODOT_PATH` at your Godot 4.x binary.
+```bash
+git clone https://github.com/Coding-Solo/godot-mcp ~/.local/share/godot-mcp
+cd ~/.local/share/godot-mcp && npm install && npm run build
+
+export GODOT_MCP_PATH="$HOME/.local/share/godot-mcp/build/index.js"
+export GODOT_PATH="$HOME/.local/bin/godot"   # optional; defaults to `godot`
+```
+
+The wrapper refuses a missing or relative `GODOT_MCP_PATH`; this keeps the repo config
+portable and makes the local trust boundary explicit.
 
 ### Updating
 
-`cd ~/.local/share/godot-mcp && git pull && npm install && npm run build`
+```bash
+cd "$(dirname "$GODOT_MCP_PATH")/.." && git pull && npm install && npm run build
+```
