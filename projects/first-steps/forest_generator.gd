@@ -301,9 +301,9 @@ func _dress_camp(start: Vector2i) -> void:
 	fire.add_child(crackle)
 	world.add_child(fire)
 	_occupied[start + Vector2i(-2, -1)] = true
-	var sign := _make_prop(SIGNPOST, false)
-	sign.position = cell_to_world(start + Vector2i(2, 0))
-	world.add_child(sign)
+	var signpost := _make_prop(SIGNPOST, false)
+	signpost.position = cell_to_world(start + Vector2i(2, 0))
+	world.add_child(signpost)
 	_occupied[start + Vector2i(2, 0)] = true
 	var seat := _make_prop(STUMP, false)
 	seat.position = cell_to_world(start + Vector2i(-1, 1))
