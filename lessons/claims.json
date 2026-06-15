@@ -329,7 +329,7 @@
         {
           "type": "contains",
           "path": "projects/first-steps/wolf.gd",
-          "value": "var spawn = Vector2.ZERO",
+          "value": "var spawn: Vector2 = Vector2.ZERO",
           "label": "current wolf stores spawn anchor"
         }
       ],
@@ -516,7 +516,7 @@
         {
           "type": "contains",
           "path": "projects/first-steps/player.gd",
-          "value": "SWORD_REST_DEGREES = 0.0",
+          "value": "SWORD_REST_DEGREES: float = 0.0",
           "label": "current sword rest pose is baked"
         }
       ],
@@ -1123,19 +1123,19 @@
         {
           "type": "contains",
           "path": "projects/first-steps/player.gd",
-          "value": "Input.get_vector(\"move_left\", \"move_right\", \"move_up\", \"move_down\")",
+          "value": "Input.get_vector(ACTION_MOVE_LEFT, ACTION_MOVE_RIGHT, ACTION_MOVE_UP, ACTION_MOVE_DOWN)",
           "label": "player reads custom movement actions"
         },
         {
           "type": "contains",
           "path": "projects/first-steps/player.gd",
-          "value": "Input.is_action_just_pressed(\"target_next\")",
+          "value": "event.is_action_pressed(ACTION_TARGET_NEXT)",
           "label": "player reads target_next"
         },
         {
           "type": "contains",
           "path": "projects/first-steps/player.gd",
-          "value": "Input.is_action_just_pressed(\"attack\")",
+          "value": "event.is_action_pressed(ACTION_ATTACK)",
           "label": "player reads attack"
         },
         {

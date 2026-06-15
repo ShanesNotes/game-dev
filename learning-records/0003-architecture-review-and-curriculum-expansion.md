@@ -1,6 +1,6 @@
 # 0003 — Architecture review & curriculum expansion (the overhaul, reconciled)
 
-**Date:** 2026-06-11 · status: **active record / Forge + Input bridge complete** (remaining cleanup tracked by the Ultragoal)
+**Date:** 2026-06-11 · status: **active record / Forge + Input bridge + G009 architecture pass complete** (remaining cleanup tracked by the Ultragoal)
 
 ## Context
 
@@ -238,6 +238,10 @@ what entered the repo ahead of its lesson):
    lessons while doing repair #1 — the inventory *is* the claims list.
 3. Decide retirement story for superseded assets (`tileset.png`, `sword.png`,
    `character.png` originals) once lessons stop referencing them.
+
+## Ultragoal review progress (2026-06-15)
+
+- **G009 · Godot code architecture and GDScript refactor pass** — ✅ shipped. Core scripts now use explicit return/parameter/export/onready types across `player.gd`, `wolf.gd`, `hud.gd`, `sword.gd`, `combat_fx.gd`, `damage_number.gd`, `sfx.gd`, and the last untyped `CombatTable` default. Player one-shot actions moved out of `_physics_process` into `_unhandled_input`; continuous movement still polls via `Input.get_vector`. `hud.gd` remains signal-driven/no `_process`; signal connections now use `StringName` constants and base-node contracts instead of depending on ignored global-script cache refreshes. Removed the stale .NET project block from `project.godot`. Lesson 37 and `lessons/claims.json` were updated to teach/check the final event-driven input shape. Verified lesson contract (0 errors / 4 planned doc warnings), combat-table test, CombatFX test, and 120-frame boot with no script errors/warnings.
 
 ## Remaining decisions / debts
 

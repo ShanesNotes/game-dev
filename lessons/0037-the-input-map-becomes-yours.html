@@ -48,10 +48,15 @@
 </div>
 
 <h2>Movement code does not get more complicated</h2>
-<p>The whole movement swap is just the action names inside the same <code class="inline">Input.get_vector</code> call:</p>
+<p>The whole movement swap is just named actions inside the same <code class="inline">Input.get_vector</code> call. The final code keeps those names as <code class="inline">StringName</code> constants so hot-path reads do not allocate new strings:</p>
 <div class="code">
   <div class="bar"><span class="t">GDScript · player.gd — final movement read</span><button class="copy">copy</button></div>
-<pre>var direction = Input.get_vector("move_left", "move_right", "move_up", "move_down")
+<pre>const ACTION_MOVE_LEFT: StringName = &amp;"move_left"
+const ACTION_MOVE_RIGHT: StringName = &amp;"move_right"
+const ACTION_MOVE_UP: StringName = &amp;"move_up"
+const ACTION_MOVE_DOWN: StringName = &amp;"move_down"
+
+var direction: Vector2 = Input.get_vector(ACTION_MOVE_LEFT, ACTION_MOVE_RIGHT, ACTION_MOVE_UP, ACTION_MOVE_DOWN)
 velocity = direction * speed
 move_and_slide()</pre>
 </div>
@@ -61,17 +66,24 @@ move_and_slide()</pre>
 </div>
 
 <h2>Discrete actions: target and attack</h2>
-<p>Movement is continuous, so it is read every physics frame. Targeting and attacking are one-shot verbs, so the player asks whether they were just pressed:</p>
+<p>Movement is continuous, so it is read every physics frame. Targeting and attacking are one-shot verbs, so the player receives them in <code class="inline">_unhandled_input</code> after UI has had a chance to consume the event:</p>
 <div class="code">
   <div class="bar"><span class="t">GDScript · player.gd — final discrete reads</span><button class="copy">copy</button></div>
-<pre>if Input.is_action_just_pressed("target_next"):
-    target_nearest_wolf()
-if Input.is_action_just_pressed("attack"):
-    start_auto_attack()</pre>
+<pre>const ACTION_TARGET_NEXT: StringName = &amp;"target_next"
+const ACTION_ATTACK: StringName = &amp;"attack"
+
+func _unhandled_input(event: InputEvent) -&gt; void:
+    if event.is_action_pressed(ACTION_TARGET_NEXT):
+        target_nearest_wolf()
+        get_viewport().set_input_as_handled()
+    elif event.is_action_pressed(ACTION_ATTACK):
+        start_auto_attack()
+        get_viewport().set_input_as_handled()</pre>
 </div>
 <div class="annot">
   <div class="line-note"><code>target_next</code> — <b>Tab/RB as a targeting verb.</b> The function chooses the nearest wolf you are not already targeting. Mouse targeting still works through the wolf's click handler; the Input Map adds a keyboard/controller route.</div>
   <div class="line-note"><code>attack</code> — <b>one action, many devices.</b> Space, right mouse, and A/Cross all call the same code. When the sword is missing, the same action triggers the "Find the sword" feedback.</div>
+  <div class="line-note"><code>_unhandled_input</code> — <b>gameplay after UI.</b> A pause menu or button can consume a click before the player script sees it; once the player handles a targeting or attack event, it marks the event handled.</div>
 </div>
 
 <h2>Do it: inspect one action</h2>
@@ -93,7 +105,7 @@ if Input.is_action_just_pressed("attack"):
   <p class="q">2. What changes in code when you bind a second device to <code class="inline">attack</code>?</p>
   <button onclick="pick(this)" data-correct>Nothing — the code still checks the action name</button>
   <button onclick="pick(this)">Add a second <code class="inline">if</code> for the gamepad</button>
-  <button onclick="pick(this)">Replace <code class="inline">is_action_just_pressed</code> with raw keycodes</button>
+  <button onclick="pick(this)">Replace <code class="inline">event.is_action_pressed</code> with raw keycodes</button>
   <div class="feedback"></div>
 </div>
 <div class="quiz">
