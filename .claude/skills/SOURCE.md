@@ -1,7 +1,8 @@
 # Godot skills — provenance
 
-These 48 skills (`<name>/SKILL.md`) and the 9 agents in `../agents/` are vendored from
+These 46 skills (`<name>/SKILL.md`) and the 8 agents in `../agents/` are vendored from
 **GodotPrompter** — an agentic skills framework for Godot 4.x game development.
+(Upstream ships 48 skills + 9 agents; the C#-only ones were pruned — see "Stack note" below.)
 
 - Source: https://github.com/jame581/GodotPrompter
 - Version: v1.9.0 (commit `e09aa6d`)
@@ -24,9 +25,10 @@ and reference a script we didn't copy. It was intentionally left out.
 
 ## Stack note
 
-The skills are GDScript-first (GDScript shown, then C#). Two are C#-only and a mismatch for this
-repo's GDScript stack — delete if unwanted: `csharp-godot/`, `csharp-signals/`, and the
-`../agents/godot-csharp-engineer.md` agent.
+The skills are GDScript-first (GDScript shown, then C#). The C#-only items from upstream were
+pruned for this repo's GDScript stack: the `csharp-godot` and `csharp-signals` skills and the
+`godot-csharp-engineer` agent. The remaining skills/agents may still mention them in
+"Related skills" / "Routing" hints — those pointers are non-breaking (they simply won't resolve).
 
 ## Updating
 
