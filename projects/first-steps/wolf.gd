@@ -1,5 +1,9 @@
 extends CharacterBody2D
 
+# Announced for the HUD's target frame, so the HUD never has to poll the wolf.
+signal health_changed(health, max_health)
+signal died
+
 @export var speed = 120
 @export var melee_range = 40.0
 @export var swing_damage = 2
@@ -52,6 +56,7 @@ func take_damage(amount, is_crit = false):
 		return
 	health -= amount
 	if health < 0: health = 0
+	health_changed.emit(health, max_health)
 	var bt = create_tween()
 	bt.tween_property(health_bar, "value", health, 0.2).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 	if is_crit:
@@ -89,6 +94,7 @@ func spawn_blood():
 
 func die():
 	dying = true
+	died.emit()
 	Sfx.play_at("yelp", global_position, -2.0)
 	$CollisionShape2D.set_deferred("disabled", true)
 	health_bar.visible = false

@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lesson 34 — The First Test</title>
+<link rel="stylesheet" href="_lesson.css">
+</head>
+<body>
+<main>
+<header class="hero">
+  <div class="kicker">Godot · Lesson 34 · The Forge 2 of 4</div>
+  <h1>The First <span>Test</span></h1>
+  <p class="sub">The combat math is in its own file. Now we make it <em>prove</em> itself — in the terminal, with the game closed, in under a second.</p>
+</header>
+
+<div class="win">
+  <b>TODAY</b>
+  <p>Run one command and watch the terminal print <code class="inline">PASS — all combat-table values match wow-combat-values.md</code> across 18 checks. The repo's first automated test. From now on, a careless balance edit that breaks a researched value turns the terminal <em>red</em> instead of silently shipping.</p>
+</div>
+
+<h2>Why a test, and why now?</h2>
+<p>
+  Lesson 33 made <code class="inline">CombatTable</code> pure — numbers in, numbers out, no nodes. That wasn't just tidiness:
+  pure functions are the only kind you can check <em>without running the game</em>. You don't need a wolf, a
+  swing timer, or a window. You just call <code class="inline">CombatTable.miss_chance(1, 2)</code> and ask: is it
+  <code class="inline">5.5</code>, like the reference says?
+</p>
+<div class="callout idea">
+  <span class="ct">◇ a test is a second opinion that never gets tired</span>
+  <p>Your <code class="inline">reference/wow-combat-values.md</code> is the source of truth for every combat number. A test is just code that re-reads that truth and checks the game still agrees. Write it once; it guards those values forever — every time you run it, for free.</p>
+</div>
+
+<h2>The tool: a headless <code class="inline">SceneTree</code> script</h2>
+<p>
+  Godot can run a single script with <strong>no window, no main scene</strong> — perfect for a test. A script that
+  <code class="inline">extends SceneTree</code> gets a <code class="inline">_init()</code> that fires the moment Godot boots; we do
+  our checks there and call <code class="inline">quit(0)</code> for success or <code class="inline">quit(1)</code> for failure.
+  <span class="cite">(The exit code is how a CI server, later, will know pass from fail.)</span>
+</p>
+
+<h2>Write the test</h2>
+<p>Create a folder <code class="inline">res://tests/</code>, and inside it a script <code class="inline">test_combat_table.gd</code>:</p>
+<div class="code">
+  <div class="bar"><span class="t">GDScript · tests/test_combat_table.gd</span><button class="copy">copy</button></div>
+<pre><span class="kw">extends</span> <span class="type">SceneTree</span>
+<span class="com"># Runs headless, game closed. Asserts CombatTable against the cited numbers in
+# reference/wow-combat-values.md. We preload the module rather than rely on the
+# global class_name, so the test runs even before the editor refreshes its cache.</span>
+
+<span class="kw">const</span> <span class="var">CT</span> = <span class="fn">preload</span>(<span class="str">"res://combat_table.gd"</span>)
+
+<span class="kw">var</span> <span class="var">_fails</span> := <span class="num">0</span>
+
+<span class="kw">func</span> <span class="fn">_init</span>() -> <span class="type">void</span>:
+    <span class="com"># Player is L1; vary the target's level to walk the Δ table.</span>
+    <span class="fn">expect</span>(<span class="str">"miss same-level"</span>, <span class="var">CT</span>.<span class="fn">miss_chance</span>(<span class="num">1</span>, <span class="num">1</span>), <span class="num">5.0</span>)
+    <span class="fn">expect</span>(<span class="str">"miss +1 (Δ=5)"</span>,   <span class="var">CT</span>.<span class="fn">miss_chance</span>(<span class="num">1</span>, <span class="num">2</span>), <span class="num">5.5</span>)
+    <span class="fn">expect</span>(<span class="str">"miss +2 (Δ=10)"</span>,  <span class="var">CT</span>.<span class="fn">miss_chance</span>(<span class="num">1</span>, <span class="num">3</span>), <span class="num">6.0</span>)
+    <span class="fn">expect</span>(<span class="str">"dodge same-level"</span>, <span class="var">CT</span>.<span class="fn">dodge_chance</span>(<span class="num">1</span>, <span class="num">1</span>), <span class="num">5.0</span>)
+    <span class="fn">expect</span>(<span class="str">"dodge +3"</span>,         <span class="var">CT</span>.<span class="fn">dodge_chance</span>(<span class="num">1</span>, <span class="num">4</span>), <span class="num">6.5</span>)
+    <span class="fn">expect</span>(<span class="str">"parry +3"</span>,         <span class="var">CT</span>.<span class="fn">parry_chance</span>(<span class="num">1</span>, <span class="num">4</span>), <span class="num">14.0</span>)
+    <span class="fn">expect</span>(<span class="str">"glancing +1"</span>,      <span class="var">CT</span>.<span class="fn">glancing_chance</span>(<span class="num">1</span>, <span class="num">2</span>), <span class="num">20.0</span>)
+    <span class="fn">expect</span>(<span class="str">"glancing +3"</span>,      <span class="var">CT</span>.<span class="fn">glancing_chance</span>(<span class="num">1</span>, <span class="num">4</span>), <span class="num">40.0</span>)
+    <span class="fn">expect</span>(<span class="str">"crit same-level"</span>,  <span class="var">CT</span>.<span class="fn">crit_chance</span>(<span class="num">1</span>, <span class="num">1</span>), <span class="num">5.0</span>)
+    <span class="fn">expect</span>(<span class="str">"crit +1"</span>,          <span class="var">CT</span>.<span class="fn">crit_chance</span>(<span class="num">1</span>, <span class="num">2</span>), <span class="num">4.0</span>)
+    <span class="fn">expect</span>(<span class="str">"conversion L1"</span>,    <span class="var">CT</span>.<span class="fn">conversion_value</span>(<span class="num">1</span>), <span class="num">7.5</span>, <span class="num">0.05</span>)
+    <span class="fn">expect</span>(<span class="str">"conversion L60"</span>,   <span class="var">CT</span>.<span class="fn">conversion_value</span>(<span class="num">60</span>), <span class="num">230.6</span>, <span class="num">0.1</span>)
+
+    <span class="kw">if</span> <span class="var">_fails</span> == <span class="num">0</span>:
+        <span class="fn">print</span>(<span class="str">"PASS — all combat-table values match wow-combat-values.md"</span>)
+        <span class="fn">quit</span>(<span class="num">0</span>)
+    <span class="kw">else</span>:
+        <span class="fn">printerr</span>(<span class="str">"%d FAILURE(S)"</span> % <span class="var">_fails</span>)
+        <span class="fn">quit</span>(<span class="num">1</span>)
+
+<span class="kw">func</span> <span class="fn">expect</span>(label: <span class="type">String</span>, got: <span class="type">float</span>, want: <span class="type">float</span>, tol := <span class="num">0.001</span>) -> <span class="type">void</span>:
+    <span class="kw">if</span> <span class="fn">abs</span>(got - want) &lt;= tol:
+        <span class="fn">print</span>(<span class="str">"  ok   "</span> + label)
+    <span class="kw">else</span>:
+        <span class="var">_fails</span> += <span class="num">1</span>
+        <span class="fn">printerr</span>(<span class="str">"  FAIL "</span> + label + <span class="str">"  got %s want %s"</span> % [got, want])</pre>
+</div>
+<div class="annot">
+  <div class="line-note"><code>const CT = preload("res://combat_table.gd")</code> — <b>we load the file directly</b> rather than use the global <code>CombatTable</code> name. A headless run may not have refreshed the class registry yet; <code>preload</code> sidesteps that entirely.</div>
+  <div class="line-note"><code>expect(label, got, want, tol)</code> — <b>one tiny assert helper.</b> Floats are never <em>exactly</em> equal, so we compare within a tolerance. A real value (rage's <code>C</code>) gets a looser <code>tol</code>; the band percentages are exact.</div>
+  <div class="line-note"><code>quit(0)</code> / <code>quit(1)</code> — <b>the verdict, as an exit code.</b> 0 = all good; 1 = something drifted. Humans read the words; machines read the number.</div>
+</div>
+
+<h2>Run it</h2>
+<p>In the terminal (left), from the repo root:</p>
+<div class="code">
+  <div class="bar"><span class="t">terminal</span><button class="copy">copy</button></div>
+<pre>godot --headless --path projects/first-steps --script res://tests/test_combat_table.gd</pre>
+</div>
+<div class="defs">
+  <div class="def"><b>--headless</b><p>No window, no rendering. Just the engine, running your script. Fast enough to run on every save.</p></div>
+  <div class="def"><b>--path</b><p>Which project to load (so <code class="inline">res://</code> resolves). Points at <code class="inline">projects/first-steps</code>.</p></div>
+  <div class="def"><b>--script</b><p>Run this one script and nothing else — no main scene. The <code class="inline">SceneTree</code> script takes over.</p></div>
+</div>
+<p>You should see a column of <code class="inline">ok</code> lines and then:</p>
+<div class="code">
+  <div class="bar"><span class="t">expected output</span></div>
+<pre><span class="com">  ok   miss same-level
+  ok   miss +1 (Δ=5)
+  …
+PASS — all combat-table values match wow-combat-values.md</span></pre>
+</div>
+
+<h2>See it catch a bug</h2>
+<div class="flow">
+  <div class="phase"><div class="rail"><div class="num">1</div><div class="line"></div></div><div class="body"><p>Open <code class="inline">combat_table.gd</code> and sabotage one value — change miss's <code class="inline">5.0</code> to <code class="inline">4.0</code>. Run the test again.</p></div></div>
+  <div class="phase"><div class="rail"><div class="num">2</div><div class="line"></div></div><div class="body"><p>It goes <strong>red</strong>: <code class="inline">FAIL miss same-level got 4.0 want 5.0</code>, then <code class="inline">1 FAILURE(S)</code>. The test caught a value drifting from the reference — exactly its job.</p></div></div>
+  <div class="phase"><div class="rail"><div class="num">3</div></div><div class="body"><p>Put it back to <code class="inline">5.0</code>. Green again. <em>That</em> loop — change, run, see green — is how every serious codebase stays correct while it grows.</p></div></div>
+</div>
+
+<h2>Check yourself</h2>
+<div class="quiz">
+  <p class="q">1. Why can we test <code class="inline">CombatTable</code> without launching the game?</p>
+  <button onclick="pick(this)" data-correct>Its functions are pure — they need only their arguments, no nodes or window</button>
+  <button onclick="pick(this)">Godot tests are always headless</button>
+  <button onclick="pick(this)">Because it has a class_name</button>
+  <div class="feedback"></div>
+</div>
+<div class="quiz">
+  <p class="q">2. Why compare floats with a <em>tolerance</em> instead of <code class="inline">==</code>?</p>
+  <button onclick="pick(this)" data-correct>Floating-point math is rarely exact, so tiny rounding differences would fail a strict equality</button>
+  <button onclick="pick(this)">To make the test run faster</button>
+  <button onclick="pick(this)">Godot can't compare floats</button>
+  <div class="feedback"></div>
+</div>
+<div class="quiz">
+  <p class="q">3. What does <code class="inline">quit(1)</code> communicate?</p>
+  <button onclick="pick(this)">The test ran for 1 second</button>
+  <button onclick="pick(this)" data-correct>A non-zero exit code = failure — so tools (and future CI) know it didn't pass</button>
+  <button onclick="pick(this)">One test was run</button>
+  <div class="feedback"></div>
+</div>
+
+<h3>Codebase checkpoint</h3>
+<p>The project after this lesson:</p>
+<div class="tree">
+<span class="dim">projects/first-steps/</span>
+├─ combat_table.gd
+├─ player.gd
+├─ <span class="leaf">tests/</span>
+│  └─ <span class="leaf">test_combat_table.gd</span>   <span class="dim">← new: the repo's first test — 18 checks vs the reference</span>
+└─ <span class="dim">…</span>
+</div>
+<p class="cite">The repo went from zero tests to one — and one is the hard one. Every future combat value can be guarded by adding a line.</p>
+
+<div class="teacher">
+  <b>I'M YOUR TEACHER — ASK ME ANYTHING</b>
+  <p>Curious how this becomes a one-key "run all tests," or how a CI server would run it on every push? That's the road this opens. When the terminal says <code class="inline">PASS</code>, say <em>"done"</em> — Lesson 35 (Forge 3) makes the <strong>HUD stop polling</strong>: it'll learn the player's health from a signal instead of checking every frame, paying off the honest debt Lessons 31 &amp; 32 flagged.</p>
+</div>
+
+<footer>
+  LESSON 34 · The Forge 2/4 · grounded in <a href="../MISSION.md">your mission</a> · values from <a href="../reference/wow-combat-values.md">wow-combat-values.md</a><br>
+  Primary references: <a href="https://docs.godotengine.org/en/stable/classes/class_scenetree.html">Godot — SceneTree</a> · <a href="https://docs.godotengine.org/en/stable/tutorials/editor/command_line_tutorial.html">Command-line tutorial</a>
+</footer>
+</main>
+<script src="_lesson.js"></script>
+</body>
+</html>

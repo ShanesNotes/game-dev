@@ -1,8 +1,11 @@
 extends CanvasLayer
 
-## Drives the unit frames, banner toasts, hurt/death feedback, and the
-## tutorial hint chips (each dims once its action has been performed).
+## The HUD listens — it never polls. Every value arrives as a signal from the player
+## or the targeted wolf, and nothing outside this script knows the HUD exists. That
+## inversion is the win: delete this scene and the game still runs (Forge F3, L35).
 
+@onready var health_bar = $UnitFrame/HealthBar
+@onready var rage_bar = $UnitFrame/RageBar
 @onready var name_label = $UnitFrame/NameLabel
 @onready var target_frame = $TargetFrame
 @onready var target_name = $TargetFrame/TargetName
@@ -20,48 +23,93 @@ extends CanvasLayer
 
 var _hints_done = {}
 var _banner_tween: Tween
-var _pulse_t = 0.0
+var _pulse_tween: Tween
+var _low = false
+var _target = null
 
 func _ready():
-	var player = get_tree().get_first_node_in_group("player")
-	if player:
-		name_label.text = "Will  Lv %d" % player.level
+	# The player adds itself to its group in _ready; defer so the whole tree exists.
+	_connect_player.call_deferred()
 
-func _process(delta):
+func _connect_player():
 	var player = get_tree().get_first_node_in_group("player")
 	if player == null:
 		return
-	_update_target_frame(player)
-	_update_low_health_pulse(player, delta)
-	_update_hints(player)
+	name_label.text = "Will  Lv %d" % player.level
+	# Seed the bars from current state — one read at connect time, not a per-frame poll.
+	health_bar.max_value = player.max_health
+	health_bar.value = player.health
+	rage_bar.max_value = player.max_rage
+	rage_bar.value = player.rage
+	player.health_changed.connect(_on_player_health)
+	player.rage_changed.connect(_on_player_rage)
+	player.hurt.connect(flash_hurt)
+	player.died.connect(show_death_screen)
+	player.target_changed.connect(_on_target_changed)
+	player.banner_requested.connect(show_banner)
+	player.moved.connect(_complete_hint.bind("move"))
+	player.attack_started.connect(_complete_hint.bind("attack"))
 
-func _update_target_frame(player):
-	var t = player.target
+# --- Player frame ---------------------------------------------------------
+func _on_player_health(health, max_health):
+	health_bar.max_value = max_health
+	var t = create_tween()
+	t.tween_property(health_bar, "value", health, 0.25).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	_set_low_health(health > 0 and health <= max_health * 0.35)
+
+func _on_player_rage(rage, max_rage):
+	rage_bar.max_value = max_rage
+	rage_bar.value = rage
+
+# --- Target frame: follow whichever wolf the player has targeted ----------
+func _on_target_changed(t):
+	if is_instance_valid(_target):
+		if _target.health_changed.is_connected(_on_target_health):
+			_target.health_changed.disconnect(_on_target_health)
+		if _target.died.is_connected(_on_target_died):
+			_target.died.disconnect(_on_target_died)
+	_target = t
 	if is_instance_valid(t) and not t.dying:
 		target_frame.visible = true
 		target_name.text = "Wolf  Lv %d" % t.level
 		target_bar.max_value = t.max_health
-		target_bar.value = lerpf(target_bar.value, t.health, 0.25)
+		target_bar.value = t.health
+		t.health_changed.connect(_on_target_health)
+		t.died.connect(_on_target_died)
+		_complete_hint("target")
 	else:
 		target_frame.visible = false
 
-# Soft red heartbeat overlay when health runs low.
-func _update_low_health_pulse(player, delta):
-	if player.dying:
+func _on_target_health(health, max_health):
+	target_bar.max_value = max_health
+	var t = create_tween()
+	t.tween_property(target_bar, "value", health, 0.2).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+
+func _on_target_died():
+	target_frame.visible = false
+	_target = null
+
+# --- Low-health heartbeat: a looping tween that yields to the hit-flash ----
+func _set_low_health(on):
+	if on == _low:
 		return
-	if player.health > 0 and player.health <= player.max_health * 0.35:
-		_pulse_t += delta * 5.0
-		hurt_flash.color.a = maxf(hurt_flash.color.a, 0.06 + 0.05 * sin(_pulse_t))
+	_low = on
+	if _low:
+		_start_pulse()
+	elif _pulse_tween:
+		_pulse_tween.kill()
+		_pulse_tween = null
+		hurt_flash.color.a = 0.0
 
-func _update_hints(player):
-	if not _hints_done.has("move") and Input.get_vector("move_left", "move_right", "move_up", "move_down") != Vector2.ZERO:
-		_complete_hint("move")
-	if not _hints_done.has("target") and is_instance_valid(player.target):
-		_complete_hint("target")
-	if not _hints_done.has("attack") and player.has_sword and not player.swing_timer.is_stopped():
-		_complete_hint("attack")
+func _start_pulse():
+	_pulse_tween = create_tween().set_loops()
+	_pulse_tween.tween_property(hurt_flash, "color:a", 0.12, 0.5).set_trans(Tween.TRANS_SINE)
+	_pulse_tween.tween_property(hurt_flash, "color:a", 0.03, 0.5).set_trans(Tween.TRANS_SINE)
 
+# --- Tutorial hint chips: each dims once its action fires (now via signal) -
 func _complete_hint(key):
+	if _hints_done.has(key):
+		return
 	_hints_done[key] = true
 	var t = create_tween()
 	t.tween_property(hints[key], "modulate:a", 0.3, 0.5)
@@ -70,6 +118,7 @@ func _complete_hint(key):
 		f.tween_interval(2.0)
 		f.tween_property(hint_strip, "modulate:a", 0.0, 1.2)
 
+# --- Toasts & flashes the player asks for ---------------------------------
 func show_banner(text):
 	if _banner_tween:
 		_banner_tween.kill()
@@ -85,9 +134,15 @@ func show_banner(text):
 	_banner_tween.tween_callback(func(): banner.visible = false)
 
 func flash_hurt():
+	# Pause the heartbeat so the two never fight over hurt_flash, then resume if still low.
+	if _pulse_tween:
+		_pulse_tween.kill()
+		_pulse_tween = null
 	var t = create_tween()
 	t.tween_property(hurt_flash, "color:a", 0.22, 0.05)
 	t.tween_property(hurt_flash, "color:a", 0.0, 0.4)
+	if _low:
+		t.tween_callback(_start_pulse)
 
 func show_death_screen():
 	death_dim.visible = true

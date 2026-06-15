@@ -90,6 +90,10 @@
   <span class="ct">◈ controller support, for free</span>
   <p>Godot's built-in <code class="inline">ui_left/right/up/down</code> actions come pre-bound to a gamepad's left stick and D-pad. Once movement reads them via <code class="inline">get_vector</code>, plug in a controller and the left stick already works — no Input Map changes needed.</p>
 </div>
+<div class="callout idea">
+  <span class="ct">📍 what the real game does now</span>
+  <p>We start with the built-in <code class="inline">ui_*</code> actions because they need <em>zero</em> setup. Later (in the overhaul pass) the project swapped to custom <code class="inline">move_left/right/up/down</code> actions defined in <strong>Project Settings → Input Map</strong>, each bound to <strong>WASD <em>and</em> the arrows <em>and</em> the gamepad stick/D-pad</strong> — so the code today reads <code class="inline">Input.get_vector("move_left", "move_right", "move_up", "move_down")</code> (see <code class="inline">player.gd</code>). The call is identical; only the action names changed. That formalization is its own step — it hasn't earned its own lesson yet.</p>
+</div>
 
 <h2>The code</h2>
 <p>Replace your whole script with this.</p>

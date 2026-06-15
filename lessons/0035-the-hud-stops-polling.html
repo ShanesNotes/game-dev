@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lesson 35 — The HUD Stops Polling</title>
+<link rel="stylesheet" href="_lesson.css">
+</head>
+<body>
+<main>
+<header class="hero">
+  <div class="kicker">Godot · Lesson 35 · The Forge 3 of 4</div>
+  <h1>The HUD Stops <span>Polling</span></h1>
+  <p class="sub">Lessons 31 &amp; 32 left an honest debt on the books: the HUD checks the player's state every single frame. Today we pay it — with signals.</p>
+</header>
+
+<div class="win">
+  <b>TODAY</b>
+  <p><strong>Delete the HUD scene and the game still runs.</strong> When that's true, you've truly decoupled the UI from the game — the player no longer knows the HUD exists, and the HUD no longer spies on the player. It just listens.</p>
+</div>
+
+<h2>The debt we're paying</h2>
+<p>
+  Back in Lesson 11 we learned the doctrine: <em>events beat polling</em>. A wolf shouldn't ask
+  "is the player near?" every frame — a zone should <em>tell</em> it. But the HUD never got that memo. Open
+  <code class="inline">hud.gd</code> as it was and you'd find a <code class="inline">_process</code> that, sixty times a
+  second, reaches into the player and reads its <code class="inline">health</code>, its <code class="inline">target</code>,
+  its <code class="inline">has_sword</code>… Lessons 31 and 32 even flagged it in writing as "honest debt."
+</p>
+<div class="callout warn">
+  <span class="ct">⚠ spying goes both ways</span>
+  <p>It's worse than one-directional. The <em>player</em> also reached <em>up</em> into the HUD: <code class="inline">hud.flash_hurt()</code>, <code class="inline">hud.show_banner(...)</code>, <code class="inline">hud.show_death_screen()</code>, and it even tweened the HUD's health bar directly. The player and the HUD were tangled together — change one, risk the other. Delete the HUD and the player would <em>crash</em>.</p>
+</div>
+
+<h2>The fix: the player <em>announces</em>; the HUD <em>listens</em></h2>
+<p>
+  A <strong>custom signal</strong> is an announcement a node makes without knowing or caring who hears it.
+  The player will shout "my health changed to 12!" into the void. Maybe the HUD is listening. Maybe nothing is.
+  The player doesn't care — and <em>that not-caring is the decoupling</em>.
+</p>
+<div class="defs">
+  <div class="def"><b>signal</b><p>Declare one at the top of a script: <code class="inline">signal health_changed(health, max_health)</code>. It's a new kind of event <em>this node</em> can fire.</p></div>
+  <div class="def"><b>emit</b><p>Fire it when the thing happens: <code class="inline">health_changed.emit(health, max_health)</code>. Anyone connected runs; if nobody's connected, nothing happens.</p></div>
+  <div class="def"><b>connect</b><p>Subscribe from the other side: <code class="inline">player.health_changed.connect(_on_player_health)</code>. Now your function runs every time the player emits.</p></div>
+</div>
+
+<h2>Part A — the player grows a voice</h2>
+<p>At the top of <code class="inline">player.gd</code>, declare what it can announce:</p>
+<div class="code">
+  <div class="bar"><span class="t">GDScript · player.gd</span><button class="copy">copy</button></div>
+<pre><span class="kw">signal</span> <span class="fn">health_changed</span>(health, max_health)
+<span class="kw">signal</span> <span class="fn">rage_changed</span>(rage, max_rage)
+<span class="kw">signal</span> <span class="fn">hurt</span>
+<span class="kw">signal</span> <span class="fn">died</span>
+<span class="kw">signal</span> <span class="fn">target_changed</span>(target)
+<span class="kw">signal</span> <span class="fn">banner_requested</span>(text)
+<span class="kw">signal</span> <span class="fn">moved</span>
+<span class="kw">signal</span> <span class="fn">attack_started</span></pre>
+</div>
+<p>Then <strong>delete</strong> the player's HUD references — <code class="inline">health_bar</code>, <code class="inline">rage_bar</code>, and <code class="inline">hud</code> all go. Each place the player used to <em>touch</em> the HUD becomes an <em>emit</em>:</p>
+<div class="code">
+  <div class="bar"><span class="t">GDScript · player.gd — before → after</span><button class="copy">copy</button></div>
+<pre><span class="com"># take_damage():  was: health_bar tween + hud.flash_hurt()</span>
+<span class="var">health_changed</span>.<span class="fn">emit</span>(health, max_health)
+<span class="var">hurt</span>.<span class="fn">emit</span>()
+
+<span class="com"># add_rage():     was: rage_bar.value = rage</span>
+<span class="var">rage_changed</span>.<span class="fn">emit</span>(rage, max_rage)
+
+<span class="com"># set_target():   announce the new target</span>
+<span class="var">target_changed</span>.<span class="fn">emit</span>(target)
+
+<span class="com"># die():          was: hud.show_death_screen()</span>
+<span class="var">died</span>.<span class="fn">emit</span>()
+
+<span class="com"># no-weapon case: was: hud.show_banner("Find the sword…")</span>
+<span class="var">banner_requested</span>.<span class="fn">emit</span>(<span class="str">"Find the sword — follow the road north!"</span>)</pre>
+</div>
+<div class="callout note">
+  <span class="ct">◈ the sword pickup, too</span>
+  <p><code class="inline">sword.gd</code> used to call <code class="inline">body.hud.show_banner(...)</code> on pickup. Now the player exposes a tiny <code class="inline">announce(text)</code> that just emits <code class="inline">banner_requested</code> — and the sword calls <code class="inline">body.announce("Rusty Sword equipped!")</code>. The sword talks to the player it already knows, never to the HUD.</p>
+</div>
+<p>The wolf gets a voice too, so the target frame can follow it: <code class="inline">signal health_changed(health, max_health)</code> and <code class="inline">signal died</code>, emitted in its <code class="inline">take_damage()</code> and <code class="inline">die()</code>.</p>
+
+<h2>Part B — the HUD becomes a listener</h2>
+<p>
+  Now <code class="inline">hud.gd</code>'s <code class="inline">_process</code> is <strong>deleted entirely</strong>. In its place, the HUD
+  connects to the player once, on startup, and reacts only when something actually changes:
+</p>
+<div class="code">
+  <div class="bar"><span class="t">GDScript · hud.gd</span><button class="copy">copy</button></div>
+<pre><span class="kw">func</span> <span class="fn">_ready</span>():
+    <span class="com"># The player joins its group in _ready; defer so the whole tree exists first.</span>
+    <span class="fn">_connect_player</span>.<span class="fn">call_deferred</span>()
+
+<span class="kw">func</span> <span class="fn">_connect_player</span>():
+    <span class="kw">var</span> <span class="var">player</span> = <span class="fn">get_tree</span>().<span class="fn">get_first_node_in_group</span>(<span class="str">"player"</span>)
+    <span class="kw">if</span> <span class="var">player</span> == <span class="kw">null</span>:
+        <span class="kw">return</span>
+    <span class="com"># Seed the bars once from current state — a single read, not a per-frame poll.</span>
+    <span class="var">health_bar</span>.max_value = <span class="var">player</span>.max_health
+    <span class="var">health_bar</span>.value = <span class="var">player</span>.health
+    <span class="var">player</span>.<span class="var">health_changed</span>.<span class="fn">connect</span>(<span class="fn">_on_player_health</span>)
+    <span class="var">player</span>.<span class="var">rage_changed</span>.<span class="fn">connect</span>(<span class="fn">_on_player_rage</span>)
+    <span class="var">player</span>.<span class="var">hurt</span>.<span class="fn">connect</span>(<span class="fn">flash_hurt</span>)
+    <span class="var">player</span>.<span class="var">died</span>.<span class="fn">connect</span>(<span class="fn">show_death_screen</span>)
+    <span class="var">player</span>.<span class="var">target_changed</span>.<span class="fn">connect</span>(<span class="fn">_on_target_changed</span>)
+    <span class="var">player</span>.<span class="var">banner_requested</span>.<span class="fn">connect</span>(<span class="fn">show_banner</span>)
+    <span class="var">player</span>.<span class="var">moved</span>.<span class="fn">connect</span>(<span class="fn">_complete_hint</span>.<span class="fn">bind</span>(<span class="str">"move"</span>))
+    <span class="var">player</span>.<span class="var">attack_started</span>.<span class="fn">connect</span>(<span class="fn">_complete_hint</span>.<span class="fn">bind</span>(<span class="str">"attack"</span>))</pre>
+</div>
+<div class="annot">
+  <div class="line-note"><code>call_deferred</code> — <b>connect after the tree is built.</b> The player adds itself to the <code>"player"</code> group in <em>its</em> <code>_ready</code>; deferring one idle frame guarantees it's there when we look.</div>
+  <div class="line-note"><code>_complete_hint.bind("move")</code> — <b>a Callable with an argument baked in.</b> <code>moved</code> carries no data, but our handler wants to know <em>which</em> hint to dim — <code>bind</code> supplies it.</div>
+  <div class="line-note">The target frame connects to <em>the targeted wolf's</em> <code>health_changed</code> / <code>died</code> when the target changes — and disconnects from the old one. The HUD follows whichever wolf you've clicked, by signal.</div>
+</div>
+<div class="callout idea">
+  <span class="ct">◇ the low-health heartbeat: a tween, not a poll</span>
+  <p>The one thing that <em>looked</em> like it needed <code class="inline">_process</code> — the red pulse at low health — becomes a <strong>looping tween</strong>, started when <code class="inline">health_changed</code> reports you're below 35% and killed when you heal or die. (It politely pauses for the hit-flash so the two never fight over the same overlay.) No per-frame state-reading survives.</p>
+</div>
+
+<h2>Do it &amp; verify the win</h2>
+<div class="flow">
+  <div class="phase"><div class="rail"><div class="num">1</div><div class="line"></div></div><div class="body"><p>Make the changes above. Press <kbd>F5</kbd> — everything should behave exactly as before: bars move, banners toast, the death screen plays, hints dim. Same feel, inverted plumbing.</p></div></div>
+  <div class="phase"><div class="rail"><div class="num">2</div><div class="line"></div></div><div class="body"><p><strong>The proof:</strong> in the Scene dock, <em>temporarily disable</em> or delete the <code class="inline">HUD</code> node, and run. The game keeps working — you can move, target, and fight with no HUD and <strong>no errors</strong>. That's impossible to do with polling. Undo the deletion when you've seen it.</p></div></div>
+  <div class="phase"><div class="rail"><div class="num">3</div></div><div class="body"><p>Run the Lesson 34 test again — still green. Refactoring the HUD didn't touch the combat math; tested code stays tested.</p></div></div>
+</div>
+
+<h2>Check yourself</h2>
+<div class="quiz">
+  <p class="q">1. Why can you now delete the HUD without the game crashing?</p>
+  <button onclick="pick(this)" data-correct>The player only emits signals — it holds no reference to the HUD, so there's nothing to break</button>
+  <button onclick="pick(this)">The HUD isn't important</button>
+  <button onclick="pick(this)">Godot recreates deleted nodes automatically</button>
+  <div class="feedback"></div>
+</div>
+<div class="quiz">
+  <p class="q">2. What is the core difference between polling and an event?</p>
+  <button onclick="pick(this)" data-correct>Polling asks "has it changed?" every frame; an event tells you the moment it changes</button>
+  <button onclick="pick(this)">Events are slower but simpler</button>
+  <button onclick="pick(this)">Polling only works in _ready</button>
+  <div class="feedback"></div>
+</div>
+<div class="quiz">
+  <p class="q">3. Why does <code class="inline">_connect_player</code> run via <code class="inline">call_deferred</code>?</p>
+  <button onclick="pick(this)">To make it run faster</button>
+  <button onclick="pick(this)" data-correct>So the player has finished _ready (and joined its group) before the HUD looks for it</button>
+  <button onclick="pick(this)">Because signals require it</button>
+  <div class="feedback"></div>
+</div>
+
+<h3>Codebase checkpoint</h3>
+<p>The project after this lesson:</p>
+<div class="tree">
+<span class="dim">projects/first-steps/</span>
+├─ <span class="leaf">player.gd</span>     <span class="dim">← changed: 8 signals declared &amp; emitted; all HUD references removed</span>
+├─ <span class="leaf">wolf.gd</span>       <span class="dim">← changed: health_changed + died signals for the target frame</span>
+├─ <span class="leaf">sword.gd</span>      <span class="dim">← changed: announce() instead of hud.show_banner()</span>
+├─ <span class="leaf">hud.gd</span>        <span class="dim">← changed: _process deleted; connects to player/target signals; pulse is a tween</span>
+└─ <span class="dim">…</span>
+</div>
+<p class="cite">The honest debt from Lessons 31 &amp; 32 is paid. The HUD is now a leaf: nothing depends on it, and it depends on nothing but the announcements it chooses to hear.</p>
+
+<div class="teacher">
+  <b>I'M YOUR TEACHER — ASK ME ANYTHING</b>
+  <p>Want to see how a global <em>event bus</em> would take this even further (signals nobody owns), or why we connect in code instead of the editor's Node→Signals tab? Ask. When the HUD-deleted run works with no errors, say <em>"done"</em> — Lesson 36 (Forge 4) gives <strong>combat FX one home</strong>: the damage-number and spark spawners, duplicated across player and wolf, become a single shared helper.</p>
+</div>
+
+<footer>
+  LESSON 35 · The Forge 3/4 · grounded in <a href="../MISSION.md">your mission</a> · the debt cited in Lessons 31 &amp; 32<br>
+  Primary references: <a href="https://docs.godotengine.org/en/stable/getting_started/step_by_step/signals.html">Godot — Signals</a> · <a href="https://docs.godotengine.org/en/stable/tutorials/scripting/gdscript/gdscript_basics.html#signals">Custom signals</a>
+</footer>
+</main>
+<script src="_lesson.js"></script>
+</body>
+</html>

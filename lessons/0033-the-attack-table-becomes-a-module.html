@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lesson 33 — The Attack Table Becomes a Module</title>
+<link rel="stylesheet" href="_lesson.css">
+</head>
+<body>
+<main>
+<header class="hero">
+  <div class="kicker">Godot · Lesson 33 · The Forge 1 of 4</div>
+  <h1>The Attack Table Becomes a <span>Module</span></h1>
+  <p class="sub">Your first real refactor. The combat math has been living inside the player — we lift it out into one cited, reusable file, and the game plays <em>exactly</em> the same.</p>
+</header>
+
+<div class="win">
+  <b>TODAY</b>
+  <p>Press <kbd>F5</kbd> after the change and combat is <em>identical</em> — same misses, same crits, same rage. But the seven researched formulas now live in one file, <code class="inline">combat_table.gd</code>, that knows nothing about the player. That file is what Lesson 34 will test.</p>
+</div>
+
+<h2>Why touch working code at all?</h2>
+<p>
+  Right now <code class="inline">player.gd</code> does two very different jobs. It runs the player — input, animation,
+  the sword, the camera. And it also <em>is</em> the rulebook of WoW combat: miss chance, dodge, parry,
+  glancing, crit, rage. Those formulas are the most important numbers in the game, and they're buried
+  200 lines deep in a script about walking around.
+</p>
+<div class="callout idea">
+  <span class="ct">◇ a module is code that does one job and hides the rest</span>
+  <p>When a chunk of logic (1) is about <em>one</em> thing, (2) can be described without mentioning the code around it, and (3) you'd want to reuse or test on its own — that's a module waiting to be born. The attack table is all three: it's pure arithmetic on two levels, the wolf will want it too, and we want to prove it matches Vanilla without launching the game.</p>
+</div>
+
+<h2>The tool: <code class="inline">class_name</code> + <code class="inline">static func</code></h2>
+<div class="defs">
+  <div class="def"><b>class_name</b><p>Put <code class="inline">class_name CombatTable</code> at the top of a script and Godot registers that name <em>everywhere</em> — any other script can write <code class="inline">CombatTable.miss_chance(...)</code> with no <code class="inline">preload</code>, no node, no instance. It becomes a word in the language.</p></div>
+  <div class="def"><b>static func</b><p>A <code class="inline">static</code> function belongs to the <em>class</em>, not to an object. It can't touch <code class="inline">self</code> or any node — only its arguments. That restriction is the point: it forces the function to be <strong>pure</strong> (same inputs → same output, no side effects), which is exactly what makes it testable.</p></div>
+</div>
+
+<h2>Part A — create the module</h2>
+<p>In the <strong>FileSystem</strong> dock, right-click <code class="inline">res://</code> → <kbd>Create New</kbd> → <kbd>Script…</kbd>, name it <code class="inline">combat_table.gd</code>. Replace its contents with this. Notice: no <code class="inline">extends</code> a node, no <code class="inline">_ready</code> — just named numbers.</p>
+<div class="code">
+  <div class="bar"><span class="t">GDScript · combat_table.gd</span><button class="copy">copy</button></div>
+<pre><span class="kw">class_name</span> <span class="type">CombatTable</span>
+<span class="com"># The Vanilla-1.12 attack table, in one place. Every white swing is one d100 roll
+# walked through bands: Miss -> Dodge -> Parry -> Glancing -> Crit -> Hit.
+# These functions are PURE: numbers in, numbers out, no node state. That is what
+# lets us test them headless (Lesson 34). Every formula cites wow-combat-values.md.</span>
+
+<span class="kw">const</span> <span class="var">BASE_CRIT</span> := <span class="num">5.0</span>          <span class="com"># §5: ~5% innate melee crit</span>
+<span class="kw">const</span> <span class="var">CRIT_MULTIPLIER</span> := <span class="num">2.0</span>    <span class="com"># §5: crits deal 200%</span>
+
+<span class="com"># Δ = (targetLevel − attackerLevel) × 5.  §2 — drives miss & glancing.</span>
+<span class="kw">static func</span> <span class="fn">skill_delta</span>(attacker_level: <span class="type">int</span>, target_level: <span class="type">int</span>) -> <span class="type">int</span>:
+    <span class="kw">return</span> (target_level - attacker_level) * <span class="num">5</span>
+
+<span class="com"># §3: miss% = 5 + Δ×0.1 (exact for targets within 2 levels — every fight we have).</span>
+<span class="kw">static func</span> <span class="fn">miss_chance</span>(attacker_level: <span class="type">int</span>, target_level: <span class="type">int</span>) -> <span class="type">float</span>:
+    <span class="kw">return</span> <span class="num">5.0</span> + <span class="fn">skill_delta</span>(attacker_level, target_level) * <span class="num">0.1</span>
+
+<span class="com"># §4: 5% + 0.5%/level above.</span>
+<span class="kw">static func</span> <span class="fn">dodge_chance</span>(attacker_level: <span class="type">int</span>, target_level: <span class="type">int</span>) -> <span class="type">float</span>:
+    <span class="kw">var</span> <span class="var">gap</span> := <span class="fn">maxi</span>(target_level - attacker_level, <span class="num">0</span>)
+    <span class="kw">return</span> <span class="num">5.0</span> + <span class="var">gap</span> * <span class="num">0.5</span>
+
+<span class="com"># §4: 5% base, +3%/level above (+3 = 14%). Front only.</span>
+<span class="kw">static func</span> <span class="fn">parry_chance</span>(attacker_level: <span class="type">int</span>, target_level: <span class="type">int</span>) -> <span class="type">float</span>:
+    <span class="kw">var</span> <span class="var">gap</span> := <span class="fn">maxi</span>(target_level - attacker_level, <span class="num">0</span>)
+    <span class="kw">return</span> <span class="num">5.0</span> + <span class="var">gap</span> * <span class="num">3.0</span>
+
+<span class="com"># §6: 0% vs equal/lower; +10%/level above (only when YOU hit up).</span>
+<span class="kw">static func</span> <span class="fn">glancing_chance</span>(attacker_level: <span class="type">int</span>, target_level: <span class="type">int</span>) -> <span class="type">float</span>:
+    <span class="kw">var</span> <span class="var">gap</span> := target_level - attacker_level
+    <span class="kw">if</span> <span class="var">gap</span> &lt;= <span class="num">0</span>:
+        <span class="kw">return</span> <span class="num">0.0</span>
+    <span class="kw">return</span> <span class="num">10.0</span> + <span class="var">gap</span> * <span class="num">10.0</span>
+
+<span class="com"># §5: base crit − 1%/level above (suppression), floored at 0.</span>
+<span class="kw">static func</span> <span class="fn">crit_chance</span>(attacker_level: <span class="type">int</span>, target_level: <span class="type">int</span>, base_crit := <span class="var">BASE_CRIT</span>) -> <span class="type">float</span>:
+    <span class="kw">return</span> <span class="fn">max</span>(base_crit - (target_level - attacker_level), <span class="num">0.0</span>)
+
+<span class="com"># §6: glancing damage band [low, high]. At +3 (Δ=15) → ~0.55..0.75 of normal.</span>
+<span class="kw">static func</span> <span class="fn">glancing_band</span>(attacker_level: <span class="type">int</span>, target_level: <span class="type">int</span>) -> <span class="type">Vector2</span>:
+    <span class="kw">var</span> <span class="var">skill_diff</span> := <span class="fn">skill_delta</span>(attacker_level, target_level)
+    <span class="kw">var</span> <span class="var">low</span> := <span class="fn">clampf</span>(<span class="num">1.3</span> - <span class="num">0.05</span> * <span class="var">skill_diff</span>, <span class="num">0.01</span>, <span class="num">0.91</span>)
+    <span class="kw">var</span> <span class="var">high</span> := <span class="fn">clampf</span>(<span class="num">1.2</span> - <span class="num">0.03</span> * <span class="var">skill_diff</span>, <span class="num">0.2</span>, <span class="num">0.99</span>)
+    <span class="kw">return</span> <span class="type">Vector2</span>(<span class="var">low</span>, <span class="var">high</span>)
+
+<span class="kw">static func</span> <span class="fn">glancing_damage</span>(attack_damage: <span class="type">float</span>, attacker_level: <span class="type">int</span>, target_level: <span class="type">int</span>) -> <span class="type">float</span>:
+    <span class="kw">var</span> <span class="var">band</span> := <span class="fn">glancing_band</span>(attacker_level, target_level)
+    <span class="kw">return</span> attack_damage * <span class="fn">randf_range</span>(<span class="var">band</span>.x, <span class="var">band</span>.y)
+
+<span class="com"># --- Rage (§8). C grows with level: L1 ≈ 7.5, L60 ≈ 230.6. ---</span>
+<span class="kw">static func</span> <span class="fn">conversion_value</span>(level: <span class="type">int</span>) -> <span class="type">float</span>:
+    <span class="kw">return</span> <span class="num">0.0091107836</span> * level * level + <span class="num">3.225598133</span> * level + <span class="num">4.2652911</span>
+
+<span class="kw">static func</span> <span class="fn">rage_from_dealing</span>(damage: <span class="type">float</span>, weapon_speed: <span class="type">float</span>, is_crit: <span class="type">bool</span>, level: <span class="type">int</span>) -> <span class="type">float</span>:
+    <span class="kw">var</span> <span class="var">f</span> := <span class="num">7.0</span> <span class="kw">if</span> is_crit <span class="kw">else</span> <span class="num">3.5</span>
+    <span class="kw">return</span> <span class="num">7.5</span> * damage / <span class="fn">conversion_value</span>(level) + <span class="var">f</span> * weapon_speed / <span class="num">2.0</span>
+
+<span class="kw">static func</span> <span class="fn">rage_from_taking</span>(damage: <span class="type">float</span>, level: <span class="type">int</span>) -> <span class="type">float</span>:
+    <span class="kw">return</span> <span class="num">2.5</span> * damage / <span class="fn">conversion_value</span>(level)</pre>
+</div>
+<div class="callout warn">
+  <span class="ct">⚠ maxi, not max</span>
+  <p>We use <code class="inline">maxi()</code> (integer max) instead of plain <code class="inline">max()</code> in <code class="inline">dodge_chance</code>/<code class="inline">parry_chance</code>. With the typed <code class="inline">:=</code> assignment, <code class="inline">max()</code> returns a <code class="inline">Variant</code> — and this project treats that warning as an <em>error</em>. <code class="inline">maxi()</code> returns a real <code class="inline">int</code>, so the type is clean. (This is a genuine error you'll hit; it's why it's called out.)</p>
+</div>
+
+<h2>Part B — rewire the player to <em>call</em> the table</h2>
+<p>Now <code class="inline">player.gd</code> stops <em>owning</em> the math and starts <em>asking</em> for it. In <code class="inline">attack()</code>, replace the five local calls:</p>
+<div class="code">
+  <div class="bar"><span class="t">GDScript · player.gd — inside attack()</span><button class="copy">copy</button></div>
+<pre>    <span class="kw">var</span> <span class="var">roll</span> = <span class="fn">randf</span>() * <span class="num">100.0</span>
+    <span class="kw">var</span> <span class="var">miss</span> = <span class="type">CombatTable</span>.<span class="fn">miss_chance</span>(level, t.level)
+    <span class="kw">var</span> <span class="var">dodge</span> = <span class="type">CombatTable</span>.<span class="fn">dodge_chance</span>(level, t.level)
+    <span class="kw">var</span> <span class="var">parry</span> = <span class="type">CombatTable</span>.<span class="fn">parry_chance</span>(level, t.level)
+    <span class="kw">var</span> <span class="var">glancing</span> = <span class="type">CombatTable</span>.<span class="fn">glancing_chance</span>(level, t.level)
+    <span class="kw">var</span> <span class="var">crit</span> = <span class="type">CombatTable</span>.<span class="fn">crit_chance</span>(level, t.level, base_crit)</pre>
+</div>
+<p>…and the glancing-damage line, a few lines down:</p>
+<div class="code">
+  <div class="bar"><span class="t">GDScript · player.gd</span><button class="copy">copy</button></div>
+<pre>        <span class="kw">var</span> <span class="var">dmg</span> = <span class="fn">roundi</span>(<span class="type">CombatTable</span>.<span class="fn">glancing_damage</span>(attack_damage, level, t.level))</pre>
+</div>
+<p>Then the two rage helpers shrink to one line each, and <code class="inline">conversion_value()</code> and all six <code class="inline">*_chance</code> functions are <strong>deleted from player.gd</strong> — they live in the module now:</p>
+<div class="code">
+  <div class="bar"><span class="t">GDScript · player.gd</span><button class="copy">copy</button></div>
+<pre><span class="kw">func</span> <span class="fn">gain_rage_dealing</span>(damage, is_crit):
+    <span class="fn">add_rage</span>(<span class="type">CombatTable</span>.<span class="fn">rage_from_dealing</span>(damage, weapon_speed, is_crit, level))
+
+<span class="kw">func</span> <span class="fn">gain_rage_taking</span>(damage):
+    <span class="fn">add_rage</span>(<span class="type">CombatTable</span>.<span class="fn">rage_from_taking</span>(damage, level))</pre>
+</div>
+<div class="annot">
+  <div class="line-note"><code>CombatTable.miss_chance(level, t.level)</code> — <b>no <code>preload</code>, no instance.</b> The <code>class_name</code> made <code>CombatTable</code> a global word. <code>level</code> is the player's; <code>t.level</code> is the target wolf's.</div>
+  <div class="line-note"><code>add_rage(...)</code> <b>stays in the player</b> — it touches the rage <em>bar</em> (a node). Only the pure arithmetic moved out. That line — node state stays, math leaves — is the whole judgement call of a refactor.</div>
+</div>
+
+<h2>The idea that proves it worked: the deletion test</h2>
+<div class="callout note">
+  <span class="ct">◈ "could I delete this and explain what broke?"</span>
+  <p>A good module passes the <strong>deletion test</strong>: if you deleted <code class="inline">combat_table.gd</code>, you could say in one breath what stops working (every swing's outcome) and nothing else would be mysteriously entangled. The combat math used to fail that test — deleting those lines from <code class="inline">player.gd</code> would have taken movement and animation context with them. Now it's a clean seam.</p>
+</div>
+
+<h2>Do it &amp; verify</h2>
+<div class="flow">
+  <div class="phase"><div class="rail"><div class="num">1</div><div class="line"></div></div><div class="body"><p>Create <code class="inline">combat_table.gd</code> (Part A) and rewire <code class="inline">player.gd</code> (Part B). Delete the old <code class="inline">crit_chance/dodge_chance/parry_chance/miss_chance/glancing_chance/glancing_damage</code> and <code class="inline">conversion_value</code> functions from <code class="inline">player.gd</code>.</p></div></div>
+  <div class="phase"><div class="rail"><div class="num">2</div><div class="line"></div></div><div class="body"><p>Press <kbd>F5</kbd>. Fight a wolf. <strong>Nothing should look different</strong> — misses miss, crits flash, rage fills. That sameness <em>is</em> the win: a refactor changes the code's shape, never its behaviour.</p></div></div>
+  <div class="phase"><div class="rail"><div class="num">3</div></div><div class="body"><p><strong>Tune one number:</strong> open <code class="inline">combat_table.gd</code>, change <code class="inline">BASE_CRIT</code> to <code class="inline">50.0</code>, run, and watch crits everywhere. Set it back to <code class="inline">5.0</code>. One file, one source of truth.</p></div></div>
+</div>
+
+<h2>Check yourself</h2>
+<div class="quiz">
+  <p class="q">1. Why must the attack-table functions be <code class="inline">static</code>?</p>
+  <button onclick="pick(this)">Static functions run faster</button>
+  <button onclick="pick(this)" data-correct>They belong to the class, not an instance — so they can't touch node state, which keeps them pure and testable</button>
+  <button onclick="pick(this)">Godot requires it for class_name</button>
+  <div class="feedback"></div>
+</div>
+<div class="quiz">
+  <p class="q">2. What does a successful refactor change?</p>
+  <button onclick="pick(this)" data-correct>The shape of the code — not its behaviour</button>
+  <button onclick="pick(this)">The game's balance numbers</button>
+  <button onclick="pick(this)">Both behaviour and structure</button>
+  <div class="feedback"></div>
+</div>
+<div class="quiz">
+  <p class="q">3. Why did <code class="inline">add_rage()</code> stay in <code class="inline">player.gd</code> while the rage <em>formula</em> moved out?</p>
+  <button onclick="pick(this)">It was too short to move</button>
+  <button onclick="pick(this)" data-correct>It touches a node (the rage bar); only the pure math belongs in the module</button>
+  <button onclick="pick(this)">Rage isn't part of combat</button>
+  <div class="feedback"></div>
+</div>
+
+<h3>Codebase checkpoint</h3>
+<p>The project after this lesson:</p>
+<div class="tree">
+<span class="dim">projects/first-steps/</span>
+├─ <span class="leaf">combat_table.gd</span>     <span class="dim">← new: CombatTable — the 7 formulas + rage, pure & cited</span>
+├─ player.gd            <span class="dim">← changed: ~32 lines shorter; attack()/rage now call CombatTable</span>
+├─ wolf.gd
+├─ hud.gd
+└─ <span class="dim">… (main.tscn, assets/ unchanged)</span>
+</div>
+<p class="cite">No scene changes — this lesson is pure code architecture. The behaviour on screen is byte-for-byte the same.</p>
+
+<div class="teacher">
+  <b>I'M YOUR TEACHER — ASK ME ANYTHING</b>
+  <p>Want to see the diff, or wondering why the wolf doesn't use <code class="inline">CombatTable</code> yet (it will, when wolves roll the <em>mob</em> table against you)? Ask. When combat plays identically with the math in its own file, say <em>"done"</em> — Lesson 34 makes that file prove itself: the repo's <strong>first test</strong>, run in the terminal with the game closed.</p>
+</div>
+
+<footer>
+  LESSON 33 · The Forge 1/4 · grounded in <a href="../MISSION.md">your mission</a> · values from <a href="../reference/wow-combat-values.md">wow-combat-values.md</a><br>
+  Primary references: <a href="https://docs.godotengine.org/en/stable/tutorials/scripting/gdscript/gdscript_basics.html#classes">Godot — class_name</a> · <a href="https://docs.godotengine.org/en/stable/tutorials/scripting/gdscript/static_typing.html">Static typing</a>
+</footer>
+</main>
+<script src="_lesson.js"></script>
+</body>
+</html>

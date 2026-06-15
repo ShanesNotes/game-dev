@@ -14,7 +14,7 @@ func _on_body_entered(body):
 	if body.is_in_group("player"):
 		Sfx.play("pickup")
 		body.equip_sword()
-		body.hud.show_banner("Rusty Sword equipped!")
+		body.announce("Rusty Sword equipped!")
 		body.spawn_sparks(global_position + Vector2(0, -14), Color(1.0, 0.85, 0.4), 14)
 		sprite.visible = false
 		$Glint.emitting = false

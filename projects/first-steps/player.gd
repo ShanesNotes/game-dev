@@ -1,5 +1,16 @@
 extends CharacterBody2D
 
+# The player announces; the HUD listens. The player holds NO reference to the HUD,
+# so the HUD scene can be deleted and the game still runs (Forge F3, L35).
+signal health_changed(health, max_health)
+signal rage_changed(rage, max_rage)
+signal hurt
+signal died
+signal target_changed(target)
+signal banner_requested(text)
+signal moved
+signal attack_started
+
 @export var speed = 200
 @export var max_health = 30
 @export var level = 1
@@ -19,14 +30,11 @@ var no_weapon_cooldown = 0.0
 var dying = false
 
 @onready var anim = $AnimatedSprite2D
-@onready var health_bar = get_node("../../HUD/UnitFrame/HealthBar")
 @onready var swing_timer = $SwingTimer
 @onready var sword = $Sword
-@onready var rage_bar = get_node("../../HUD/UnitFrame/RageBar")
 @onready var slash_arc = $SlashArc
 @onready var foot_dust = $FootDust
 @onready var camera = $Camera2D
-@onready var hud = get_node("../../HUD")
 
 const DAMAGE_NUMBER = preload("res://damage_number.tscn")
 const SPARK = preload("res://assets/spark.png")
@@ -41,13 +49,11 @@ const SWING_FRAMES = [
 ]
 var _swing_tween: Tween
 
+var _announced_move = false
+
 func _ready():
 	add_to_group("player")            # so any wolf can find us
 	swing_timer.wait_time = weapon_speed
-	health_bar.max_value = max_health
-	health_bar.value = health
-	rage_bar.max_value = max_rage
-	rage_bar.value = rage
 	sword.rotation_degrees = SWORD_REST_DEGREES
 
 func _physics_process(delta):
@@ -56,6 +62,9 @@ func _physics_process(delta):
 	move_and_slide()
 	update_animation(direction)
 	foot_dust.emitting = direction != Vector2.ZERO
+	if not _announced_move and direction != Vector2.ZERO:
+		_announced_move = true
+		moved.emit()
 	no_weapon_cooldown = maxf(no_weapon_cooldown - delta, 0.0)
 	if Input.is_action_just_pressed("target_next"):
 		target_nearest_wolf()
@@ -86,6 +95,12 @@ func set_target(new_target):
 	target = new_target
 	target.set_targeted(true)        # highlight the new one
 	Sfx.play("ping", -8.0)
+	target_changed.emit(target)
+
+# A line for the HUD's banner toast. Anyone (the sword pickup) can ask the player
+# to announce something without ever touching the HUD.
+func announce(text):
+	banner_requested.emit(text)
 
 func equip_sword():
 	has_sword = true
@@ -98,11 +113,12 @@ func start_auto_attack():
 		if no_weapon_cooldown == 0.0:
 			no_weapon_cooldown = 2.5
 			spawn_text_over(self, "No weapon!", Color.GRAY)
-			hud.show_banner("Find the sword — follow the road north!")
+			banner_requested.emit("Find the sword — follow the road north!")
 		return
 	if is_instance_valid(target) and swing_timer.is_stopped():
 		swing()                 # immediate first hit
 		swing_timer.start()     # then keep swinging on the tick
+		attack_started.emit()
 
 func _on_swing_timer_timeout():
 	swing()
@@ -167,11 +183,11 @@ func face_toward(point: Vector2):
 
 func attack(t):
 	var roll = randf() * 100.0
-	var miss = miss_chance(t)
-	var dodge = dodge_chance(t)
-	var parry = parry_chance(t)
-	var glancing = glancing_chance(t)
-	var crit = crit_chance(t)
+	var miss = CombatTable.miss_chance(level, t.level)
+	var dodge = CombatTable.dodge_chance(level, t.level)
+	var parry = CombatTable.parry_chance(level, t.level)
+	var glancing = CombatTable.glancing_chance(level, t.level)
+	var crit = CombatTable.crit_chance(level, t.level, base_crit)
 	if roll < miss:
 		spawn_text_over(t, "Miss", Color.GRAY)
 		Sfx.play("miss", -8.0)
@@ -183,7 +199,7 @@ func attack(t):
 		Sfx.play("miss", -6.0)
 	elif roll < miss + dodge + parry + glancing:
 		spawn_text_over(t, "Glancing", Color.GRAY)
-		var dmg = roundi(glancing_damage(t))
+		var dmg = roundi(CombatTable.glancing_damage(attack_damage, level, t.level))
 		t.take_damage(dmg)
 		gain_rage_dealing(dmg, false)
 		Sfx.play("hit", -6.0)
@@ -218,10 +234,9 @@ func take_damage(amount, from = null):
 		return
 	health -= amount
 	if health < 0: health = 0
-	var bt = create_tween()
-	bt.tween_property(health_bar, "value", health, 0.25).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	health_changed.emit(health, max_health)
+	hurt.emit()
 	Sfx.play("hurt", -4.0)
-	hud.flash_hurt()
 	spawn_number(amount, Color(1.0, 0.36, 0.22))   # hot red-orange — reads on dirt and grass alike
 	gain_rage_taking(amount)      # getting hit builds rage too
 	if is_instance_valid(from):       # hit by an enemy -> engage it
@@ -232,49 +247,18 @@ func take_damage(amount, from = null):
 	if health == 0:
 		die()
 
-# --- Attack table: outcome chances (one roll, walked in attack()) ---
-func crit_chance(t):
-	var c = base_crit - (t.level - level)   # -1% per level the target is above you
-	return max(c, 0.0)                       # never below 0
-
-func dodge_chance(t):
-	var gap = max(t.level - level, 0)
-	return 5.0 + gap * 0.5        # +0.5% per level above you
-
-func parry_chance(t):
-	var gap = max(t.level - level, 0)
-	return 5.0 + gap * 3.0        # scales hard: +3 = 14% (front only)
-
-func miss_chance(t):
-	var delta = (t.level - level) * 5    # target defense skill − your weapon skill
-	return 5.0 + delta * 0.1            # exact for our level range (gap ≤ 2)
-
-func glancing_chance(t):
-	var gap = t.level - level
-	if gap <= 0:
-		return 0.0                     # no glancing vs equal/lower level
-	return 10.0 + gap * 10.0          # +1 = 20%, +2 = 30%
-
-func glancing_damage(t):
-	var skill_diff = (t.level - level) * 5
-	var low = clampf(1.3 - 0.05 * skill_diff, 0.01, 0.91)
-	var high = clampf(1.2 - 0.03 * skill_diff, 0.2, 0.99)
-	return attack_damage * randf_range(low, high)
-
-# --- Rage ---
-func conversion_value():
-	return 0.0091107836 * level * level + 3.225598133 * level + 4.2652911
-
+# --- Attack table & rage formulas now live in combat_table.gd (CombatTable) so
+# they can be unit-tested headless (see tests/test_combat_table.gd). attack()
+# above calls CombatTable.*; the player keeps only what touches node state. ---
 func add_rage(amount):
 	rage = clampf(rage + amount, 0, max_rage)
-	rage_bar.value = rage
+	rage_changed.emit(rage, max_rage)
 
 func gain_rage_dealing(damage, is_crit):
-	var f = 7.0 if is_crit else 3.5
-	add_rage(7.5 * damage / conversion_value() + f * weapon_speed / 2.0)
+	add_rage(CombatTable.rage_from_dealing(damage, weapon_speed, is_crit, level))
 
 func gain_rage_taking(damage):
-	add_rage(2.5 * damage / conversion_value())
+	add_rage(CombatTable.rage_from_taking(damage, level))
 
 func spawn_sparks(at: Vector2, color: Color, count: int):
 	var p = CPUParticles2D.new()
@@ -314,7 +298,7 @@ func die():
 	foot_dust.emitting = false
 	swing_timer.stop()
 	Sfx.play("death")
-	hud.show_death_screen()
+	died.emit()
 	var t = create_tween()
 	t.tween_property(anim, "modulate:a", 0.0, 0.9)
 	t.parallel().tween_property(sword, "modulate:a", 0.0, 0.9)

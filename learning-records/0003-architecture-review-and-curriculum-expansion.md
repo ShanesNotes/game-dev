@@ -158,20 +158,31 @@ Also affected conceptually: L07 (walk rows — now four true directions exist;
 0002's sequence stays intact (XP=27 … Whirlwind=34 → cabin). Two new arcs slot around
 it; whether they renumber 27+ (the v2 precedent) or append is an **open decision**.
 
-### Arc "The Forge" — engineering the combat core *(before/with the XP lesson)*
-One win each; all triggers fired:
+### Arc "The Forge" — engineering the combat core *(STARTED 2026-06-14)*
+One win each; all triggers fired. Numbered as **lessons 33+** (append, per the v2
+"course = build order" precedent; XP slides after). Built the Game-Feel way: code
+refactored first, lesson back-engineered against final code.
 
-- **F1 · The attack table becomes a module** — extract `CombatTable`; win: *game plays
-  identically with combat math in one cited file*. Teaches `class_name`, static funcs,
-  value objects, the deletion test as an idea.
-- **F2 · The first test** — win: *combat values verified in the terminal with the game
-  closed*. Teaches `godot --headless --script`, seeded RNG, asserting against
-  `wow-combat-values.md`. (The repo currently has zero tests.)
-- **F3 · Events over polling II — the HUD stops spying** — win: *delete the HUD scene
-  and the game still runs*. Teaches custom signals; deletes `hud.gd._process`; revisits
-  L11 doctrine. *(Optionally absorbs F4.)*
-- **F4 · One home for combat FX** *(optional/foldable)* — win: *five spawners become
-  three functions*. Teaches autoloads.
+- **F1 · The attack table becomes a module** — ✅ **shipped as L33.** Extracted
+  `combat_table.gd` (`class_name CombatTable`): the 7 chance formulas + glancing band +
+  rage, as pure static funcs, each citing `wow-combat-values.md`. `player.gd` rewired to
+  call `CombatTable.*`; local formulas deleted (358→326 lines). Game boots clean, plays
+  identically. Teaches `class_name`, static/pure funcs, the deletion test.
+  *(Note: used `maxi()` not `max()` — typed `:=` + warnings-as-errors rejects Variant.)*
+- **F2 · The first test** — ✅ **shipped as L34.** `tests/test_combat_table.gd` — a
+  headless `SceneTree` script, 18 assertions vs the reference, exit-code verdict. Repo's
+  first test; PASSes. Run: `godot --headless --path projects/first-steps --script
+  res://tests/test_combat_table.gd`. Teaches headless `--script`, float tolerance, `quit()`.
+- **F3 · Events over polling II — the HUD stops spying** — ✅ **shipped as L35.** Inverted
+  *both* directions: `player.gd` declares 8 signals (`health_changed`, `rage_changed`, `hurt`,
+  `died`, `target_changed`, `banner_requested`, `moved`, `attack_started`) and dropped all HUD
+  refs; `wolf.gd` emits `health_changed`/`died`; `sword.gd` calls `body.announce()` not
+  `body.hud.*`; `hud.gd` deleted `_process`, connects to player/target signals (deferred), and
+  the low-health pulse became a looping tween that yields to the hit-flash. Verified: game boots
+  clean 120 frames, HUD freed mid-run with no crash (delete-HUD win), combat test still green.
+- **F4 · One home for combat FX** *(NEXT — last Forge step)* — win: *the duplicated
+  damage-number + particle-burst spawners (player.gd spawn_text_over/spawn_number/spawn_sparks;
+  wolf.gd spawn_number/spawn_blood) become a shared `CombatFX` helper*. Teaches autoloads.
 
 ### Arc VII "Game Feel" — **STARTED 2026-06-11** (the UX-round retrofits)
 

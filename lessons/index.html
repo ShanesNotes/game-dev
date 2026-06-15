@@ -23,7 +23,7 @@
 <body>
 <main>
 <header class="hero">
-  <div class="kicker">Godot · Course Index · 32 lessons</div>
+  <div class="kicker">Godot · Course Index · 35 lessons</div>
   <h1>From <span>"what is a node"</span> to a real combat system</h1>
   <p class="sub">Every lesson is one small win, built by hand, inside one story: find a sword, a wolf appears,
   a WoW-style fight breaks out in Elwynn Forest. Each lesson ends with a <em>codebase checkpoint</em> —
@@ -37,8 +37,9 @@
   now with a full synthesized sound pack, a sword pickup that feels like an event, and a blade that
   changes hands with Will's facing and swings with real weight (hit-stop included), a death
   that's a staged scene, and a HUD that teaches the controls then gets out of the way.
-  Next: XP &amp; leveling, inventory, quests, and the first real ability — or The Forge
-  (the engineering arc) first; that's the next planning call.</p>
+  <strong>The Forge has begun:</strong> the attack table is now a tested, standalone module.
+  Next: the HUD stops polling, combat FX get one home — then XP &amp; leveling, inventory, quests,
+  and the first real ability.</p>
 </div>
 
 <section class="arc">
@@ -124,18 +125,28 @@
   </div>
 </section>
 
+<section class="arc">
+  <h2>VIII · The Forge</h2>
+  <p class="arc-note">The engineering arc — the combat core becomes tested, signal-driven modules. Working code,
+  refactored under green: every change proven not to alter behaviour.</p>
+  <div class="toc">
+    <a class="row" href="0033-the-attack-table-becomes-a-module.html"><span class="n">33</span><span><span class="t">The Attack Table Becomes a Module</span><span class="d">Lift the 7 combat formulas + rage out of player.gd into a pure, cited CombatTable — the game plays identically. class_name, static funcs, the deletion test.</span></span></a>
+    <a class="row" href="0034-the-first-test.html"><span class="n">34</span><span><span class="t">The First Test<span class="tag">✓ FIRST TEST</span></span><span class="d">Prove CombatTable matches the reference in the terminal, game closed — a headless SceneTree script, 18 checks, an exit code. The repo's first test.</span></span></a>
+    <a class="row" href="0035-the-hud-stops-polling.html"><span class="n">35</span><span><span class="t">The HUD Stops Polling</span><span class="d">Pay the debt from L31/32: the player announces via signals, the HUD listens — delete the HUD scene and the game still runs. Custom signals, both directions inverted.</span></span></a>
+  </div>
+</section>
+
 <div class="callout idea">
   <span class="ct">NEXT UP</span>
-  <p><strong>The Game Feel arc is complete (27–32).</strong> Two roads from here: the progression arc —
-  <strong>XP &amp; Leveling</strong> on the mob-XP formula, inventory, wolf pelts, a wizard with a quest,
-  Heroic Strike, Whirlwind (<code class="inline">learning-records/0002-roadmap-combat-quests-progression.md</code>) —
-  or <strong>The Forge</strong>: the combat core becomes tested, signal-driven modules
-  (<code class="inline">learning-records/0003-architecture-review-and-curriculum-expansion.md</code>).
-  Which goes first is the next planning session's call.</p>
+  <p><strong>The Forge is underway (33–34 shipped).</strong> Next in the arc: <strong>F3 — the HUD stops polling</strong>
+  (health via signal, paying off the debt flagged in Lessons 31 &amp; 32) and <strong>F4 — one home for combat FX</strong>
+  (de-duplicate the damage-number &amp; spark spawners). Then the progression arc — <strong>XP &amp; Leveling</strong> on the
+  mob-XP formula, inventory, wolf pelts, a wizard with a quest, Heroic Strike, Whirlwind
+  (<code class="inline">learning-records/0002-roadmap-combat-quests-progression.md</code>), now resting on a tested combat core.</p>
 </div>
 
 <footer>
-  GODOT LEARNING WORKSPACE · 32 LESSONS · ONE WIN AT A TIME · EVERY LESSON ENDS IN A CODEBASE CHECKPOINT<br>
+  GODOT LEARNING WORKSPACE · 35 LESSONS · ONE WIN AT A TIME · EVERY LESSON ENDS IN A CODEBASE CHECKPOINT<br>
   The method behind this course is documented in <code class="inline">GUIDE.md</code> at the repo root ·
   purpose audited by <code class="inline">/goal</code> → <code class="inline">TELOS.md</code>
 </footer>
