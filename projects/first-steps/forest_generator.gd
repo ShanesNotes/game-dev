@@ -10,8 +10,8 @@ extends TileMapLayer
 @export var map_width: int = 64
 @export var map_height: int = 48
 @export var map_seed: int = 1337   # same seed = the exact same forest
-@export var tree_count: int = 170
-@export var bush_count: int = 90
+@export var tree_count: int = 200
+@export var bush_count: int = 110
 @export var rock_count: int = 36
 @export var extra_wolves: int = 6
 
@@ -34,6 +34,8 @@ const MUSHROOMS = preload("res://assets/mushroom_cluster.png")
 const CAMPFIRE = preload("res://assets/campfire.png")
 const SIGNPOST = preload("res://assets/signpost.png")
 const SOFT_DOT = preload("res://assets/soft_dot.png")
+const PEDESTAL = preload("res://assets/pedestal.png")
+const CRACKLE = preload("res://assets/sounds/campfire_crackle.wav")
 
 # terrain.png atlas: row 0 = grass variants, row 1 = dirt variants,
 # rows 2-5 = dual-grid transitions (bit 1=TL, 2=TR, 4=BL, 8=BR is dirt).
@@ -60,7 +62,7 @@ func _ready() -> void:
 	_scatter(ROCKS, rock_count, 2, true)
 	_scatter([STUMP], 18, 2, false)
 	_scatter([MUSHROOMS], 40, 1, false)
-	_scatter_roadside(26)
+	_scatter_roadside(40)
 	var wolves := _spawn_wolves()
 	_add_bounds()
 	_place_story_positions()
@@ -198,10 +200,10 @@ func _make_prop(tex: Texture2D, solid: bool) -> Node2D:
 	shadow.texture = SHADOW
 	if h < 22:   # ground-hugging props: wider, lower, so the rim actually shows
 		shadow.position = Vector2(0, -1)
-		shadow.scale = Vector2(w / 18.0, w / 26.0)
+		shadow.scale = Vector2(w / 21.0, w / 26.0)
 	else:
 		shadow.position = Vector2(0, -2)
-		shadow.scale = Vector2(w / 22.0, w / 30.0)
+		shadow.scale = Vector2(w / 25.5, w / 30.0)
 	shadow.show_behind_parent = true
 	var root: Node2D
 	if solid:
@@ -266,7 +268,12 @@ func _place_story_positions() -> void:
 		cam.limit_bottom = map_height * 32
 		cam.call_deferred("reset_smoothing")
 	if pickup_sword:
-		pickup_sword.global_position = cell_to_world(_sword_cell())
+		var spot := cell_to_world(_sword_cell())
+		var pedestal := _make_prop(PEDESTAL, true)   # solid: you grab the sword, you never stand in the stone
+		pedestal.position = spot + Vector2(0, 4)
+		world.add_child(pedestal)
+		_occupied[_sword_cell()] = true
+		pickup_sword.global_position = spot
 
 # The spawn clearing becomes a camp: fire with a flickering glow, a signpost
 # pointing up the road, a stump for sitting.
@@ -275,19 +282,28 @@ func _dress_camp(start: Vector2i) -> void:
 	fire.position = cell_to_world(start + Vector2i(-2, -1))
 	var glow := Sprite2D.new()
 	glow.texture = SOFT_DOT
-	glow.scale = Vector2(7, 5)
+	glow.scale = Vector2(10, 7)
 	glow.position = Vector2(0, -6)
 	glow.modulate = Color(1.0, 0.72, 0.3, 0.3)
 	glow.show_behind_parent = true
+	var glow_mat := CanvasItemMaterial.new()
+	glow_mat.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD   # actually lights the grass
+	glow.material = glow_mat
 	fire.add_child(glow)
 	var t := create_tween().set_loops()
 	t.tween_property(glow, "modulate:a", 0.18, 0.45)
 	t.tween_property(glow, "modulate:a", 0.3, 0.45)
+	var crackle := AudioStreamPlayer2D.new()
+	crackle.stream = CRACKLE
+	crackle.autoplay = true
+	crackle.max_distance = 280.0
+	crackle.volume_db = -6.0
+	fire.add_child(crackle)
 	world.add_child(fire)
 	_occupied[start + Vector2i(-2, -1)] = true
-	var sign := _make_prop(SIGNPOST, false)
-	sign.position = cell_to_world(start + Vector2i(2, 0))
-	world.add_child(sign)
+	var signpost := _make_prop(SIGNPOST, false)
+	signpost.position = cell_to_world(start + Vector2i(2, 0))
+	world.add_child(signpost)
 	_occupied[start + Vector2i(2, 0)] = true
 	var seat := _make_prop(STUMP, false)
 	seat.position = cell_to_world(start + Vector2i(-1, 1))

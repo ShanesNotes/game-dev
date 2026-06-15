@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lesson 29 — Holding It Right: The Directional Sword</title>
+<link rel="stylesheet" href="_lesson.css">
+</head>
+<body>
+<main>
+<header class="hero">
+  <div class="kicker">Godot · Lesson 29 · Game Feel 3</div>
+  <h1>Holding It Right: <span>The Directional Sword</span></h1>
+  <p class="sub">Lesson 17 bolted the sword to one side of the body — fine, until Will turns around and the
+  blade floats on the wrong side like a sticker. Today the sword follows his <em>hands</em>: right hand
+  facing right and down, mirrored to the left hand facing left, tucked behind his back facing away.</p>
+</header>
+
+<div class="win">
+  <b>TODAY</b>
+  <p>Walk a slow circle and watch the blade: it changes hands as Will turns, and disappears behind his body
+  when he faces away from you. Click a wolf, then press attack while standing still — Will <em>squares up to
+  face it</em> before the first swing. Three properties, one function — and a trick that happened in the art
+  pipeline, not in code.</p>
+</div>
+
+<h2>The big idea: a sprite is a flat lie</h2>
+<p>
+  A 3D game rotates a sword model and it just <em>works</em>. A top-down 2D character is four flat drawings
+  pretending to be one person — so "holding a sword" is also four flat lies, and you fake each one with three
+  cheap tools: <strong>where</strong> the sword sprite sits (<code class="inline">position</code>),
+  <strong>which way</strong> it's drawn (<code class="inline">flip_h</code>), and <strong>whether it draws in
+  front of or behind the body</strong> (<code class="inline">show_behind_parent</code>). Get those right per
+  facing and nobody ever notices. Get one wrong and everybody does.
+</p>
+
+<div class="defs">
+  <div class="def"><b>flip_h</b><p>Mirrors a sprite horizontally — for free, no second drawing. One blade drawn for the right hand becomes the left-hand blade with <code class="inline">flip_h = true</code>. (The wolf has used this since Lesson 9 to face its prey.)</p></div>
+  <div class="def"><b>show_behind_parent</b><p>A CanvasItem switch: "draw me in the <em>behind</em> group." Godot draws a node's behind-flagged children first, then the node's own drawing, then its other children — so the Sword (a child of the Player, <em>sibling</em> of the AnimatedSprite2D body) jumps from after the body sprite to before it. It stays attached and moves with the Player; only its slot in the Player's draw order changes.</p></div>
+  <div class="def"><b>match</b><p>GDScript's many-way branch. <code class="inline">match facing:</code> with one block per value reads like a table — much cleaner than four chained <code class="inline">elif</code>s when every case does the same <em>kind</em> of thing.</p></div>
+  <div class="def"><b>baked rotation</b><p>Rotating art <em>in the generator</em> (once, on real pixels) instead of rotating the node at runtime (every frame, off the pixel grid). The result ships as a normal sprite.</p></div>
+</div>
+
+<h2>Part A — the rest pose moved into the pixels</h2>
+<p>
+  In Lesson 17 the sword rested at an angle by rotating the node:
+  <code class="inline">SWORD_REST_DEGREES = 25.0</code>. The overhaul changed that constant to <strong>zero</strong>
+  — and the sword still rests at 25°. The angle moved into the art: the asset pipeline
+  (<code class="inline">assets/gen_polish.py</code>) rotates the clean sword sprite <em>once</em>, with
+  nearest-neighbor sampling, and saves it as <code class="inline">sword_held.png</code>. The scene's Sword
+  sprite now uses that texture:
+</p>
+<div class="code">
+  <div class="bar"><span class="t">GDScript · player.gd</span><button class="copy">copy</button></div>
+<pre><span class="kw">const</span> <span class="var">SWORD_REST_DEGREES</span> = <span class="num">0.0</span>   <span class="com"># 25-degree rest pose is baked into sword_held.png</span></pre>
+</div>
+<div class="code">
+  <div class="bar"><span class="t">Python · assets/gen_polish.py</span><button class="copy">copy</button></div>
+<pre><span class="kw">def</span> <span class="fn">make_sword_held</span>():
+    <span class="var">im</span> = <span class="type">Image</span>.<span class="fn">open</span>(<span class="str">'sword_clean.png'</span>).<span class="fn">convert</span>(<span class="str">'RGBA'</span>)
+    <span class="var">rot</span> = <span class="var">im</span>.<span class="fn">rotate</span>(-<span class="num">25</span>, resample=<span class="type">Image</span>.NEAREST, expand=<span class="kw">False</span>)
+    <span class="var">rot</span>.<span class="fn">save</span>(<span class="str">'sword_held.png'</span>)</pre>
+</div>
+<div class="callout note">
+  <span class="ct">◈ WHY BAKE? PIXELS LIVE ON A GRID</span>
+  <p>Rotate a pixel-art sprite at runtime and its texels land <em>between</em> screen pixels — some render
+  fat and others thin, off the chunky grid every other drawing lives on. (Our
+  <code class="inline">snap_2d_transforms_to_pixel</code> project setting keeps a <em>fixed</em> rotation from
+  shimmering as you walk — but the uneven texels remain, frozen wrong. And the moment the angle
+  <em>animates</em>, like our swing, the edges crawl.) Rotate it <strong>once in the generator</strong> and
+  the result is re-snapped to the texture grid like any other drawing: chunky and stable forever. Rule of
+  thumb: rotation that never changes belongs in the art; rotation that animates belongs in code — <em>unless</em>
+  you can afford a baked frame per step. As of today the swing still rotates live (watch the blade mid-arc
+  with educated eyes and you can see it); baking it too is the next lesson's whole story.</p>
+</div>
+
+<h2>Part B — one function owns the pose</h2>
+<p>Every facing gets a hand position, a mirror flag, and a front/behind decision — one
+<code class="inline">match</code>, called whenever facing changes:</p>
+<div class="code">
+  <div class="bar"><span class="t">GDScript · player.gd</span><button class="copy">copy</button></div>
+<pre><span class="com"># The held sword follows the hand: right side when facing right/down,</span>
+<span class="com"># mirrored to the left hand when facing left, tucked behind the body</span>
+<span class="com"># when facing away.</span>
+<span class="kw">func</span> <span class="fn">update_sword_pose</span>():
+    <span class="kw">if</span> <span class="kw">not</span> <span class="var">has_sword</span>:
+        <span class="kw">return</span>
+    <span class="kw">match</span> <span class="var">facing</span>:
+        <span class="str">"right"</span>:
+            <span class="var">sword</span>.position = <span class="type">Vector2</span>(<span class="num">10</span>, <span class="num">2</span>)
+            <span class="var">sword</span>.flip_h = <span class="kw">false</span>
+            <span class="var">sword</span>.show_behind_parent = <span class="kw">false</span>
+        <span class="str">"left"</span>:
+            <span class="var">sword</span>.position = <span class="type">Vector2</span>(-<span class="num">10</span>, <span class="num">2</span>)
+            <span class="var">sword</span>.flip_h = <span class="kw">true</span>
+            <span class="var">sword</span>.show_behind_parent = <span class="kw">false</span>
+        <span class="str">"down"</span>:
+            <span class="var">sword</span>.position = <span class="type">Vector2</span>(<span class="num">9</span>, <span class="num">3</span>)
+            <span class="var">sword</span>.flip_h = <span class="kw">false</span>
+            <span class="var">sword</span>.show_behind_parent = <span class="kw">false</span>
+        <span class="str">"up"</span>:
+            <span class="var">sword</span>.position = <span class="type">Vector2</span>(-<span class="num">9</span>, <span class="num">0</span>)
+            <span class="var">sword</span>.flip_h = <span class="kw">true</span>
+            <span class="var">sword</span>.show_behind_parent = <span class="kw">true</span></pre>
+</div>
+<div class="annot">
+  <div class="line-note"><b>The early return</b> — before the pickup, there's no pose to manage. Guard clauses first; the function body assumes a sword exists.</div>
+  <div class="line-note"><b>The numbers are hand anchors.</b> (10,&nbsp;2) is "the right fist, mid-body" in the character's local pixels. They were found the honest way: nudge, run, squint, repeat. Pose code is <em>tuned</em>, not derived.</div>
+  <div class="line-note"><b>"up" gets both tricks:</b> mirrored <em>and</em> behind. Facing away, you see Will's back — his right hand is now on screen-left, and his body should hide most of the blade. Two booleans sell the entire 180° turn.</div>
+</div>
+
+<h2>Part C — call it when facing changes</h2>
+<p>Three call sites. The first two you've already met:</p>
+<div class="code">
+  <div class="bar"><span class="t">GDScript · player.gd</span><button class="copy">copy</button></div>
+<pre><span class="kw">func</span> <span class="fn">equip_sword</span>():
+    <span class="var">has_sword</span> = <span class="kw">true</span>
+    <span class="var">sword</span>.visible = <span class="kw">true</span>
+    <span class="var">sword</span>.rotation_degrees = <span class="var">SWORD_REST_DEGREES</span>
+    <span class="fn">update_sword_pose</span>()</pre>
+</div>
+<p><code class="inline">update_animation()</code> (Lesson 7's walk logic) already sets
+<code class="inline">facing</code> from input — it now ends with an <code class="inline">update_sword_pose()</code>
+call, so walking keeps the blade in the correct hand. The third call site is new, and it's the one that makes
+combat <em>look intentional</em> — turning to face your victim:</p>
+<div class="code">
+  <div class="bar"><span class="t">GDScript · player.gd</span><button class="copy">copy</button></div>
+<pre><span class="com"># Turn the standing pose toward a point (movement animation wins while walking).</span>
+<span class="kw">func</span> <span class="fn">face_toward</span>(<span class="var">point</span>: <span class="type">Vector2</span>):
+    <span class="kw">var</span> <span class="var">d</span> = <span class="var">point</span> - <span class="var">global_position</span>
+    <span class="kw">if</span> <span class="fn">abs</span>(<span class="var">d</span>.x) &gt; <span class="fn">abs</span>(<span class="var">d</span>.y):
+        <span class="var">facing</span> = <span class="str">"right"</span> <span class="kw">if</span> <span class="var">d</span>.x &gt; <span class="num">0</span> <span class="kw">else</span> <span class="str">"left"</span>
+    <span class="kw">else</span>:
+        <span class="var">facing</span> = <span class="str">"down"</span> <span class="kw">if</span> <span class="var">d</span>.y &gt; <span class="num">0</span> <span class="kw">else</span> <span class="str">"up"</span>
+    <span class="kw">if</span> <span class="var">velocity</span> == <span class="type">Vector2</span>.ZERO:
+        <span class="var">anim</span>.animation = <span class="str">"walk_"</span> + <span class="var">facing</span>
+        <span class="var">anim</span>.<span class="fn">stop</span>()
+        <span class="var">anim</span>.frame = <span class="num">0</span>
+    <span class="fn">update_sword_pose</span>()</pre>
+</div>
+<div class="annot">
+  <div class="line-note"><b>Dominant axis wins.</b> <code>abs(d.x) &gt; abs(d.y)</code> picks the facing that best points at the target — the same idea Lesson 7 used to pick a walk row from input, now reused for aim.</div>
+  <div class="line-note"><code>anim.frame = 0</code> — <b>settle on the standing pose.</b> Without it, turning while idle freezes Will mid-stride on whatever frame the last walk left behind. Frame 0 of each walk row doubles as that row's "standing" drawing.</div>
+  <div class="line-note"><b>The velocity guard</b> keeps priorities straight: if Will is walking, the walk animation owns the body; <code>face_toward()</code> only repaints the <em>standing</em> pose. The sword pose updates either way — the hand must be right even mid-stride.</div>
+</div>
+<p>The player's <code class="inline">swing()</code> opens with <code class="inline">face_toward(target.global_position)</code>
+— that's why Will turns before every hit instead of slashing the air behind him.</p>
+
+<h2>Part D — the mirror debt</h2>
+<p>
+  One honest wrinkle before we close: the <em>swing</em> (Lesson 17's live rotation tween) doesn't know about
+  any of this yet. A mirrored sprite rotated by the same angle swings <strong>backwards</strong> — so at
+  today's checkpoint, attack while facing left and watch closely: the blade sweeps the wrong way. A quick
+  patch exists (<code class="inline">var swing_to = 65 if sword.flip_h else -65</code> — mirror the angle
+  whenever the art is mirrored), but we're not taking it.
+</p>
+<p>
+  Next lesson the swing stops rotating live entirely — it becomes a sequence of pre-rotated textures, and
+  since <code class="inline">flip_h</code> mirrors <em>whatever texture is showing</em>, the same flag that
+  moves the blade into the left hand will mirror every frame of the arc. The correct left-handed swing will
+  cost <strong>zero extra code</strong>. Good representation choices don't just fix bugs — they delete the
+  code that would have fixed them.
+</p>
+
+<div class="callout idea">
+  <span class="ct">FEEL IT YOURSELF — BREAK ONE CASE</span>
+  <p>In <code class="inline">update_sword_pose()</code>, set the <code class="inline">"up"</code> branch's
+  <code class="inline">show_behind_parent</code> to <code class="inline">false</code>, run, and walk north:
+  the blade floats over Will's back like a magnet. Now change the <code class="inline">"right"</code> position
+  to <code class="inline">Vector2(16, 2)</code>: the sword detaches from his fist entirely. Revert both.
+  You now know exactly what each lie is doing.</p>
+</div>
+
+<h2>Check yourself</h2>
+<div class="quiz">
+  <p class="q">Facing up, the sword uses <code>show_behind_parent = true</code>. Why not set its <code>z_index</code> lower instead?</p>
+  <button onclick="pick(this)">z_index can't be changed from code</button>
+  <button onclick="pick(this)" data-correct>show_behind_parent flips draw order within the Player only — the sword keeps its place relative to everything else in the Y-sorted world</button>
+  <button onclick="pick(this)">show_behind_parent is faster to render</button>
+  <div class="feedback"></div>
+</div>
+
+<h3>Codebase checkpoint</h3>
+<p>The project after this lesson:</p>
+<div class="tree">
+<span class="dim">projects/first-steps/</span>
+├─ project.godot              <span class="dim">· [autoload] Sfx (L27)</span>
+├─ <span class="leaf">main.tscn</span>                 <span class="dim">← changed: Player's Sword sprite uses sword_held.png</span>
+├─ <span class="leaf">player.gd</span>                 <span class="dim">← changed: update_sword_pose(), face_toward(), SWORD_REST_DEGREES = 0.0</span>
+├─ sword.gd                   <span class="dim">· the pickup moment (L28)</span>
+├─ hud.gd                     <span class="dim">· the banner toast (L28; full tour later this arc)</span>
+├─ sfx.gd                     <span class="dim">· the sound bus (L27)</span>
+├─ wolf.gd / wolf.tscn        <span class="dim">· chase, aggro, pack, clickable (L9–19)</span>
+├─ damage_number.gd / .tscn   <span class="dim">· floating combat text (L14)</span>
+├─ forest_generator.gd        <span class="dim">· the world (L26)</span>
+└─ assets/
+   ├─ <span class="leaf">sword_held.png</span>         <span class="dim">← new: the 25° rest pose, baked</span>
+   └─ <span class="leaf">gen_polish.py</span>          <span class="dim">← new (overhaul): the post-processing pass — today: make_sword_held()</span>
+</div>
+
+<div class="teacher">
+  <b>TEACHER'S NOTE</b>
+  <p>Notice what today <em>wasn't</em>: no new mechanics, no new nodes — three properties and one tuned
+  function, and suddenly the character "really holds" the weapon. Most production polish is exactly this
+  size. Next: <strong>Lesson 30 — Swing Feel</strong>, where the strike earns its weight — the lean into
+  the blow, the camera flinch, and the heartbeat of frozen time when a crit lands.</p>
+</div>
+
+<footer>
+  GODOT · LESSON 29 · GAME FEEL 3 · ONE WIN AT A TIME<br>
+  Primary reference: <a href="https://docs.godotengine.org/en/stable/classes/class_sprite2d.html">Godot — Sprite2D (flip_h)</a> · <a href="https://docs.godotengine.org/en/stable/classes/class_canvasitem.html">CanvasItem (show_behind_parent)</a> · <a href="https://docs.godotengine.org/en/stable/tutorials/scripting/gdscript/gdscript_basics.html#match">GDScript — match</a>
+</footer>
+</main>
+<script src="_lesson.js"></script>
+</body>
+</html>

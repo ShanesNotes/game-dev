@@ -3,10 +3,10 @@ extends Label
 func setup(amount, color):
 	show_text(str(amount), color)   # numbers route through show_text
 
-func show_text(s, color, size = 18):
+func show_text(s, color, font_size = 18):
 	text = s
 	modulate = color
-	add_theme_font_size_override("font_size", size)
+	add_theme_font_size_override("font_size", font_size)
 	position.x += randf_range(-6, 6)   # so stacked hits don't overlap exactly
 	pivot_offset = Vector2(20, 12)
 	scale = Vector2(0.3, 0.3)

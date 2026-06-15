@@ -13,6 +13,10 @@ extends CharacterBody2D
 var rage = 0.0
 var health = max_health
 var target = null
+var has_sword = false
+var facing = "down"
+var no_weapon_cooldown = 0.0
+var dying = false
 
 @onready var anim = $AnimatedSprite2D
 @onready var health_bar = get_node("../../HUD/UnitFrame/HealthBar")
@@ -22,10 +26,20 @@ var target = null
 @onready var slash_arc = $SlashArc
 @onready var foot_dust = $FootDust
 @onready var camera = $Camera2D
+@onready var hud = get_node("../../HUD")
 
 const DAMAGE_NUMBER = preload("res://damage_number.tscn")
 const SPARK = preload("res://assets/spark.png")
 const SWORD_REST_DEGREES = 0.0   # 25-degree rest pose is baked into sword_held.png
+# The swing is pre-rotated in the art pipeline too — four frames from rest to
+# full extension. Stepping textures keeps every texel on the pixel grid.
+const SWING_FRAMES = [
+	preload("res://assets/sword_held.png"),
+	preload("res://assets/sword_swing_1.png"),
+	preload("res://assets/sword_swing_2.png"),
+	preload("res://assets/sword_swing_3.png"),
+]
+var _swing_tween: Tween
 
 func _ready():
 	add_to_group("player")            # so any wolf can find us
@@ -42,6 +56,7 @@ func _physics_process(delta):
 	move_and_slide()
 	update_animation(direction)
 	foot_dust.emitting = direction != Vector2.ZERO
+	no_weapon_cooldown = maxf(no_weapon_cooldown - delta, 0.0)
 	if Input.is_action_just_pressed("target_next"):
 		target_nearest_wolf()
 	if Input.is_action_just_pressed("attack"):
@@ -70,12 +85,21 @@ func set_target(new_target):
 		target.set_targeted(false)   # un-highlight the old one
 	target = new_target
 	target.set_targeted(true)        # highlight the new one
+	Sfx.play("ping", -8.0)
 
 func equip_sword():
+	has_sword = true
 	sword.visible = true
 	sword.rotation_degrees = SWORD_REST_DEGREES
+	update_sword_pose()
 
 func start_auto_attack():
+	if not has_sword:
+		if no_weapon_cooldown == 0.0:
+			no_weapon_cooldown = 2.5
+			spawn_text_over(self, "No weapon!", Color.GRAY)
+			hud.show_banner("Find the sword — follow the road north!")
+		return
 	if is_instance_valid(target) and swing_timer.is_stopped():
 		swing()                 # immediate first hit
 		swing_timer.start()     # then keep swinging on the tick
@@ -84,12 +108,17 @@ func _on_swing_timer_timeout():
 	swing()
 
 func swing_sword():
-	var t = create_tween()
-	t.tween_property(sword, "rotation_degrees", -65, 0.08)   # slash across
-	t.tween_property(sword, "rotation_degrees", SWORD_REST_DEGREES, 0.12)    # back to held rest angle (prevents perma "out" pose)
-	# white swoosh flashed along the cut, aimed at the target
+	# Animate an index, not an angle: each frame is pre-rotated in the art,
+	# so the blade stays crisp mid-arc. flip_h mirrors the frames for free
+	# when the sword is in the left hand.
+	if _swing_tween:
+		_swing_tween.kill()
+	_swing_tween = create_tween()
+	_swing_tween.tween_method(_set_swing_frame, 0.0, 3.0, 0.08)   # slash out
+	_swing_tween.tween_method(_set_swing_frame, 3.0, 0.0, 0.12)   # and settle back to rest
+	# white swoosh flashed along the cut, aimed at the target (15° steps keep it crisp)
 	if is_instance_valid(target):
-		slash_arc.rotation = (target.global_position - global_position).angle()
+		slash_arc.rotation = snappedf((target.global_position - global_position).angle(), TAU / 24.0)
 	slash_arc.visible = true
 	slash_arc.modulate.a = 0.9
 	slash_arc.scale = Vector2(0.6, 0.6)
@@ -98,15 +127,43 @@ func swing_sword():
 	s.parallel().tween_property(slash_arc, "modulate:a", 0.0, 0.16)
 	s.tween_callback(func(): slash_arc.visible = false)
 
+func _set_swing_frame(i: float):
+	sword.texture = SWING_FRAMES[clampi(roundi(i), 0, SWING_FRAMES.size() - 1)]
+
 func swing():
 	if not is_instance_valid(target):
 		swing_timer.stop()
 		target = null
-		sword.rotation_degrees = SWORD_REST_DEGREES
+		sword.texture = SWING_FRAMES[0]   # settle back to the rest pose
 		return
+	face_toward(target.global_position)
 	swing_sword()
+	lunge_toward(target.global_position)
 	if global_position.distance_to(target.global_position) <= attack_range:
+		Sfx.play("swing", -4.0)
 		attack(target)        # in range -> roll the table
+	else:
+		Sfx.play("miss", -10.0)
+
+# Brief body lean into the strike (visual only — the body doesn't move).
+func lunge_toward(point: Vector2):
+	var dir = (point - global_position).normalized()
+	var t = create_tween()
+	t.tween_property(anim, "position", dir * 5.0, 0.07).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	t.tween_property(anim, "position", Vector2.ZERO, 0.14)
+
+# Turn the standing pose toward a point (movement animation wins while walking).
+func face_toward(point: Vector2):
+	var d = point - global_position
+	if abs(d.x) > abs(d.y):
+		facing = "right" if d.x > 0 else "left"
+	else:
+		facing = "down" if d.y > 0 else "up"
+	if velocity == Vector2.ZERO:
+		anim.animation = "walk_" + facing
+		anim.stop()
+		anim.frame = 0
+	update_sword_pose()
 
 func attack(t):
 	var roll = randf() * 100.0
@@ -117,25 +174,38 @@ func attack(t):
 	var crit = crit_chance(t)
 	if roll < miss:
 		spawn_text_over(t, "Miss", Color.GRAY)
+		Sfx.play("miss", -8.0)
 	elif roll < miss + dodge:
 		spawn_text_over(t, "Dodge", Color.CYAN)
+		Sfx.play("miss", -8.0)
 	elif roll < miss + dodge + parry:
 		spawn_text_over(t, "Parry", Color.ORANGE)
+		Sfx.play("miss", -6.0)
 	elif roll < miss + dodge + parry + glancing:
 		spawn_text_over(t, "Glancing", Color.GRAY)
 		var dmg = roundi(glancing_damage(t))
 		t.take_damage(dmg)
 		gain_rage_dealing(dmg, false)
+		Sfx.play("hit", -6.0)
 	elif roll < miss + dodge + parry + glancing + crit:
 		var dmg = attack_damage * 2
 		t.take_damage(dmg, true)
 		gain_rage_dealing(dmg, true)
 		spawn_sparks(t.global_position, Color(1.0, 0.85, 0.3), 10)
 		shake_camera(4.0)
+		Sfx.play("crit", -2.0)
+		hit_stop()
 	else:
 		t.take_damage(attack_damage)
 		gain_rage_dealing(attack_damage, false)
 		spawn_sparks(t.global_position, Color(1, 1, 1), 5)
+		Sfx.play("hit", -4.0)
+
+# A heartbeat of frozen time sells the crit.
+func hit_stop():
+	Engine.time_scale = 0.05
+	await get_tree().create_timer(0.05, true, false, true).timeout
+	Engine.time_scale = 1.0
 
 func spawn_text_over(t, s, color):
 	var n = DAMAGE_NUMBER.instantiate()
@@ -144,10 +214,15 @@ func spawn_text_over(t, s, color):
 	n.show_text(s, color)
 
 func take_damage(amount, from = null):
+	if dying:
+		return
 	health -= amount
 	if health < 0: health = 0
-	health_bar.value = health
-	spawn_number(amount, Color.RED)
+	var bt = create_tween()
+	bt.tween_property(health_bar, "value", health, 0.25).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	Sfx.play("hurt", -4.0)
+	hud.flash_hurt()
+	spawn_number(amount, Color(1.0, 0.36, 0.22))   # hot red-orange — reads on dirt and grass alike
 	gain_rage_taking(amount)      # getting hit builds rage too
 	if is_instance_valid(from):       # hit by an enemy -> engage it
 		if not is_instance_valid(target):
@@ -234,16 +309,49 @@ func spawn_number(amount, color):
 	n.setup(amount, color)
 
 func die():
-	print("- Memory Eternal -")
-	get_tree().reload_current_scene()
+	dying = true
+	set_physics_process(false)
+	foot_dust.emitting = false
+	swing_timer.stop()
+	Sfx.play("death")
+	hud.show_death_screen()
+	var t = create_tween()
+	t.tween_property(anim, "modulate:a", 0.0, 0.9)
+	t.parallel().tween_property(sword, "modulate:a", 0.0, 0.9)
+	get_tree().create_timer(2.4).timeout.connect(get_tree().reload_current_scene)
 
 func update_animation(direction):
 	if direction == Vector2.ZERO:
 		anim.stop()
+		anim.frame = 0   # settle on the standing pose, not mid-stride
 		return
 	if abs(direction.x) > abs(direction.y):
-		if direction.x > 0: anim.play("walk_right")
-		else: anim.play("walk_left")
+		facing = "right" if direction.x > 0 else "left"
 	else:
-		if direction.y > 0: anim.play("walk_down")
-		else: anim.play("walk_up")
+		facing = "down" if direction.y > 0 else "up"
+	anim.play("walk_" + facing)
+	update_sword_pose()
+
+# The held sword follows the hand: right side when facing right/down,
+# mirrored to the left hand when facing left, tucked behind the body
+# when facing away.
+func update_sword_pose():
+	if not has_sword:
+		return
+	match facing:
+		"right":
+			sword.position = Vector2(10, 2)
+			sword.flip_h = false
+			sword.show_behind_parent = false
+		"left":
+			sword.position = Vector2(-10, 2)
+			sword.flip_h = true
+			sword.show_behind_parent = false
+		"down":
+			sword.position = Vector2(9, 3)
+			sword.flip_h = false
+			sword.show_behind_parent = false
+		"up":
+			sword.position = Vector2(-9, 0)
+			sword.flip_h = true
+			sword.show_behind_parent = true

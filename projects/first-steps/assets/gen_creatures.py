@@ -398,6 +398,29 @@ def build_sword():
     for x, y, c in pommel:
         px[x, y] = c + (255,)
     img = quantize_frame(img, 15)
+    # "Rusty Sword" should look the part: remap the cold silver blade (rows
+    # above the guard) onto a warm iron ramp, dim the speculars, pit the edge.
+    IRON = [(0x46, 0x40, 0x36), (0x6a, 0x62, 0x52), (0x8e, 0x84, 0x6e), (0xb4, 0xa8, 0x8c)]
+    RUST = [(0x6f, 0x36, 0x1e), (0x8a, 0x55, 0x30)]
+    px = img.load()
+    for y in range(0, 19):
+        for x in range(32):
+            r, g, b, a = px[x, y]
+            if a == 0:
+                continue
+            lum = 0.299 * r + 0.587 * g + 0.114 * b
+            if lum < 60:
+                c = IRON[0]
+            elif lum < 110:
+                c = IRON[1]
+            elif lum < 170:
+                c = IRON[2]
+            else:
+                c = IRON[3]               # shine, one step dimmer than white
+            px[x, y] = c + (255,)
+    for i, (x, y) in enumerate(((15, 4), (16, 7), (14, 10), (16, 13), (15, 16))):
+        if px[x, y][3] > 0:
+            px[x, y] = RUST[i % 2] + (255,)
     img = outline(img)
     img.save('sword_clean.png')
     return img

@@ -51,6 +51,26 @@ Untaught systems now in the codebase (the retrofit inventory):
   palette by convention). **Order matters:** `gen_creatures.py` must run before
   `gen_polish.py` (polish mutates its outputs in place; not idempotent).
 
+**Added by the UX/production-polish round (later on 2026-06-11):**
+
+- **Sfx autoload** — `sfx.gd` sound bus (`play` / `play_at`), 13 synthesized WAVs from
+  `gen_sfx.py` (deterministic, seam-rotated loops); ambience + campfire crackle live as
+  scene nodes, not the bus. *(→ taught in L27.)*
+- **Pickup moment** — pedestal prop, bob tween, glint particles, chime + gold burst +
+  banner, deferred teardown; attacks gated on `has_sword` ("No weapon!" + hint banner)
+  — the one mechanic-adjacent change, justified as making the pickup meaningful.
+  *(→ taught in L28.)*
+- **Directional held sword** — `update_sword_pose()` (right/left-mirrored/tucked-behind-up),
+  mirrored swing arcs, `face_toward()`. *(→ L29 planned.)*
+- **Swing feel** — lunge tween, crit hit-stop (`Engine.time_scale`), camera shake,
+  outcome-laddered SFX volumes. *(→ L30 planned.)*
+- **Death sequence** — dying guard, sting, fade, "— Memory Eternal —", 2.4 s respawn;
+  HUD hurt flash + low-HP pulse. *(→ L31 planned.)*
+- **HUD UX** — banner toasts (`show_banner`), tutorial hint chips that dim per learned
+  action, tweened HP/target bars. *(banner taught in L28; chips → L32 planned.)*
+- **Window identity** — `config/name="Will's First Steps"`, generated `icon.png`
+  (`gen_pickup.py`).
+
 ## Architecture findings (preserved for the attentive session)
 
 Vocabulary: *module / interface / seam / depth / locality / leverage / deletion test*
@@ -152,6 +172,41 @@ One win each; all triggers fired:
   L11 doctrine. *(Optionally absorbs F4.)*
 - **F4 · One home for combat FX** *(optional/foldable)* — win: *five spawners become
   three functions*. Teaches autoloads.
+
+### Arc VII "Game Feel" — **STARTED 2026-06-11** (the UX-round retrofits)
+
+Per the user's directive ("back engineer your optimizations to loop them into our lesson
+plans/guide"), the UX-round systems are being retrofitted as a new index arc, L26-style
+(guided build of the real repo code + a tune-one-number exercise):
+
+- **L27 · The Game Finds Its Voice: Autoloads & Sound** — ✅ shipped. Sfx bus, autoload
+  concept (new to curriculum — partially covers candidate 3's teaching goal), signals
+  connected in code, play/play_at lifetime contrast, loudness ladder.
+- **L28 · Juice: The Pickup Moment** — ✅ shipped. Juice doctrine, looped tweens,
+  toast pattern (kill-then-retween), `set_deferred`, polite teardown, attack gating.
+- **L29 · Holding It Right** — ✅ shipped. `update_sword_pose` (position/flip_h/
+  show_behind_parent), baked rest pose rationale (pixels live on a grid), `face_toward`,
+  mirrored swing arc. Honest note in-lesson: the swing still rotates live (L30 hook).
+- **L30 · Swing Feel** — ✅ shipped. Frame-stepped swing (the swing itself was converted
+  to 4 baked frames + `tween_method` index-stepping FIRST, then the lesson written against
+  final code — retired L29's `swing_to` mirror line, slash arc snapped to 15°), lunge,
+  hit-stop (`ignore_time_scale` timer), camera shake via offset.
+- **L31 · A Death Worth Respawning From** — ✅ shipped. dying latch, feedback-first
+  take_damage, die() ceremony, show_death_screen, low-HP pulse — with an explicit
+  "HONEST DEBT: THIS IS POLLING" callout pointing at Forge F3 (keeps the L11 doctrine
+  contradiction on the books rather than teaching polling as fine).
+- **L32 · The HUD Teaches the Game** — ✅ shipped, **arc complete (27–32)**. Hint chips
+  as a reactive tutorial (evidence probes, dict-as-checklist, dim-don't-delete); polling
+  debt re-cited ("same ledger entry" → Forge F3). Absorbs part of O5's HUD-anatomy goal;
+  remaining O5 content (NinePatch/TextureProgressBar internals) folds into F3 whenever
+  it runs. Teacher note + index now frame the open decision: XP arc vs Forge first.
+
+**Provisional numbering decision (open decision 1, narrowed):** Game Feel lessons append
+in *build order* at 27+ (course = the codebase's build order; these systems entered the
+repo before XP exists; no lesson files existed past 26, so renumbering cost ≈ zero).
+XP & the 0002 progression arc slide after Game Feel. The Forge stays unnumbered backlog
+for the attentive session. Reversal = renaming files + index rows; nothing else anchors
+to the numbers yet.
 
 ### Arc "The Overhaul, Understood" — retrofit tour *(interleavable breathers, L26-style)*
 Guided tours of existing code with one hands-on tweak each (the L26 precedent: teach

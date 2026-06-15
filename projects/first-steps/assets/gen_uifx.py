@@ -2,8 +2,8 @@
 """UI chrome + VFX texture pack for first-steps.
 
 Deterministic generator (fixed seed). Outputs:
-  ui_panel.png 48x48, ui_bar_bg.png 64x12, ui_bar_fill_hp.png 64x12,
-  ui_bar_fill_rage.png 64x12, vignette.png 480x270, slash_arc.png 48x48,
+  ui_panel.png 48x48, ui_bar_bg.png 136x12, ui_bar_fill_hp.png 136x12,
+  ui_bar_fill_rage.png 136x12, vignette.png 480x270, slash_arc.png 48x48,
   spark.png 9x9, soft_dot.png 8x8, aggro_mark.png 10x14
 Also builds /tmp previews (dark + grass backgrounds, NEAREST upscale).
 """
@@ -95,7 +95,7 @@ def gen_panel():
 
 # ---------------------------------------------------------------- bars
 def gen_bar_bg():
-    W, H = 64, 12
+    W, H = 136, 12
     im = Image.new('RGBA', (W, H), (0, 0, 0, 0))
     px = im.load()
     for y in range(H):
@@ -110,7 +110,7 @@ def gen_bar_bg():
 
 
 def gen_bar_fill(base, light, dark):
-    W, H = 64, 12
+    W, H = 136, 12
     im = Image.new('RGBA', (W, H), (0, 0, 0, 0))
     px = im.load()
     for y in range(1, H - 1):
@@ -279,7 +279,7 @@ def nine_slice(src, w, h, m=10):
 def bar_with_fill(bg, fill, pct):
     out = bg.copy()
     if pct > 0:
-        wpx = 1 + int(62 * pct)
+        wpx = 1 + int(134 * pct)
         out.alpha_composite(fill.crop((0, 0, wpx, 12)), (0, 0))
     return out
 
