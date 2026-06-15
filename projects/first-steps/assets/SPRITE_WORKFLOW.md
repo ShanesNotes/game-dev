@@ -57,12 +57,32 @@ research behind these choices (tools, prices, what's still unsolved) lives in
   Texture Filter → Nearest** (per-texture override: CanvasItem → Texture →
   Filter). Linear filtering is why pixel art looks blurry.
 
-## Current assets
+## Current asset generators
+
+All generator scripts anchor paths to this folder, so they can be run either from
+`projects/first-steps/assets/` or from the repository root. Generated previews go
+to `/tmp/`; committed game assets stay beside the scripts.
+
+Recommended full rebuild order:
+
+1. `python gen_terrain.py` → `terrain.png` (the current Ground/Road atlas).
+2. `python gen_props.py` → trees, bushes, rocks, stump, mushrooms, campfire, signpost.
+3. `python gen_creatures.py` → `character_clean.png`, `wolf_sheet.png`, `sword_clean.png`, portrait.
+4. `python gen_polish.py` → mutates the creature/UI outputs in place and bakes the held/swing sword frames. Run it after `gen_creatures.py`.
+5. `python gen_pickup.py` → pedestal, glint, icon.
+6. `python gen_uifx.py` → HUD chrome, VFX textures, target/aggro marks.
+7. `python gen_sfx.py` → deterministic WAVs under `sounds/`.
+
+Legacy lesson assets (`tileset.png`, `tree.png`, `character.png`, `wolf.png`,
+`sword.png`) remain in the repo because early lessons still reference the build
+ramp. The current playable world uses the generated v2 assets listed above.
+
+## Current source assets
 
 | Asset | Source | Notes |
 |---|---|---|
-| `character.png` | `character_source_1024.png` | 4×4 walk frames, 32px |
-| `wolf.png` | `wolf_source.png` | single frame |
-| `sword.png` | `sword_source.png` | pickup + held sprite |
-| `tree.png` | `tree_source.png` | forest generator prop |
-| `tileset.png` | — (hand-made) | 4 ground tiles: grass, dirt, stone, grass variant |
+| `character.png` | `character_source_1024.png` | early/AI source sheet; `gen_creatures.py` produces `character_clean.png` |
+| `wolf.png` | `wolf_source.png` | early source; `gen_creatures.py` produces `wolf_sheet.png` |
+| `sword.png` | `sword_source.png` | early source; `gen_creatures.py` + `gen_polish.py` produce final sword frames |
+| `terrain.png` | `gen_terrain.py` | current 4×6 atlas for Ground + Road |
+| `tileset.png` | `make_tileset.py` | legacy four-tile lesson ramp asset |

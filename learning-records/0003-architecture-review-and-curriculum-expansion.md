@@ -1,6 +1,6 @@
 # 0003 — Architecture review & curriculum expansion (the overhaul, reconciled)
 
-**Date:** 2026-06-11 · status: **active record / Forge + Input bridge + G009 architecture pass complete** (remaining cleanup tracked by the Ultragoal)
+**Date:** 2026-06-11 · status: **active record / Forge + Input bridge + G009/G010 passes complete** (remaining cleanup tracked by the Ultragoal)
 
 ## Context
 
@@ -116,7 +116,7 @@ Vocabulary: *module / interface / seam / depth / locality / leverage / deletion 
   teaches **autoloads** again through a visual-feedback service (L36).
 
 ### 4 · ForestPlan — split the plan from the planting · **Parked (Law 5)**
-- **Files:** `forest_generator.gd` (298 lines).
+- **Files:** `forest_generator.gd`.
 - **Shape:** `ForestPlan.build(seed, w, h) → plan` (pure data: dirt mask, tiles, road
   bits, prop placements, spawns) + a thin node applier. Placement invariants become
   headless assertions; seed regressions become data diffs.
@@ -242,6 +242,7 @@ what entered the repo ahead of its lesson):
 ## Ultragoal review progress (2026-06-15)
 
 - **G009 · Godot code architecture and GDScript refactor pass** — ✅ shipped. Core scripts now use explicit return/parameter/export/onready types across `player.gd`, `wolf.gd`, `hud.gd`, `sword.gd`, `combat_fx.gd`, `damage_number.gd`, `sfx.gd`, and the last untyped `CombatTable` default. Player one-shot actions moved out of `_physics_process` into `_unhandled_input`; continuous movement still polls via `Input.get_vector`. `hud.gd` remains signal-driven/no `_process`; signal connections now use `StringName` constants and base-node contracts instead of depending on ignored global-script cache refreshes. Removed the stale .NET project block from `project.godot`. Lesson 37 and `lessons/claims.json` were updated to teach/check the final event-driven input shape. Verified lesson contract (0 errors / 4 planned doc warnings), combat-table test, CombatFX test, and 120-frame boot with no script errors/warnings.
+- **G010 · World, forest, and asset pipeline refactor pass** — ✅ shipped. `forest_generator.gd` now exposes scene wiring as typed NodePaths, keeps procedural state/local variables typed, and adds bounds through an explicit parent reference instead of an inline parent-chain call. Added `tests/test_forest_generator.gd`, which registers the test-only autoloads, instantiates `main.tscn`, and locks seed-1337 invariants: 3072 ground cells, 219 road cells, 431 world children, 9 wolves, camp/sword coordinates, and World Y-sort. Asset generator scripts now anchor paths to their own folder (removing the absolute `gen_props.py` output path and caller-CWD assumptions), and `assets/SPRITE_WORKFLOW.md` documents the v2 generator order plus legacy lesson-ramp assets. ForestPlan remains parked: one consumer, no generation-logic bug, and the new invariant test gives enough regression coverage without splitting plan/application yet.
 
 ## Remaining decisions / debts
 
@@ -251,4 +252,4 @@ what entered the repo ahead of its lesson):
    deliberate build-order ramps preserved with evolution notes.
 3. **Retrofit depth:** keep O-lessons as guided tours unless a system's trigger demands a
    rebuild-from-scratch lesson.
-4. **ForestPlan** stays parked unless its trigger fires first.
+4. **ForestPlan** stays parked unless its trigger fires first. G010 rechecked the trigger and kept it parked.

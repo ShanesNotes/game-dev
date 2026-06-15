@@ -1,7 +1,11 @@
 """Generate tileset.png (4 tiles, 32x32: grass, dirt, stone, grass-variant)
 and shadow.png (soft blob for under actors/trees). Deterministic."""
+import os
 import random
 from PIL import Image, ImageDraw
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+os.chdir(HERE)
 
 random.seed(7)
 T = 32

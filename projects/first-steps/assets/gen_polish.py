@@ -2,8 +2,12 @@
 the portrait as a head bust, relight the wolf, harden shadows, warm the
 vignette, give bar troughs a visible border, and add a target ring.
 Deterministic; operates on already-generated assets in place."""
+import os
 import random
 from PIL import Image
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+os.chdir(HERE)
 
 random.seed(11)
 OUTLINE = (26, 20, 15)

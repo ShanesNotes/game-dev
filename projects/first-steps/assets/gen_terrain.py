@@ -10,8 +10,12 @@ Rows 2-5: 16 dual-grid dirt-over-grass transition tiles.
 
 Deterministic (fixed seed). Also writes previews to /tmp/.
 """
+import os
 import random
 from PIL import Image
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+os.chdir(HERE)
 
 SEED = 0xF1257
 T = 32

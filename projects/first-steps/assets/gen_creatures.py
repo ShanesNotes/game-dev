@@ -9,8 +9,12 @@ Outputs:
 
 Deterministic: no random drawing, but seed fixed anyway.
 """
+import os
 import random
 from PIL import Image
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+os.chdir(HERE)
 
 random.seed(42)
 

@@ -8,12 +8,13 @@ Outputs (all RGBA, transparent bg, ground anchor = bottom-center):
 
 Also writes a /tmp/props_preview.png (grass + gray panels, 5x nearest).
 """
+import os
 import random
 from PIL import Image
 
 random.seed(20260611)
 
-OUT = "/home/ark/game-dev/projects/first-steps/assets"
+OUT = os.path.dirname(os.path.abspath(__file__))
 
 
 def C(h):
