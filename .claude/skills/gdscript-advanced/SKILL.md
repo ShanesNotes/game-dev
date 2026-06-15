@@ -7,9 +7,9 @@ description: Use when writing production-grade GDScript — performance idioms, 
 
 Production-grade GDScript depth — for shipping games, not for learning the language. Pair with **gdscript-patterns** for fundamentals.
 
-> **Related skills:** **gdscript-patterns** for language fundamentals, **godot-optimization** for engine-side perf work, **godot-debugging** for runtime diagnosis, **csharp-godot** for the C# alternative.
+> **Related skills:** **gdscript-patterns** for language fundamentals, **godot-optimization** for engine-side perf work, **godot-debugging** for runtime diagnosis.
 
-> **Intent:** This skill is GDScript-only by design (allowlisted). C# users should read `csharp-godot`. Adding C# parity here would undermine the audience split.
+> **Intent:** This skill is GDScript-only by design (allowlisted). Adding C# parity here would undermine the audience split.
 
 ## 1. When to reach for advanced GDScript
 

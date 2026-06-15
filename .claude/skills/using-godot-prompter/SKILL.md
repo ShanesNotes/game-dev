@@ -82,7 +82,6 @@ Load `godot-prompter:godot-code-review` to review the code against Godot-specifi
 - **godot-shader-author** — Authors custom shaders, post-processing, Compositor effects
 - **godot-performance-profiler** — Diagnoses performance issues from profiler data
 - **godot-animator** — Designs animation graphs, blend trees, IKModifier3D, BoneConstraint3D, retargeting
-- **godot-csharp-engineer** — C#-first development; parity mode for closing this repo's C# debt
 - **godot-ui-designer** — Builds Control-tree UI — themes, responsive layouts, localization-aware
 - **godot-tools-engineer** — Editor plugins, custom inspectors, gizmos, `@tool` scripts, plugin distribution
 
@@ -158,8 +157,6 @@ Skills use Claude Code tool names as the canonical reference. Non-Claude platfor
 
 ### Scripting
 - `gdscript-patterns` — Static typing, await/coroutines, lambdas, match, exports, idioms
-- `csharp-godot` — C# conventions, GodotSharp API
-- `csharp-signals` — C# signal patterns
 
 ### Math & Data
 - `math-essentials` — Vectors, transforms, interpolation, curves, paths, RNG

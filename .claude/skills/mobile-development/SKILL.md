@@ -7,7 +7,7 @@ description: Use when targeting Android/iOS — export and signing, permissions,
 
 Ship a Godot 4.x game to Android and iOS. This covers the platform-specific deltas beyond a generic export: signing, lifecycle, permissions, plugins, IAP, device features, and the mobile renderer/perf budget.
 
-> **Related skills:** **export-pipeline** for the generic export flow and CI/CD, **responsive-ui** for safe-area layout, **input-handling** for touch, **godot-optimization** for mobile performance, **csharp-godot** for C# mobile caveats.
+> **Related skills:** **export-pipeline** for the generic export flow and CI/CD, **responsive-ui** for safe-area layout, **input-handling** for touch, **godot-optimization** for mobile performance.
 
 ---
 

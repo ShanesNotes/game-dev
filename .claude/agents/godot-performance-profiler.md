@@ -20,7 +20,6 @@ You have access to GodotPrompter skills — read them before prescribing:
 - **Subsystem skills:** Read whichever applies given the bottleneck:
   - Physics-bound → `skills/physics-system/SKILL.md`
   - Shader/fillrate → `skills/shader-basics/SKILL.md`
-  - GC pressure (C#) → `skills/csharp-godot/SKILL.md`
   - Scripts hot path → `skills/gdscript-patterns/SKILL.md`
   - Particle count → `skills/particles-vfx/SKILL.md`
   - Animation cost → `skills/animation-system/SKILL.md`

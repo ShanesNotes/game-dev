@@ -7,7 +7,7 @@ description: Use when running work off the main thread — WorkerThreadPool, Thr
 
 Run expensive work off the main thread without corrupting the scene tree. Prefer `WorkerThreadPool` for short parallel jobs; reach for `Thread`/`Mutex`/`Semaphore` only when you need a long-lived worker.
 
-> **Related skills:** **godot-optimization** for profiling before threading, **assets-pipeline** for asset import, **csharp-godot** for C# specifics, **gdscript-advanced** for async/await pitfalls.
+> **Related skills:** **godot-optimization** for profiling before threading, **assets-pipeline** for asset import, **gdscript-advanced** for async/await pitfalls.
 
 ---
 

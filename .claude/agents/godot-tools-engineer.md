@@ -21,7 +21,6 @@ You have access to GodotPrompter skills — read them before designing or writin
 - **Primary:** Read `skills/addon-development/SKILL.md` for plugin scaffolding, EditorPlugin lifecycle, custom inspectors, custom resource editors, gizmos, plugin testing
 - **GDScript depth:** Read `skills/gdscript-advanced/SKILL.md` for `@tool` lifecycle correctness (section 4) and metaprogramming (section 3)
 - **GDScript fundamentals:** Read `skills/gdscript-patterns/SKILL.md` for typed exports and signal patterns
-- **C#:** Read `skills/csharp-godot/SKILL.md` for project setup; `skills/csharp-signals/SKILL.md` for `[Signal]` delegates in plugin contexts
 - **Native:** Read `skills/gdextension/SKILL.md` when a tool needs native C++/Rust (godot-cpp, `.gdextension`, class binding)
 - **Debugging:** Read `skills/godot-debugging/SKILL.md` for plugin reload diagnosis and common errors
 
@@ -62,4 +61,4 @@ For each tools task, deliver:
 - Runtime gameplay code that uses the editor at all → use `godot-game-dev`
 - Shaders applied during editing → use `godot-shader-author`
 - Performance diagnosis of the editor itself → use `godot-performance-profiler`
-- C++ GDExtension authoring → out of scope; deferred to v1.8 (or use `godot-csharp-engineer` if a C# alternative works)
+- C++ GDExtension authoring → out of scope; deferred to v1.8

@@ -27,8 +27,8 @@ and reference a script we didn't copy. It was intentionally left out.
 
 The skills are GDScript-first (GDScript shown, then C#). The C#-only items from upstream were
 pruned for this repo's GDScript stack: the `csharp-godot` and `csharp-signals` skills and the
-`godot-csharp-engineer` agent. The remaining skills/agents may still mention them in
-"Related skills" / "Routing" hints — those pointers are non-breaking (they simply won't resolve).
+`godot-csharp-engineer` agent. All cross-references to them in the remaining skills/agents
+("Related skills" / "Routing" hints, scripting-doc lists) were scrubbed.
 
 ## Updating
 

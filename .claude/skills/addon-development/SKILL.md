@@ -7,7 +7,7 @@ description: Use when creating Godot editor plugins — EditorPlugin, @tool scri
 
 Editor plugins extend the Godot editor itself: custom node types, inspector panels, dock widgets, 3D gizmos, and toolbar buttons. All examples target Godot 4.3+ with no deprecated APIs.
 
-> **Related skills:** **resource-pattern** for custom Resource editors, **godot-ui** for editor panel UI, **csharp-godot** for C# plugin development.
+> **Related skills:** **resource-pattern** for custom Resource editors, **godot-ui** for editor panel UI.
 
 ---
 

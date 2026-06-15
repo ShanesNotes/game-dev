@@ -8,7 +8,7 @@ description: |
   <example>Context: User wants to structure signal communication. user: "How should I structure the signal communication between my player, inventory, and UI systems?" assistant: "I'll use the godot-game-architect agent to design the signal architecture." <commentary>Cross-system communication design requires architectural thinking — use the architect agent with event-bus and component-system skills.</commentary></example>
   <example>Context: User wants to add a combo system. user: "I want to add a combo system to my 2D action game's combat" assistant: "Let me bring in the godot-game-architect agent to plan the combo system." <commentary>Designing a new gameplay system requires planning before implementation.</commentary></example>
 
-  Routing: For C#-heavy projects prefer `godot-csharp-engineer`; for animation graphs / IK / retargeting prefer `godot-animator`; for Control-tree UI work prefer `godot-ui-designer`; for editor plugins, @tool scripts, custom inspectors, or gizmos prefer `godot-tools-engineer`.
+  Routing: For animation graphs / IK / retargeting prefer `godot-animator`; for Control-tree UI work prefer `godot-ui-designer`; for editor plugins, @tool scripts, custom inspectors, or gizmos prefer `godot-tools-engineer`.
 model: inherit
 ---
 

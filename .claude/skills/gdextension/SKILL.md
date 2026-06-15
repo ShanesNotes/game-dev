@@ -7,7 +7,7 @@ description: Use when building native extensions for Godot — godot-cpp (C++) o
 
 Run native C++ (or Rust) in Godot as a shared library **without recompiling the engine**. Use it for performance-critical code, wrapping existing C/C++ libraries, or language bindings.
 
-> **Related skills:** **csharp-godot** for when C# is enough, **gdscript-advanced** for GDScript performance idioms first, **godot-optimization** for profiling before going native, **addon-development** for distributing the result, **export-pipeline** for shipping the binaries.
+> **Related skills:** **gdscript-advanced** for GDScript performance idioms first, **godot-optimization** for profiling before going native, **addon-development** for distributing the result, **export-pipeline** for shipping the binaries.
 
 ---
 
