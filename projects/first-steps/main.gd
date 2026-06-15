@@ -12,6 +12,8 @@ const EFFECTS_LAYER_GROUP: StringName = &"effects_layer"
 func _ready() -> void:
 	world.add_to_group(EFFECTS_LAYER_GROUP)
 	tree_exiting.connect(_stop_all_audio)
+	if DisplayServer.get_name() == "headless":
+		_stop_all_audio.call_deferred()
 
 
 func _exit_tree() -> void:

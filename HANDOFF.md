@@ -49,7 +49,7 @@ godot --headless --path projects/first-steps --script res://tests/test_combat_ta
 godot --headless --path projects/first-steps --script res://tests/test_combat_fx.gd
 godot --headless --audio-driver Dummy --path projects/first-steps --script res://tests/test_forest_generator.gd
 godot --headless --audio-driver Dummy --path projects/first-steps --script res://tests/test_progression_table.gd
-godot --headless --audio-driver Dummy --path projects/first-steps res://main.tscn --quit-after 120
+tools/check_godot_boot.sh 3
 ```
 
 Expected current lesson checker state: **0 errors / 0 warnings**. The stale project/runtime wording is gone from scanned docs.
