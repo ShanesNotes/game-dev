@@ -18,14 +18,10 @@ var health = max_health
 @onready var aggro_mark = $AggroMark
 @onready var target_ring = $TargetRing
 
-const BLOOD = preload("res://assets/soft_dot.png")
-
 var dying = false
 
 var target = null
 var spawn = Vector2.ZERO
-
-const DAMAGE_NUMBER = preload("res://damage_number.tscn")
 
 func _ready():
 	add_to_group("wolves")
@@ -60,11 +56,11 @@ func take_damage(amount, is_crit = false):
 	var bt = create_tween()
 	bt.tween_property(health_bar, "value", health, 0.2).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 	if is_crit:
-		spawn_number(amount, Color.YELLOW, 28)   # loud
+		CombatFX.damage_number(self, amount, Color.YELLOW, 28)   # loud
 	else:
-		spawn_number(amount, Color.WHITE, 18)
+		CombatFX.damage_number(self, amount, Color.WHITE, 18)
 	flash_hit()
-	spawn_blood()
+	CombatFX.blood(global_position)
 	if health == 0:
 		die()
 
@@ -72,25 +68,6 @@ func flash_hit():
 	sprite.modulate = Color(1, 0.35, 0.35)
 	var t = create_tween()
 	t.tween_property(sprite, "modulate", Color.WHITE, 0.18)
-
-func spawn_blood():
-	var p = CPUParticles2D.new()
-	p.texture = BLOOD
-	p.amount = 6
-	p.one_shot = true
-	p.explosiveness = 1.0
-	p.lifetime = 0.4
-	p.initial_velocity_min = 25.0
-	p.initial_velocity_max = 60.0
-	p.gravity = Vector2(0, 220)
-	p.scale_amount_min = 0.3
-	p.scale_amount_max = 0.6
-	p.color = Color(0.72, 0.13, 0.1)
-	p.z_index = 30
-	get_parent().add_child(p)
-	p.global_position = global_position + Vector2(0, -8)
-	p.emitting = true
-	p.finished.connect(p.queue_free)
 
 func die():
 	dying = true
@@ -105,12 +82,6 @@ func die():
 	t.parallel().tween_property(sprite, "scale", Vector2(1.1, 0.3), 0.35)
 	t.parallel().tween_property(sprite, "position:y", 8.0, 0.35)
 	t.tween_callback(queue_free)
-
-func spawn_number(amount, color, size = 18):
-	var n = DAMAGE_NUMBER.instantiate()
-	get_parent().add_child(n)
-	n.global_position = global_position + Vector2(-8, -30)
-	n.show_text(str(amount), color, size)
 
 func _on_aggro_area_body_entered(body):
 	if body.is_in_group("player") and not dying:

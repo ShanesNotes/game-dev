@@ -1,6 +1,6 @@
 # 0003 — Architecture review & curriculum expansion (the overhaul, reconciled)
 
-**Date:** 2026-06-11 · status: **backlog / planning** (decisions deferred to an attentive session)
+**Date:** 2026-06-11 · status: **active record / Forge complete** (major retrofit decisions resolved; remaining debt tracked by the Ultragoal)
 
 ## Context
 
@@ -61,13 +61,13 @@ Untaught systems now in the codebase (the retrofit inventory):
   — the one mechanic-adjacent change, justified as making the pickup meaningful.
   *(→ taught in L28.)*
 - **Directional held sword** — `update_sword_pose()` (right/left-mirrored/tucked-behind-up),
-  mirrored swing arcs, `face_toward()`. *(→ L29 planned.)*
+  mirrored swing arcs, `face_toward()`. *(→ taught in L29.)*
 - **Swing feel** — lunge tween, crit hit-stop (`Engine.time_scale`), camera shake,
-  outcome-laddered SFX volumes. *(→ L30 planned.)*
+  outcome-laddered SFX volumes. *(→ taught in L30.)*
 - **Death sequence** — dying guard, sting, fade, "— Memory Eternal —", 2.4 s respawn;
-  HUD hurt flash + low-HP pulse. *(→ L31 planned.)*
+  HUD hurt flash + low-HP pulse. *(→ taught in L31.)*
 - **HUD UX** — banner toasts (`show_banner`), tutorial hint chips that dim per learned
-  action, tweened HP/target bars. *(banner taught in L28; chips → L32 planned.)*
+  action, tweened HP/target bars. *(banner taught in L28; chips taught in L32.)*
 - **Window identity** — `config/name="Will's First Steps"`, generated `icon.png`
   (`gen_pickup.py`).
 
@@ -104,15 +104,16 @@ Vocabulary: *module / interface / seam / depth / locality / leverage / deletion 
   HUD/XP-bar changes never touch player.gd; it's L11 doctrine applied — a natural lesson.
   **Trigger: fired twice** (the breakage + the doctrine).
 
-### 3 · CombatFX — one home for floating text & bursts · **Worth exploring**
-- **Files:** `player.gd:140,204,230`, `wolf.gd:70,101`.
+### 3 · CombatFX — one home for floating text & bursts · **Shipped**
+- **Files:** `combat_fx.gd`, `player.gd`, `wolf.gd`, `sword.gd`, `tests/test_combat_fx.gd`.
 - **Problem:** five near-duplicate spawners (`spawn_text_over`, `spawn_number` ×2,
   `spawn_sparks`, `spawn_blood`), each assuming scene-tree shape via
   `get_parent().add_child`.
-- **Solution:** a `CombatFX` **autoload**: `number(at, amount, opts)` / `text(at, s, color)`
-  / `burst(at, color, n)`, spawning into a dedicated FX layer.
-- **Benefits:** modest deletion-test pass; teaches **autoloads** (core Godot concept
-  absent from the curriculum). Could ride along with candidate 2's lesson.
+- **Solution:** a `CombatFX` **autoload**: `text_over(target, words, color)`,
+  `damage_number(target, amount, color, size)`, `sparks(at, color, count)`, and
+  `blood(at)`, all spawning through one shared helper.
+- **Benefits:** deletion-test pass; actors ask for feedback without owning construction;
+  teaches **autoloads** again through a visual-feedback service (L36).
 
 ### 4 · ForestPlan — split the plan from the planting · **Parked (Law 5)**
 - **Files:** `forest_generator.gd` (298 lines).
@@ -155,11 +156,10 @@ Also affected conceptually: L07 (walk rows — now four true directions exist;
 
 ## Curriculum expansion (proposed backlog — numbering decided later)
 
-0002's sequence stays intact (XP=27 … Whirlwind=34 → cabin). Two new arcs slot around
-it; whether they renumber 27+ (the v2 precedent) or append is an **open decision**.
+0002's sequence stays intact conceptually, but numbering slides after the retrofit arcs. Game Feel appended as L27–L32 and The Forge appended as L33–L36, preserving the actual build order.
 
 ### Arc "The Forge" — engineering the combat core *(STARTED 2026-06-14)*
-One win each; all triggers fired. Numbered as **lessons 33+** (append, per the v2
+One win each; all triggers fired. Numbered as **lessons 33–36** (append, per the v2
 "course = build order" precedent; XP slides after). Built the Game-Feel way: code
 refactored first, lesson back-engineered against final code.
 
@@ -180,9 +180,12 @@ refactored first, lesson back-engineered against final code.
   `body.hud.*`; `hud.gd` deleted `_process`, connects to player/target signals (deferred), and
   the low-health pulse became a looping tween that yields to the hit-flash. Verified: game boots
   clean 120 frames, HUD freed mid-run with no crash (delete-HUD win), combat test still green.
-- **F4 · One home for combat FX** *(NEXT — last Forge step)* — win: *the duplicated
-  damage-number + particle-burst spawners (player.gd spawn_text_over/spawn_number/spawn_sparks;
-  wolf.gd spawn_number/spawn_blood) become a shared `CombatFX` helper*. Teaches autoloads.
+- **F4 · One home for combat FX** — ✅ **shipped as L36.** Added `combat_fx.gd` as a
+  `CombatFX` autoload beside `Sfx`; moved floating text, damage numbers, sparks, and blood
+  into one helper. `player.gd`, `wolf.gd`, and `sword.gd` now ask `CombatFX` instead of
+  constructing feedback nodes locally; old spawner helpers deleted. Added
+  `tests/test_combat_fx.gd` to prove the factories, and the boot check proves the autoload name.
+  **The Forge is complete.**
 
 ### Arc VII "Game Feel" — **STARTED 2026-06-11** (the UX-round retrofits)
 
@@ -203,21 +206,16 @@ plans/guide"), the UX-round systems are being retrofitted as a new index arc, L2
   final code — retired L29's `swing_to` mirror line, slash arc snapped to 15°), lunge,
   hit-stop (`ignore_time_scale` timer), camera shake via offset.
 - **L31 · A Death Worth Respawning From** — ✅ shipped. dying latch, feedback-first
-  take_damage, die() ceremony, show_death_screen, low-HP pulse — with an explicit
-  "HONEST DEBT: THIS IS POLLING" callout pointing at Forge F3 (keeps the L11 doctrine
-  contradiction on the books rather than teaching polling as fine).
+  take_damage, die() ceremony, show_death_screen, low-HP pulse — now marked as historical
+  polling debt paid by Forge F3/L35.
 - **L32 · The HUD Teaches the Game** — ✅ shipped, **arc complete (27–32)**. Hint chips
-  as a reactive tutorial (evidence probes, dict-as-checklist, dim-don't-delete); polling
-  debt re-cited ("same ledger entry" → Forge F3). Absorbs part of O5's HUD-anatomy goal;
-  remaining O5 content (NinePatch/TextureProgressBar internals) folds into F3 whenever
-  it runs. Teacher note + index now frame the open decision: XP arc vs Forge first.
+  as a reactive tutorial (evidence probes, dict-as-checklist, dim-don't-delete); the lesson
+  now names Forge F3/L35 as the payoff for the durable HUD polling debt. Absorbs part of
+  O5's HUD-anatomy goal.
 
-**Provisional numbering decision (open decision 1, narrowed):** Game Feel lessons append
-in *build order* at 27+ (course = the codebase's build order; these systems entered the
-repo before XP exists; no lesson files existed past 26, so renumbering cost ≈ zero).
-XP & the 0002 progression arc slide after Game Feel. The Forge stays unnumbered backlog
-for the attentive session. Reversal = renaming files + index rows; nothing else anchors
-to the numbers yet.
+**Numbering decision (resolved):** Game Feel lessons append in *build order* at L27–L32;
+The Forge follows at L33–L36; XP and the 0002 progression arc slide after those retrofit
+arcs. This preserves the course as the codebase's actual build order.
 
 ### Arc "The Overhaul, Understood" — retrofit tour *(interleavable breathers, L26-style)*
 Guided tours of existing code with one hands-on tweak each (the L26 precedent: teach
@@ -241,13 +239,12 @@ what entered the repo ahead of its lesson):
 3. Decide retirement story for superseded assets (`tileset.png`, `sword.png`,
    `character.png` originals) once lessons stop referencing them.
 
-## Open decisions for the attentive session
+## Remaining decisions / debts
 
-1. **Numbering:** renumber 27+ to make room for The Forge (v2 precedent), or append
-   arcs after 34? (Forge wants to precede XP didactically.)
-2. **Repair style** for drifted lessons: in-place rewrite vs. an "evolution note" box
-   (preserves the historical build order the early lessons document).
-3. **F4 (CombatFX):** own lesson, folded into F3, or parked?
-4. **Retrofit depth:** are O-lessons guided tours (read + one tweak, like L26) or
-   rebuild-from-scratch? (Tours respect hobby pace; rebuilds repay Law 2 more fully.)
-5. **ForestPlan** stays parked unless its trigger fires first.
+1. **Input Map teaching debt:** the custom `move_*`, `target_next`, and `attack` actions are
+   used by the game and only forward-noted in L03; close this before progression.
+2. **Repair style:** resolved in practice as hybrid repair — factual drift fixed in place,
+   deliberate build-order ramps preserved with evolution notes.
+3. **Retrofit depth:** keep O-lessons as guided tours unless a system's trigger demands a
+   rebuild-from-scratch lesson.
+4. **ForestPlan** stays parked unless its trigger fires first.

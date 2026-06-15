@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lesson 36 — Combat FX, One Home</title>
+<link rel="stylesheet" href="_lesson.css">
+</head>
+<body>
+<main>
+<header class="hero">
+  <div class="kicker">Godot · Lesson 36 · The Forge 4 of 4</div>
+  <h1>Combat FX, <span>One Home</span></h1>
+  <p class="sub">Damage numbers, miss words, sparks, and blood all do the same job: spawn a tiny feedback node and let it clean itself up. Today they stop living in two different actors.</p>
+</header>
+
+<div class="win">
+  <b>TODAY</b>
+  <p><strong>Player, wolf, and sword pickup all ask one autoload for combat feedback.</strong> The game looks the same, but the duplicate spawners disappear: one <code class="inline">CombatFX</code> bus owns floating text and particle bursts.</p>
+</div>
+
+<h2>The smell: feedback code copied into actors</h2>
+<p>
+  The player has combat decisions to make. The wolf has AI and death to manage. Neither one should also remember
+  how to construct a floating label, which texture a spark uses, or which gravity value makes blood fall. Before this
+  lesson, that construction lived in both scripts:
+</p>
+<div class="code">
+  <div class="bar"><span class="t">old shape · scattered helpers</span><button class="copy">copy</button></div>
+<pre>player.gd: spawn_text_over(), spawn_number(), spawn_sparks()
+wolf.gd:   spawn_number(), spawn_blood()
+sword.gd:  body.spawn_sparks(...)</pre>
+</div>
+<div class="callout warn">
+  <span class="ct">⚠ duplicate helpers are soft coupling</span>
+  <p>None of those helpers are huge. That's why the smell is easy to ignore. But every copy assumes where to add the node, which scene to preload, and which magic numbers make the effect feel right. Change the damage-number scene once, and you have to remember every little factory that stamps it out.</p>
+</div>
+
+<h2>The move: one tiny autoload, like <code class="inline">Sfx</code></h2>
+<p>
+  Lesson 27 already gave sound one global home: <code class="inline">Sfx.play("hit")</code>. Combat feedback is the visual twin of that idea.
+  <code class="inline">CombatFX</code> is not an event bus for game rules; it is a little workshop that builds short-lived visual effects.
+</p>
+<div class="defs">
+  <div class="def"><b>autoload</b><p>A script Godot creates once at startup and exposes by name. Use it for small global services like <code class="inline">Sfx</code> and now <code class="inline">CombatFX</code>.</p></div>
+  <div class="def"><b>factory</b><p>A function whose job is to build a node correctly. Callers ask for the result; they do not know the construction recipe.</p></div>
+  <div class="def"><b>scene root</b><p><code class="inline">get_tree().current_scene</code> is where these world-space FX should live. If a headless test has no current scene, the helper falls back to <code class="inline">root</code>.</p></div>
+</div>
+
+<h2>Part A — register the bus</h2>
+<p>Create <code class="inline">res://combat_fx.gd</code>, then register it in <strong>Project Settings → Autoload</strong> as <code class="inline">CombatFX</code>. The project file ends up with:</p>
+<div class="code">
+  <div class="bar"><span class="t">project.godot</span><button class="copy">copy</button></div>
+<pre>[autoload]
+
+Sfx="*res://sfx.gd"
+CombatFX="*res://combat_fx.gd"</pre>
+</div>
+<p>The order is boring on purpose: sound and visual feedback are siblings. Actors request them; the buses own the messy lifetime details.</p>
+
+<h2>Part B — move the construction recipes</h2>
+<div class="code">
+  <div class="bar"><span class="t">GDScript · combat_fx.gd</span><button class="copy">copy</button></div>
+<pre>extends Node
+
+const DAMAGE_NUMBER = preload("res://damage_number.tscn")
+const SPARK = preload("res://assets/spark.png")
+const BLOOD = preload("res://assets/soft_dot.png")
+
+func text_over(target, words: String, color: Color, font_size: int = 18):
+    if not is_instance_valid(target):
+        return null
+    return text_at(target.global_position + Vector2(-8, -30), words, color, font_size)
+
+func damage_number(target, amount: int, color: Color, font_size: int = 18):
+    return text_over(target, str(amount), color, font_size)
+
+func text_at(at: Vector2, words: String, color: Color, font_size: int = 18):
+    var n = DAMAGE_NUMBER.instantiate()
+    _world_root().add_child(n)
+    n.global_position = at
+    n.show_text(words, color, font_size)
+    return n</pre>
+</div>
+<div class="annot">
+  <div class="line-note"><code>text_over(target, ...)</code> — <b>caller speaks in game terms.</b> Player says "put Miss over that wolf"; the bus decides the pixel offset and scene instantiation.</div>
+  <div class="line-note"><code>damage_number(...)</code> — <b>number is just text with a convention.</b> The old <code>setup(amount, color)</code> wrapper still exists on the label, but the bus routes both words and numbers through the same path.</div>
+  <div class="line-note"><code>return n</code> — <b>test seam.</b> Gameplay ignores the return value, but the headless test can inspect the node and prove the factory built the right kind of thing.</div>
+</div>
+
+<p>The two particle recipes share one private helper:</p>
+<div class="code">
+  <div class="bar"><span class="t">GDScript · combat_fx.gd — bursts</span><button class="copy">copy</button></div>
+<pre>func sparks(at: Vector2, color: Color, count: int):
+    return _particle_burst(SPARK, at + Vector2(0, -10), color, count,
+        0.35, 40.0, 90.0, Vector2(0, 160), 0.5, 1.0)
+
+func blood(at: Vector2):
+    return _particle_burst(BLOOD, at + Vector2(0, -8), Color(0.72, 0.13, 0.1), 6,
+        0.4, 25.0, 60.0, Vector2(0, 220), 0.3, 0.6)
+
+func _particle_burst(texture, at: Vector2, color: Color, count: int, lifetime: float,
+        velocity_min: float, velocity_max: float, gravity: Vector2,
+        scale_min: float, scale_max: float):
+    var p = CPUParticles2D.new()
+    p.texture = texture
+    p.amount = count
+    p.one_shot = true
+    p.explosiveness = 1.0
+    p.lifetime = lifetime
+    p.initial_velocity_min = velocity_min
+    p.initial_velocity_max = velocity_max
+    p.gravity = gravity
+    p.scale_amount_min = scale_min
+    p.scale_amount_max = scale_max
+    p.color = color
+    p.z_index = 30
+    _world_root().add_child(p)
+    p.global_position = at
+    p.emitting = true
+    p.finished.connect(p.queue_free)
+    return p</pre>
+</div>
+<div class="callout note">
+  <span class="ct">◈ why not make a giant VFX system?</span>
+  <p>Because the game does not need one yet. This is one shallow, useful module: three public verbs (<code class="inline">text_over</code>, <code class="inline">damage_number</code>, <code class="inline">sparks</code>/<code class="inline">blood</code>) and one private recipe. No pooling, no plugin, no new dependency. Depth without ceremony.</p>
+</div>
+
+<h2>Part C — actors ask; actors stop building</h2>
+<p>Now the player only describes the feedback it wants:</p>
+<div class="code">
+  <div class="bar"><span class="t">GDScript · player.gd — before → after</span><button class="copy">copy</button></div>
+<pre># old: spawn_text_over(t, "Miss", Color.GRAY)
+CombatFX.text_over(t, "Miss", Color.GRAY)
+
+# old: spawn_sparks(t.global_position, Color(1.0, 0.85, 0.3), 10)
+CombatFX.sparks(t.global_position, Color(1.0, 0.85, 0.3), 10)
+
+# old: spawn_number(amount, Color(1.0, 0.36, 0.22))
+CombatFX.damage_number(self, amount, Color(1.0, 0.36, 0.22))</pre>
+</div>
+<p>The wolf does the same:</p>
+<div class="code">
+  <div class="bar"><span class="t">GDScript · wolf.gd</span><button class="copy">copy</button></div>
+<pre>if is_crit:
+    CombatFX.damage_number(self, amount, Color.YELLOW, 28)
+else:
+    CombatFX.damage_number(self, amount, Color.WHITE, 18)
+flash_hit()
+CombatFX.blood(global_position)</pre>
+</div>
+<p>And the pickup no longer asks the player to create particles for it:</p>
+<div class="code">
+  <div class="bar"><span class="t">GDScript · sword.gd</span><button class="copy">copy</button></div>
+<pre>CombatFX.sparks(global_position + Vector2(0, -14), Color(1.0, 0.85, 0.4), 14)</pre>
+</div>
+<div class="win">
+  <b>DELETION TEST</b>
+  <p>Delete <code class="inline">spawn_text_over</code>, both <code class="inline">spawn_number</code> helpers, <code class="inline">spawn_sparks</code>, and <code class="inline">spawn_blood</code>. If the game still boots and the CombatFX test passes, the duplication really moved — it was not copied again under a new name.</p>
+</div>
+
+<h2>Part D — test the helper</h2>
+<p>
+  A <code class="inline">--script</code> test does not rely on the autoload's global name at compile time, so it preloads
+  <code class="inline">combat_fx.gd</code>, adds an instance to the test tree, and calls the same public functions.
+</p>
+<div class="code">
+  <div class="bar"><span class="t">terminal</span><button class="copy">copy</button></div>
+<pre>godot --headless --path projects/first-steps --script res://tests/test_combat_fx.gd</pre>
+</div>
+<p>Expected ending:</p>
+<div class="code">
+  <div class="bar"><span class="t">expected output</span></div>
+<pre>  ok   blood amount = 6
+  ok   blood offset = (30.0, 32.0)
+PASS — CombatFX builds shared text and particle effects</pre>
+</div>
+<div class="annot">
+  <div class="line-note"><b>Why test visual code at all?</b> Not to judge prettiness — a screenshot verdict can do that later. This test checks the factories: correct node type, correct text, correct font size, one-shot particles, and the offsets we depend on.</div>
+  <div class="line-note"><b>Why keep the boot check?</b> The test proves the helper. The boot proves the project autoload name is registered and real gameplay scripts compile against <code>CombatFX</code>.</div>
+</div>
+
+<h2>Check yourself</h2>
+<div class="quiz">
+  <p class="q">1. Why is <code class="inline">CombatFX</code> an autoload instead of another child node under Player?</p>
+  <button onclick="pick(this)" data-correct>Wolf, player, and pickup all need it; putting it under Player would keep other actors coupled to Player's scene shape</button>
+  <button onclick="pick(this)">Autoloads make particles faster</button>
+  <button onclick="pick(this)">Godot requires all particles to be autoloads</button>
+  <div class="feedback"></div>
+</div>
+<div class="quiz">
+  <p class="q">2. What did the deletion test prove?</p>
+  <button onclick="pick(this)">That combat no longer has visual feedback</button>
+  <button onclick="pick(this)" data-correct>The old local spawner functions are gone, and callers now depend on one shared helper</button>
+  <button onclick="pick(this)">That DamageNumber is unused</button>
+  <div class="feedback"></div>
+</div>
+<div class="quiz">
+  <p class="q">3. Why does <code class="inline">CombatFX</code> return the nodes it creates?</p>
+  <button onclick="pick(this)">Gameplay needs to store every effect forever</button>
+  <button onclick="pick(this)" data-correct>Gameplay can ignore them, but tests can inspect them before they free themselves</button>
+  <button onclick="pick(this)">Particles only emit when returned</button>
+  <div class="feedback"></div>
+</div>
+
+<h3>Codebase checkpoint</h3>
+<p>The project after this lesson:</p>
+<div class="tree">
+<span class="dim">projects/first-steps/</span>
+├─ <span class="leaf">combat_fx.gd</span>              <span class="dim">← new: shared floating text + particle burst factory</span>
+├─ <span class="leaf">project.godot</span>             <span class="dim">← changed: CombatFX autoload beside Sfx</span>
+├─ <span class="leaf">player.gd</span>                 <span class="dim">← changed: asks CombatFX; local spawners deleted</span>
+├─ <span class="leaf">wolf.gd</span>                   <span class="dim">← changed: asks CombatFX; local spawners deleted</span>
+├─ <span class="leaf">sword.gd</span>                  <span class="dim">← changed: asks CombatFX for pickup sparks</span>
+├─ <span class="leaf">tests/test_combat_fx.gd</span>   <span class="dim">← new: headless factory test</span>
+└─ <span class="dim">…</span>
+</div>
+<p class="cite">The Forge is complete: combat math is pure and tested, the HUD is signal-driven, and combat feedback has one home.</p>
+
+<div class="teacher">
+  <b>I'M YOUR TEACHER — ASK ME ANYTHING</b>
+  <p>Curious why we chose a small autoload instead of an event bus, or when we'd add pooling for performance? Ask. When the CombatFX test and clean boot both pass, say <em>"done"</em> — next we close the old <code class="inline">move_*</code> Input Map teaching debt, then the progression arc can stand on a tested Forge.</p>
+</div>
+
+<footer>
+  LESSON 36 · The Forge 4/4 · grounded in <a href="../MISSION.md">your mission</a> · same autoload idea as Lesson 27<br>
+  Primary references: <a href="https://docs.godotengine.org/en/stable/tutorials/scripting/singletons_autoload.html">Godot — Singletons / Autoload</a> · <a href="https://docs.godotengine.org/en/stable/classes/class_cpuparticles2d.html">CPUParticles2D</a> · <a href="https://docs.godotengine.org/en/stable/classes/class_scenetree.html">SceneTree</a>
+</footer>
+</main>
+<script src="_lesson.js"></script>
+</body>
+</html>

@@ -36,8 +36,6 @@ var dying = false
 @onready var foot_dust = $FootDust
 @onready var camera = $Camera2D
 
-const DAMAGE_NUMBER = preload("res://damage_number.tscn")
-const SPARK = preload("res://assets/spark.png")
 const SWORD_REST_DEGREES = 0.0   # 25-degree rest pose is baked into sword_held.png
 # The swing is pre-rotated in the art pipeline too — four frames from rest to
 # full extension. Stepping textures keeps every texel on the pixel grid.
@@ -112,7 +110,7 @@ func start_auto_attack():
 	if not has_sword:
 		if no_weapon_cooldown == 0.0:
 			no_weapon_cooldown = 2.5
-			spawn_text_over(self, "No weapon!", Color.GRAY)
+			CombatFX.text_over(self, "No weapon!", Color.GRAY)
 			banner_requested.emit("Find the sword — follow the road north!")
 		return
 	if is_instance_valid(target) and swing_timer.is_stopped():
@@ -189,16 +187,16 @@ func attack(t):
 	var glancing = CombatTable.glancing_chance(level, t.level)
 	var crit = CombatTable.crit_chance(level, t.level, base_crit)
 	if roll < miss:
-		spawn_text_over(t, "Miss", Color.GRAY)
+		CombatFX.text_over(t, "Miss", Color.GRAY)
 		Sfx.play("miss", -8.0)
 	elif roll < miss + dodge:
-		spawn_text_over(t, "Dodge", Color.CYAN)
+		CombatFX.text_over(t, "Dodge", Color.CYAN)
 		Sfx.play("miss", -8.0)
 	elif roll < miss + dodge + parry:
-		spawn_text_over(t, "Parry", Color.ORANGE)
+		CombatFX.text_over(t, "Parry", Color.ORANGE)
 		Sfx.play("miss", -6.0)
 	elif roll < miss + dodge + parry + glancing:
-		spawn_text_over(t, "Glancing", Color.GRAY)
+		CombatFX.text_over(t, "Glancing", Color.GRAY)
 		var dmg = roundi(CombatTable.glancing_damage(attack_damage, level, t.level))
 		t.take_damage(dmg)
 		gain_rage_dealing(dmg, false)
@@ -207,14 +205,14 @@ func attack(t):
 		var dmg = attack_damage * 2
 		t.take_damage(dmg, true)
 		gain_rage_dealing(dmg, true)
-		spawn_sparks(t.global_position, Color(1.0, 0.85, 0.3), 10)
+		CombatFX.sparks(t.global_position, Color(1.0, 0.85, 0.3), 10)
 		shake_camera(4.0)
 		Sfx.play("crit", -2.0)
 		hit_stop()
 	else:
 		t.take_damage(attack_damage)
 		gain_rage_dealing(attack_damage, false)
-		spawn_sparks(t.global_position, Color(1, 1, 1), 5)
+		CombatFX.sparks(t.global_position, Color(1, 1, 1), 5)
 		Sfx.play("hit", -4.0)
 
 # A heartbeat of frozen time sells the crit.
@@ -222,12 +220,6 @@ func hit_stop():
 	Engine.time_scale = 0.05
 	await get_tree().create_timer(0.05, true, false, true).timeout
 	Engine.time_scale = 1.0
-
-func spawn_text_over(t, s, color):
-	var n = DAMAGE_NUMBER.instantiate()
-	get_parent().add_child(n)
-	n.global_position = t.global_position + Vector2(-8, -30)
-	n.show_text(s, color)
 
 func take_damage(amount, from = null):
 	if dying:
@@ -237,7 +229,7 @@ func take_damage(amount, from = null):
 	health_changed.emit(health, max_health)
 	hurt.emit()
 	Sfx.play("hurt", -4.0)
-	spawn_number(amount, Color(1.0, 0.36, 0.22))   # hot red-orange — reads on dirt and grass alike
+	CombatFX.damage_number(self, amount, Color(1.0, 0.36, 0.22))   # hot red-orange — reads on dirt and grass alike
 	gain_rage_taking(amount)      # getting hit builds rage too
 	if is_instance_valid(from):       # hit by an enemy -> engage it
 		if not is_instance_valid(target):
@@ -260,37 +252,12 @@ func gain_rage_dealing(damage, is_crit):
 func gain_rage_taking(damage):
 	add_rage(CombatTable.rage_from_taking(damage, level))
 
-func spawn_sparks(at: Vector2, color: Color, count: int):
-	var p = CPUParticles2D.new()
-	p.texture = SPARK
-	p.amount = count
-	p.one_shot = true
-	p.explosiveness = 1.0
-	p.lifetime = 0.35
-	p.initial_velocity_min = 40.0
-	p.initial_velocity_max = 90.0
-	p.gravity = Vector2(0, 160)
-	p.scale_amount_min = 0.5
-	p.scale_amount_max = 1.0
-	p.color = color
-	p.z_index = 30
-	get_parent().add_child(p)
-	p.global_position = at + Vector2(0, -10)
-	p.emitting = true
-	p.finished.connect(p.queue_free)
-
 func shake_camera(strength: float):
 	var t = create_tween()
 	for i in 4:
 		var off = Vector2(randf_range(-strength, strength), randf_range(-strength, strength))
 		t.tween_property(camera, "offset", off, 0.04)
 	t.tween_property(camera, "offset", Vector2.ZERO, 0.05)
-
-func spawn_number(amount, color):
-	var n = DAMAGE_NUMBER.instantiate()
-	get_parent().add_child(n)
-	n.global_position = global_position + Vector2(-8, -30)
-	n.setup(amount, color)
 
 func die():
 	dying = true

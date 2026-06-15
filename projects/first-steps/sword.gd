@@ -15,7 +15,7 @@ func _on_body_entered(body):
 		Sfx.play("pickup")
 		body.equip_sword()
 		body.announce("Rusty Sword equipped!")
-		body.spawn_sparks(global_position + Vector2(0, -14), Color(1.0, 0.85, 0.4), 14)
+		CombatFX.sparks(global_position + Vector2(0, -14), Color(1.0, 0.85, 0.4), 14)
 		sprite.visible = false
 		$Glint.emitting = false
 		$CollisionShape2D.set_deferred("disabled", true)

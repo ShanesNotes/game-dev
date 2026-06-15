@@ -1,7 +1,7 @@
 {
   "version": 1,
   "description": "Seeded lesson/code claims for the Godot learning repo. Error claims must pass now; known_debt warnings are burn-down items for the Ultragoal lesson audit.",
-  "expectedLessonCount": 35,
+  "expectedLessonCount": 36,
   "index": "lessons/index.html",
   "lessonGlob": "lessons/[0-9][0-9][0-9][0-9]-*.html",
   "contentScans": [
@@ -1032,6 +1032,68 @@
         }
       ],
       "evolutionNotes": []
+    },
+    {
+      "id": "0036",
+      "file": "lessons/0036-combat-fx-one-home.html",
+      "title": "Combat FX, One Home",
+      "claims": [
+        {
+          "type": "contains",
+          "path": "lessons/0036-combat-fx-one-home.html",
+          "value": "CombatFX",
+          "label": "teaches CombatFX"
+        },
+        {
+          "type": "autoload",
+          "name": "CombatFX",
+          "path": "res://combat_fx.gd",
+          "label": "CombatFX autoload registered"
+        },
+        {
+          "type": "path_exists",
+          "path": "projects/first-steps/combat_fx.gd",
+          "label": "CombatFX script exists"
+        },
+        {
+          "type": "contains",
+          "path": "projects/first-steps/player.gd",
+          "value": "CombatFX.text_over",
+          "label": "player uses CombatFX text"
+        },
+        {
+          "type": "contains",
+          "path": "projects/first-steps/wolf.gd",
+          "value": "CombatFX.blood",
+          "label": "wolf uses CombatFX blood"
+        },
+        {
+          "type": "contains",
+          "path": "projects/first-steps/sword.gd",
+          "value": "CombatFX.sparks",
+          "label": "pickup uses CombatFX sparks"
+        },
+        {
+          "type": "not_contains",
+          "path": "projects/first-steps/player.gd",
+          "value": "func spawn_sparks",
+          "label": "player local spark helper deleted"
+        },
+        {
+          "type": "not_contains",
+          "path": "projects/first-steps/wolf.gd",
+          "value": "func spawn_blood",
+          "label": "wolf local blood helper deleted"
+        },
+        {
+          "type": "path_exists",
+          "path": "projects/first-steps/tests/test_combat_fx.gd",
+          "label": "CombatFX test exists"
+        }
+      ],
+      "evolutionNotes": [
+        "Forge F4 moves floating text and combat particle construction out of actors and into the CombatFX autoload."
+      ]
     }
   ]
 }
