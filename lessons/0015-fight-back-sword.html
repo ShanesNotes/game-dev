@@ -126,6 +126,11 @@
 </div>
 
 <h2>Part D — give the wolf health &amp; numbers</h2>
+<div class="callout idea">
+  <span class="ct">📍 health-bar path checkpoint</span>
+  <p>The player code still shows the early <code class="inline">../HUD/HealthBar</code> path from Lesson 13. Keep it for this checkpoint; the later Forge refactor turns that direct HUD reach into <code class="inline">health_changed</code> signals.</p>
+</div>
+
 <p>The wolf already has a <code class="inline">HealthBar</code> child (a <code class="inline">ProgressBar</code>) from a previous lesson. Confirm the wolf script's <code class="inline">take_damage</code> includes the spawn call from Lesson 14:</p>
 <div class="code">
   <div class="bar"><span class="t">GDScript · wolf.gd — take_damage (confirm this exists)</span><button class="copy">copy</button></div>

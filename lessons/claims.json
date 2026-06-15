@@ -285,12 +285,21 @@
           "label": "wolf scene exists"
         },
         {
-          "type": "known_debt",
-          "label": "wolf sprite evolution",
-          "message": "Lesson 09 still describes Sprite2D; current wolf scene uses AnimatedSprite2D."
+          "type": "contains",
+          "path": "lessons/0009-wolf-chase-ai.html",
+          "value": "AnimatedSprite2D",
+          "label": "documents wolf animation evolution"
+        },
+        {
+          "type": "contains",
+          "path": "projects/first-steps/wolf.tscn",
+          "value": "AnimatedSprite2D",
+          "label": "current wolf uses AnimatedSprite2D"
         }
       ],
-      "evolutionNotes": []
+      "evolutionNotes": [
+        "Lesson starts with Sprite2D/wolf.png; final project upgrades to AnimatedSprite2D/wolf_sheet.png without changing the chase root."
+      ]
     },
     {
       "id": "0010",
@@ -310,12 +319,21 @@
           "label": "current wolf aggro target state"
         },
         {
-          "type": "known_debt",
-          "label": "state-machine evolution",
-          "message": "Lesson 10 teaches an explicit enum state machine; current wolf behavior is target/spawn driven without enum State."
+          "type": "contains",
+          "path": "lessons/0010-aggro-leash-state-machine.html",
+          "value": "target</code> plus <code class=\"inline\">spawn",
+          "label": "documents target spawn final wolf evolution"
+        },
+        {
+          "type": "contains",
+          "path": "projects/first-steps/wolf.gd",
+          "value": "var spawn = Vector2.ZERO",
+          "label": "current wolf stores spawn anchor"
         }
       ],
-      "evolutionNotes": []
+      "evolutionNotes": [
+        "Lesson teaches explicit enum State; final wolf keeps the behaviour with target/spawn after event-driven aggro arrives."
+      ]
     },
     {
       "id": "0011",
@@ -375,12 +393,27 @@
           "label": "current HUD tracks health"
         },
         {
-          "type": "known_debt",
-          "label": "HUD path evolution",
-          "message": "Early HUD lessons use ../HUD/HealthBar; current HUD is UnitFrame/TextureProgressBar and now signal-driven after L35."
+          "type": "contains",
+          "path": "lessons/0013-health-and-health-bars.html",
+          "value": "UnitFrame",
+          "label": "documents final HUD signal evolution"
+        },
+        {
+          "type": "contains",
+          "path": "lessons/0015-fight-back-sword.html",
+          "value": "health-bar path checkpoint",
+          "label": "L15 preserves early HUD path intentionally"
+        },
+        {
+          "type": "contains",
+          "path": "lessons/0016-player-auto-attack.html",
+          "value": "health-bar path checkpoint",
+          "label": "L16 preserves early HUD path intentionally"
         }
       ],
-      "evolutionNotes": []
+      "evolutionNotes": [
+        "Lessons 13/15/16 keep the early ../HUD/HealthBar path as a checkpoint; final project moves to UnitFrame and signal-driven HUD in L35."
+      ]
     },
     {
       "id": "0014",
@@ -473,12 +506,21 @@
           "label": "current held sword asset exists"
         },
         {
-          "type": "known_debt",
-          "label": "sword asset evolution",
-          "message": "Lesson 17 teaches sword.png/rest angle; current code uses baked sword_held.png and SWORD_REST_DEGREES = 0.0."
+          "type": "contains",
+          "path": "lessons/0017-wielding-the-sword.html",
+          "value": "sword_held.png",
+          "label": "documents baked sword pose evolution"
+        },
+        {
+          "type": "contains",
+          "path": "projects/first-steps/player.gd",
+          "value": "SWORD_REST_DEGREES = 0.0",
+          "label": "current sword rest pose is baked"
         }
       ],
-      "evolutionNotes": []
+      "evolutionNotes": [
+        "Lesson starts with sword.png and a 25 degree rest angle; final art bakes the pose into sword_held.png and uses SWORD_REST_DEGREES = 0.0."
+      ]
     },
     {
       "id": "0018",

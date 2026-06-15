@@ -44,6 +44,10 @@
   <span class="leaf">├─ Sprite2D</span> <span class="dim">(wolf.png)</span>
   <span class="leaf">└─ CollisionShape2D</span> <span class="dim">(its body)</span>
 </div>
+<div class="callout idea">
+  <span class="ct">📍 what the real game does now</span>
+  <p>This first wolf uses a plain <code class="inline">Sprite2D</code> because chase logic is the point. Later the visual overhaul swaps the art node to <code class="inline">AnimatedSprite2D</code> and <code class="inline">wolf_sheet.png</code> so the same enemy can idle, walk, attack, flash, and die. Same root node, richer child.</p>
+</div>
 <div class="flow">
   <div class="phase"><div class="rail"><div class="num">1</div><div class="line"></div></div><div class="body"><p>Right-click <code class="inline">Main</code> → <kbd>Add Child Node</kbd> → <code class="inline">CharacterBody2D</code> → rename <code class="inline">Wolf</code>.</p></div></div>
   <div class="phase"><div class="rail"><div class="num">2</div><div class="line"></div></div><div class="body"><p>Add child <code class="inline">Sprite2D</code> → Texture → Quick Load → <code class="inline">assets/wolf.png</code>. Leave its name as <code class="inline">Sprite2D</code> (code refers to it).</p></div></div>

@@ -34,6 +34,11 @@
 </div>
 
 <h2>Three new code tools</h2>
+<div class="callout idea">
+  <span class="ct">📍 what the real game does now</span>
+  <p>This lesson teaches the state-machine idea explicitly with <code class="inline">enum State { IDLE, CHASE, RETURN }</code>. Later, Lesson 11 replaces the distance-polling aggro check with an <code class="inline">AggroArea</code> event and the final wolf stores <code class="inline">target</code> plus <code class="inline">spawn</code> instead of a visible enum. The behaviour remains: idle at spawn, chase while engaged, walk home when disengaged.</p>
+</div>
+
 <div class="defs">
   <div class="def"><b>@export</b><p>Puts a variable in the <em>Inspector</em> so you can tune it live without touching code — perfect for <code class="inline">aggro_radius</code> and <code class="inline">leash_range</code>.</p></div>
   <div class="def"><b>enum</b><p>A named list of options. <code class="inline">enum State { IDLE, CHASE, RETURN }</code> gives our three states readable names instead of magic numbers.</p></div>

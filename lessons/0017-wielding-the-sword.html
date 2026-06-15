@@ -50,6 +50,10 @@
   <span class="ct">◈ Offset vs Position</span>
   <p><code class="inline">Position</code> moves the whole node (where on your body the sword sits). <code class="inline">Offset</code> moves just the <em>texture</em> relative to the node's origin — so the origin can land exactly on the handle while the node sits at your hand. Rotation always spins around the origin, which is why this is the correct control for a slash pivot.</p>
 </div>
+<div class="callout idea">
+  <span class="ct">📍 what the real game does now</span>
+  <p>This lesson uses <code class="inline">assets/sword.png</code> and <code class="inline">SWORD_REST_DEGREES = 25.0</code> so the pivot idea is visible. The finished art pass bakes that rest pose into <code class="inline">sword_held.png</code>, so the final code uses <code class="inline">SWORD_REST_DEGREES = 0.0</code> and rotates from a cleaner pixel-art source.</p>
+</div>
 
 <h2>Part B — equip it from the pickup</h2>
 <p>Add the onready reference, the constant, and a small <code class="inline">equip_sword()</code> method to the Player. Then call it from <code class="inline">sword.gd</code>.</p>

@@ -138,6 +138,11 @@
 </div>
 
 <h2>Part C — the wolf names its attacker</h2>
+<div class="callout idea">
+  <span class="ct">📍 health-bar path checkpoint</span>
+  <p>This lesson still carries the early <code class="inline">../HUD/HealthBar</code> connection forward so auto-attack is the only new idea. Later, Lesson 35 deletes that direct HUD dependency and wires the same health change through signals.</p>
+</div>
+
 <p>One line change: pass <code class="inline">self</code> as the attacker so getting bitten auto-engages that wolf.</p>
 <div class="code">
   <div class="bar"><span class="t">GDScript · wolf.gd — _on_swing_timer_timeout (one line)</span><button class="copy">copy</button></div>

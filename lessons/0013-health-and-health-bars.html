@@ -93,6 +93,10 @@
   <div class="line-note"><code>func take_damage(amount):</code> — <b>one argument, the amount.</b> Subtract, clamp at 0, update the bar, die if empty. (A second argument for the attacker arrives in Lesson 16 — not yet.)</div>
   <div class="line-note"><code>get_tree().reload_current_scene()</code> — <b>restart the level</b> on death — a dead-simple respawn.</div>
 </div>
+<div class="callout idea">
+  <span class="ct">📍 what the real game does now</span>
+  <p>The checkpoint here is intentionally simple: one <code class="inline">HUD/HealthBar</code> path so you can see health move. The finished project later grows that into a WoW-style <code class="inline">UnitFrame</code> with <code class="inline">TextureProgressBar</code>s, and Lesson 35 removes the direct path entirely: the Player emits <code class="inline">health_changed</code>, and the HUD listens.</p>
+</div>
 
 <h2>Part C — make the wolf's bite deal damage</h2>
 <p>In <code class="inline">wolf.gd</code>, change <em>only</em> the swing handler so the bite calls the player's new method:</p>
