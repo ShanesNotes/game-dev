@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "godot": {
+      "command": "node",
+      "args": ["/home/ark/.local/share/godot-mcp/build/index.js"],
+      "env": {
+        "GODOT_PATH": "/home/ark/.local/bin/godot",
+        "DEBUG": "false"
+      }
+    }
+  }
+}
