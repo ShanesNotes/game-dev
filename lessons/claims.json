@@ -88,7 +88,7 @@
     {
       "id": "0003",
       "file": "lessons/0003-player-input-arrow-keys.html",
-      "title": "Take the Controls: Arrow-Key Movement",
+      "title": "Take the Controls: One Vector, Any Device",
       "claims": [
         {
           "type": "contains",
@@ -168,12 +168,21 @@
           "label": "current terrain atlas exists"
         },
         {
-          "type": "known_debt",
-          "label": "tilemap evolution",
-          "message": "Lesson 05 teaches tileset.png; current world uses terrain.png plus Road layer, needing evolution note or later lesson."
+          "type": "contains",
+          "path": "lessons/0005-tilemap-floor.html",
+          "value": "terrain.png",
+          "label": "documents terrain atlas evolution"
+        },
+        {
+          "type": "contains",
+          "path": "lessons/0005-tilemap-floor.html",
+          "value": "Road",
+          "label": "documents Road layer evolution"
         }
       ],
-      "evolutionNotes": []
+      "evolutionNotes": [
+        "Lesson starts with tileset.png/Ground; current project later evolves to terrain.png plus a Road TileMapLayer."
+      ]
     },
     {
       "id": "0006",
@@ -211,9 +220,23 @@
           "path": "projects/first-steps/main.tscn",
           "value": "AnimatedSprite2D",
           "label": "current player uses animated sprite"
+        },
+        {
+          "type": "contains",
+          "path": "lessons/0007-animated-character-facing.html",
+          "value": "character_clean.png",
+          "label": "documents cleaned character sheet evolution"
+        },
+        {
+          "type": "contains",
+          "path": "projects/first-steps/main.tscn",
+          "value": "character_clean.png",
+          "label": "current scene uses cleaned character sheet"
         }
       ],
-      "evolutionNotes": []
+      "evolutionNotes": [
+        "Lesson starts with character.png; final project uses character_clean.png with the same 4x4 directional animation contract."
+      ]
     },
     {
       "id": "0008",
