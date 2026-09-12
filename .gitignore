@@ -1,0 +1,14 @@
+# Generated caches and build artifacts. Keeps top-level agent scans, listings,
+# and git status free of noise/bloat. The Godot project has its own supplementary
+# rules in projects/first-steps/.gitignore (do not duplicate there).
+**/.godot/
+**/__pycache__/
+*.py[cod]
+*.pyo
+.DS_Store
+Thumbs.db
+
+# Godot export/build artifacts (if produced at any depth)
+export/
+*.pck
+*.zip

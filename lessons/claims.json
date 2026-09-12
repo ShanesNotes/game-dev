@@ -20,11 +20,12 @@
     {
       "name": "gdscript-only-doc-csharp-audit",
       "paths": [
+        "GUIDE.md",
+        "HANDOFF.md",
         "MISSION.md",
         "NOTES.md",
-        "RESOURCES.md",
         "README.md",
-        "GUIDE.md",
+        "RESOURCES.md",
         "TELOS.md",
         "learning-records/*.md",
         "projects/first-steps/project.godot"
